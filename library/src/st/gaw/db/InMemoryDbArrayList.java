@@ -7,6 +7,12 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.util.Log;
 
+/**
+ * a basic helper class to keep the content of a flat database in an {@link ArrayList}
+ * @author Steve Lhomme
+ *
+ * @param <E> the type of items stored in memory by the {@link InMemoryDbArrayList}
+ */
 public abstract class InMemoryDbArrayList<E> extends InMemoryDbHelper<E> {
 
 	/**

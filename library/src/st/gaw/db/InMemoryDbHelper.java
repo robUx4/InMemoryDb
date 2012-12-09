@@ -13,6 +13,14 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 
+/**
+ * the main helper class that saves/restore item in memory using a DB storage
+ * <p>
+ * the storage handling is done in a separate thread
+ * @author Steve Lhomme
+ *
+ * @param <E> the type of items stored in memory
+ */
 public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 
 	protected final static String TAG = "MemoryDb";
@@ -95,7 +103,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 
 	/**
 	 * set the listener that will receive error events
-	 * @param listener
+	 * @param listener null to remove the listener
 	 */
 	public void setDbListener(InMemoryDbErrorHandler<E> listener) {
 		if (listener==null)
@@ -124,8 +132,23 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 		}
 	}
 
+	/**
+	 * the name of the main table corresponding to the inMemory elements
+	 * @return the name of the main table
+	 */
 	protected abstract String getMainTableName();
+	
+	/**
+	 * the where clause that should be used to delete the item
+	 * @param itemToDelete the data about to be deleted
+	 * @return a string for the whereClause in {@link SQLiteDatabase#delete(String, String, String[])}
+	 */
 	protected abstract String getDeleteClause(E itemToDelete);
+	/**
+	 * the where arguments that should be used to delete the item
+	 * @param itemToDelete the data about to be deleted
+	 * @return a string array for the whereArgs in {@link SQLiteDatabase#delete(String, String, String[])}
+	 */
 	protected abstract String[] getDeleteArgs(E itemToDelete);
 
 	/**
@@ -133,13 +156,37 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 */
 	protected abstract void loadDataInMemory();
 
+	/**
+	 * transform the {@link Cursor} into an element that can be used in memory
+	 * @param c the Cursor to transform
+	 * @return a formated element used in memory
+	 * @see #getValuesFromData(Object)
+	 */
 	protected abstract E getDataFromCursor(Cursor c);
+	/**
+	 * transform the element in memory into {@link ContentValues} that can be saved in the database
+	 * @param c the data to transform
+	 * @return a ContentValues element with all data that can be used to restore the data later from the database
+	 * @see #getDataFromCursor(Cursor)
+	 */
 	protected abstract ContentValues getValuesFromData(E data);
 
+	/**
+	 * request to store the item in the database, it should be kept in synch with the in memory storage
+	 * <p>
+	 * will call the {@link InMemoryDbErrorHandler} in case of error
+	 * @param item
+	 */
 	protected void scheduleAddOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEM, item));
 	}
 
+	/**
+	 * request to delete the item from the database, it should be kept in synch with the in memory storage
+	 * <p>
+	 * will call the {@link InMemoryDbErrorHandler} in case of error
+	 * @param item
+	 */
 	protected void scheduleRemoveOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
 	}
