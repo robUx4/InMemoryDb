@@ -1,24 +1,27 @@
 package st.gaw.db;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
-import android.util.Log;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link ArrayList}
+ * <p>
+ * you should use the {@link #mDataLock} when iterating through the {@link ArrayList}
  * @author Steve Lhomme
  *
  * @param <E> the type of items stored in memory by the {@link InMemoryDbArrayList}
  */
-public abstract class InMemoryDbArrayList<E> extends InMemoryDbHelper<E> {
+public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList<E>> {
 
 	/**
 	 * the array where the data are stored, locked when writing on it
 	 */
-	protected final ArrayList<E> mData = new ArrayList<E>();
+	private ArrayList<E> mData;
+
+	protected ReentrantLock mDataLock = new ReentrantLock();
 
 	/**
 	 * @param context to use to open or create the database
@@ -32,28 +35,46 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbHelper<E> {
 	}
 
 	@Override
-	protected void loadDataInMemory() {
-		synchronized (mData) {
-			mData.clear();
-			try {
-				Cursor c = getReadableDatabase().query(getMainTableName(), null, null, null, null, null, null);
-				if (c!=null)
-					try {
-						if (c.moveToFirst()) {
-							mData.ensureCapacity(c.getCount());
-							do {
-								E item = getDataFromCursor(c);
-								if (item!=null)
-									mData.add(item);
-							} while (c.moveToNext());
-						}
-
-					} finally {
-						c.close();
-					}
-			} catch (SQLException e) {
-				Log.w(TAG,"Can't query table "+getMainTableName()+" in "+this, e);
-			}
-		}
+	protected synchronized ArrayList<E> getList() {
+		if (mData==null)
+			mData = new ArrayList<E>(0);
+		return mData;
 	}
+
+	@Override
+	protected void startLoadingInMemory() {
+		super.startLoadingInMemory();
+		mDataLock.lock();
+	}
+
+	@Override
+	protected void finishLoadingInMemory() {
+		mDataLock.unlock();
+		super.finishLoadingInMemory();
+	}
+
+	@Override
+	protected void startLoadingFromCursor(Cursor c) {
+		mData.ensureCapacity(c.getCount());
+	}
+
+	public void addItem(E item) {
+		// protect the data coherence
+		mDataLock.lock();
+		try {
+			super.addItem(item);
+		} finally {
+			mDataLock.unlock();
+		}
+	};
+
+	public boolean removeItem(E item) {
+		// protect the data coherence
+		mDataLock.lock();
+		try {
+			return super.removeItem(item);
+		} finally {
+			mDataLock.unlock();
+		}
+	};
 }

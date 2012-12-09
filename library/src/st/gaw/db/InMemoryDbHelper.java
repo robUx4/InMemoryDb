@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.util.Log;
 
 /**
  * the main helper class that saves/restore item in memory using a DB storage
@@ -51,7 +52,28 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 				SQLiteDatabase db;
 				switch (msg.what) {
 				case MSG_LOAD_IN_MEMORY:
-					loadDataInMemory();	
+					startLoadingInMemory();
+					try {
+						try {
+							Cursor c = getReadableDatabase().query(getMainTableName(), null, null, null, null, null, null);
+							if (c!=null)
+								try {
+									if (c.moveToFirst()) {
+										startLoadingFromCursor(c);
+										do {
+											addCursorInMemory(c);
+										} while (c.moveToNext());
+									}
+
+								} finally {
+									c.close();
+								}
+						} catch (SQLException e) {
+							Log.w(TAG,"Can't query table "+getMainTableName()+" in "+this, e);
+						}
+					} finally {
+						finishLoadingInMemory();
+					}
 					break;
 				case MSG_STORE_ITEM:
 					@SuppressWarnings("unchecked")
@@ -95,7 +117,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 				}
 
 				super.handleMessage(msg);
-			};
+			}
 		};
 
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_LOAD_IN_MEMORY));
@@ -137,7 +159,21 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * @return the name of the main table
 	 */
 	protected abstract String getMainTableName();
-	
+
+	/**
+	 * use the data in the {@link Cursor} to store them in the memory storage
+	 * @param c the Cursor to use
+	 * @see #getValuesFromData(Object)
+	 */
+	protected abstract void addCursorInMemory(Cursor c);
+	/**
+	 * transform the element in memory into {@link ContentValues} that can be saved in the database
+	 * @param c the data to transform
+	 * @return a ContentValues element with all data that can be used to restore the data later from the database
+	 * @see #addCursorInMemory(Cursor)
+	 */
+	protected abstract ContentValues getValuesFromData(E data);
+
 	/**
 	 * the where clause that should be used to delete the item
 	 * @param itemToDelete the data about to be deleted
@@ -150,26 +186,6 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * @return a string array for the whereArgs in {@link SQLiteDatabase#delete(String, String, String[])}
 	 */
 	protected abstract String[] getDeleteArgs(E itemToDelete);
-
-	/**
-	 * should open the database and store in memory all the elements
-	 */
-	protected abstract void loadDataInMemory();
-
-	/**
-	 * transform the {@link Cursor} into an element that can be used in memory
-	 * @param c the Cursor to transform
-	 * @return a formated element used in memory
-	 * @see #getValuesFromData(Object)
-	 */
-	protected abstract E getDataFromCursor(Cursor c);
-	/**
-	 * transform the element in memory into {@link ContentValues} that can be saved in the database
-	 * @param c the data to transform
-	 * @return a ContentValues element with all data that can be used to restore the data later from the database
-	 * @see #getDataFromCursor(Cursor)
-	 */
-	protected abstract ContentValues getValuesFromData(E data);
 
 	/**
 	 * request to store the item in the database, it should be kept in synch with the in memory storage
@@ -190,5 +206,22 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	protected void scheduleRemoveOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
 	}
+
+	/**
+	 * called when we are about to read the data from the disk
+	 */
+	protected void startLoadingInMemory() {}
+	/**
+	 * called when we have the cursor to read the data from
+	 * <p>
+	 * useful to prepare the amount of data needed or get the index of the column we need
+	 * @param c the {@link Cursor} that will be used to read the data
+	 */
+	protected void startLoadingFromCursor(Cursor c) {}
+	/**
+	 * called after the data have been read from the disk
+	 */
+	protected void finishLoadingInMemory() {}
+	
 
 }
