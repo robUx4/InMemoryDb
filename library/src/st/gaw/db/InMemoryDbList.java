@@ -3,8 +3,10 @@ package st.gaw.db;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link List}
@@ -13,7 +15,7 @@ import android.database.Cursor;
  * @param <E> the type of items stored in memory by the {@link InMemoryDbList}
  * @param <L> the type of in memory storage that will be used
  */
-public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHelper<E> implements InMemoryDbErrorHandler<E> {
+public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHelper<E> implements InMemoryDbErrorHandler<E>/*, List<E>*/ {
 
 	private WeakReference<InMemoryDbErrorHandler<E>> mListener;
 
@@ -26,7 +28,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 	 */
 	protected InMemoryDbList(Context context, String name, int version) {
 		super(context, name, version);
-		super.setDbListener(this);
+		super.setDbErrorHandler(this);
 	}
 
 	/**
@@ -39,40 +41,51 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 	 * transform the {@link Cursor} into an element that can be used in memory
 	 * @param c the Cursor to transform
 	 * @return a formated element used in memory
-	 * @see #getValuesFromData(Object)
+	 * @see #getValuesFromData(Object, SQLiteDatabase)
 	 */
 	protected abstract E getDataFromCursor(Cursor c);
 
+	/**
+	 * transform the element in memory into {@link ContentValues} that can be saved in the database
+	 * @param data the data to transform
+	 * @return a ContentValues element with all data that can be used to restore the data later from the database
+	 * @see #addCursorInMemory(Cursor)
+	 */
+	protected abstract ContentValues getValuesFromData(E data);
 	
+	protected void onDataCleared() {}
+
 	@Override
-	public void setDbListener(InMemoryDbErrorHandler<E> listener) {
+	protected final ContentValues getValuesFromData(E data, SQLiteDatabase dbToFill) throws RuntimeException {
+		return getValuesFromData(data); // we don't need to know the database in Lists
+	};
+
+	@Override
+	public void setDbErrorHandler(InMemoryDbErrorHandler<E> listener) {
 		if (listener==null)
 			mListener = null;
 		else
 			mListener = new WeakReference<InMemoryDbErrorHandler<E>>(listener);
 	}
-	
+
 	@Override
 	protected final void addCursorInMemory(Cursor c) {
 		E item = getDataFromCursor(c);
 		getList().add(item);
 	}
 
-	@Override
-	protected void startLoadingInMemory() {
-		getList().clear();
-		super.startLoadingInMemory();
-	}
-
 	/**
 	 * add a new element in memory (synchronous) and in the database (asynchronous)
 	 * @param item to add
 	 */
-	public void addItem(E item) {
+	public boolean add(E item) {
 		if (!getList().contains(item)) {
-			getList().add(item);
-			scheduleAddOperation(item);
+			if (getList().add(item)) {
+				scheduleAddOperation(item);
+				return true;
+			}
 		}
+		return false;
 	}
 
 	/**
@@ -80,7 +93,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 	 * @param item
 	 * @return true if the element was removed
 	 */
-	public boolean removeItem(E item) {
+	public boolean remove(E item) {
 		if (!getList().remove(item))
 			return false;
 
@@ -88,8 +101,74 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		return true;
 	}
 
+	public boolean remove(int index) {
+		if (index < 0 || index >= getList().size())
+			return false;
+		E removedItem = getList().remove(index);
+		if (removedItem==null)
+			return false;
+
+		scheduleRemoveOperation(removedItem);
+		return true;
+	}
+
+	public E get(int position) {
+		if (position >= getList().size())
+			return null;
+		return getList().get(position);
+	}
+
+	public E findItem(E similar) {
+		int found = getList().indexOf(similar);
+		if (found<0)
+			return null;
+
+		return getList().get(found);
+	}
+
+	public void notifyItemChanged(E item) {
+		int itemPos = getList().indexOf(item);
+		if (itemPos>=0) {
+			getList().set(itemPos, item);
+			scheduleUpdateOperation(item);
+		}
+	}
+
+	@Override
+	protected void clearDataInMemory() {
+		getList().clear();
+		super.clearDataInMemory();
+		onDataCleared();
+	}
+
+	public boolean replace(int index, E newData) {
+		if (index < 0 || index >= getList().size())
+			return false;
+
+		E prevValue = getList().get(index); 
+		getList().set(index, newData);
+		scheduleReplaceOperation(prevValue, newData);
+		return true;
+	}
+
+	public void swap(int positionA, int positionB) {
+		if (positionA < 0 || positionA >= getList().size())
+			return;
+		if (positionB < 0 || positionB >= getList().size())
+			return;
+
+		E aa = getList().get(positionA);
+		E bb = getList().get(positionB);
+		getList().set(positionB, aa);
+		getList().set(positionA, bb);
+
+		scheduleSwapOperation(aa, bb);
+	}
+
 	public void onAddItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause) {
-		removeItem(item);
+		// revert the failed change in memory
+		remove(item);
+
 		if (mListener!=null) {
 			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
@@ -100,13 +179,40 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 	};
 
 	public void onRemoveItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause) {
-		addItem(item);
+		// revert the failed change in memory
+		add(item);
+
 		if (mListener!=null) {
 			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
 			else
 				listener.onRemoveItemFailed(db, item, cause);
+		}
+	};
+
+	public void onUpdateItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause) {
+		if (mListener!=null) {
+			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
+			if (listener==null)
+				mListener = null;
+			else
+				listener.onUpdateItemFailed(db, item, cause);
+		}
+	};
+
+	public void onReplaceItemFailed(InMemoryDbHelper<E> db, E original, E replacement, Throwable cause) {
+		// revert the failed change in memory
+		int prevIndex = getList().indexOf(replacement); // TODO: we may store the position somewhere
+		if (prevIndex>=0)
+			getList().set(prevIndex, original);
+
+		if (mListener!=null) {
+			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
+			if (listener==null)
+				mListener = null;
+			else
+				listener.onReplaceItemFailed(db, original, replacement, cause);
 		}
 	};
 

@@ -1,6 +1,7 @@
 package st.gaw.db;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -25,13 +26,21 @@ import android.util.Log;
 public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 
 	protected final static String TAG = "MemoryDb";
+	protected final static boolean DEBUG_DB = false;
 
 	private final Handler saveStoreHandler;
 	private static final int MSG_LOAD_IN_MEMORY = 100;
 	private static final int MSG_STORE_ITEM     = 101;
 	private static final int MSG_REMOVE_ITEM    = 102;
+	private static final int MSG_UPDATE_ITEM    = 103;
+	private static final int MSG_CLEAR_DATABASE = 104;
+	private static final int MSG_SWAP_ITEMS     = 106;
+	private static final int MSG_REPLACE_ITEMS  = 107;
 
-	private WeakReference<InMemoryDbErrorHandler<E>> mListener; // not protected for now
+	private WeakReference<InMemoryDbErrorHandler<E>> mErrorHandler; // not protected for now
+	private final CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>> mDbListeners = new CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>>();
+	
+	private boolean mDataLoaded;
 
 	/**
 	 * @param context to use to open or create the database
@@ -69,49 +78,105 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 									c.close();
 								}
 						} catch (SQLException e) {
-							Log.w(TAG,"Can't query table "+getMainTableName()+" in "+this, e);
+							Log.w(TAG,"Can't query table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
 						}
 					} finally {
 						finishLoadingInMemory();
 					}
 					break;
+
+				case MSG_CLEAR_DATABASE:
+					try {
+						db = getWritableDatabase();
+						db.delete(getMainTableName(), "1", null);
+					} catch (Throwable e) {
+						Log.w(TAG,"Failed to empty table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
+						sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
+					}
+					SQLiteDatabase.releaseMemory();
+					break;
+
 				case MSG_STORE_ITEM:
 					@SuppressWarnings("unchecked")
 					E itemToAdd = (E) msg.obj;
-					ContentValues addValues = getValuesFromData(itemToAdd);
-					db = getWritableDatabase();
-					db.beginTransaction();
 					try {
-						if (db.insertOrThrow(getMainTableName(), null, addValues)==-1)
-							notifyAddItemFailed(itemToAdd, new RuntimeException("failed to add values "+addValues+" in "+InMemoryDbHelper.this.getClass().getSimpleName()));
-						db.setTransactionSuccessful();
+						db = getWritableDatabase();
+						ContentValues addValues = getValuesFromData(itemToAdd, db);
+						if (addValues!=null) {
+							long id = db.insertOrThrow(getMainTableName(), null, addValues);
+							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" insert "+addValues+" = "+id);
+							if (id==-1)
+								notifyAddItemFailed(itemToAdd, new RuntimeException("failed to add values "+addValues+" in "+InMemoryDbHelper.this.getClass().getSimpleName()));
+						}
 					} catch (Throwable e) {
 						notifyAddItemFailed(itemToAdd, e);
-					} finally {
-						try {
-							db.endTransaction();
-						} catch (SQLException e) {
-							notifyAddItemFailed(itemToAdd, e);
-						}
 					}
 					break;
+
 				case MSG_REMOVE_ITEM:
 					@SuppressWarnings("unchecked")
 					E itemToDelete = (E) msg.obj;
-					db = getWritableDatabase();
-					db.beginTransaction();
 					try {
-						if (db.delete(getMainTableName(), getDeleteClause(itemToDelete), getDeleteArgs(itemToDelete))==0)
+						db = getWritableDatabase();
+						if (db.delete(getMainTableName(), getItemSelectClause(itemToDelete), getItemSelectArgs(itemToDelete))==0)
 							notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+InMemoryDbHelper.this.getClass().getSimpleName()));
-						db.setTransactionSuccessful();
 					} catch (Throwable e) {
 						notifyRemoveItemFailed(itemToDelete, e);
-					} finally {
-						try {
-							db.endTransaction();
-						} catch (SQLException e) {
-							notifyRemoveItemFailed(itemToDelete, e);
+					}
+					break;
+
+				case MSG_UPDATE_ITEM:
+					@SuppressWarnings("unchecked")
+					E itemToUpdate = (E) msg.obj;
+					try {
+						db = getWritableDatabase();
+						ContentValues updateValues = getValuesFromData(itemToUpdate, db);
+						if (updateValues!=null) {
+							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
+							db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate));
 						}
+					} catch (Throwable e) {
+						notifyUpdateItemFailed(itemToUpdate, e);
+					}
+					break;
+
+				case MSG_REPLACE_ITEMS:
+					@SuppressWarnings("unchecked")
+					DoubleItems itemsToReplace = (DoubleItems) msg.obj;
+					try {
+						db = getWritableDatabase();
+						ContentValues newValues = getValuesFromData(itemsToReplace.itemA, db);
+						if (newValues!=null) {
+							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
+							db.update(getMainTableName(), newValues, getItemSelectClause(itemsToReplace.itemB), getItemSelectArgs(itemsToReplace.itemB));
+						}
+					} catch (Throwable e) {
+						notifyReplaceItemFailed(itemsToReplace.itemA, itemsToReplace.itemB, e);
+					}
+					break;
+
+				case MSG_SWAP_ITEMS:
+					@SuppressWarnings("unchecked")
+					DoubleItems itemsToSwap = (DoubleItems) msg.obj;
+					try {
+						db = getWritableDatabase();
+						ContentValues newValuesA = getValuesFromData(itemsToSwap.itemB, db);
+						if (newValuesA!=null) {
+							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
+							db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.itemA), getItemSelectArgs(itemsToSwap.itemA));
+						}
+					} catch (Throwable e) {
+						notifyUpdateItemFailed(itemsToSwap.itemA, e);
+					}
+					try {
+						db = getWritableDatabase();
+						ContentValues newValuesB = getValuesFromData(itemsToSwap.itemA, db);
+						if (newValuesB!=null) {
+							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
+							db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.itemB), getItemSelectArgs(itemsToSwap.itemB));
+						}
+					} catch (Throwable e) {
+						notifyUpdateItemFailed(itemsToSwap.itemB, e);
 					}
 					break;
 				}
@@ -120,38 +185,90 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 			}
 		};
 
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_LOAD_IN_MEMORY));
+		preloadInit();
+
+		saveStoreHandler.sendEmptyMessage(MSG_LOAD_IN_MEMORY);
 	}
+
+	protected void clearDataInMemory() {
+		notifyDatabaseChanged();
+	}
+
+	protected void preloadInit() {}
 
 	/**
 	 * set the listener that will receive error events
 	 * @param listener null to remove the listener
 	 */
-	public void setDbListener(InMemoryDbErrorHandler<E> listener) {
+	public void setDbErrorHandler(InMemoryDbErrorHandler<E> listener) {
 		if (listener==null)
-			mListener = null;
+			mErrorHandler = null;
 		else
-			mListener = new WeakReference<InMemoryDbErrorHandler<E>>(listener);
+			mErrorHandler = new WeakReference<InMemoryDbErrorHandler<E>>(listener);
+	}
+
+	public void addListener(InMemoryDbListener<E> listener) {
+		for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
+			if (l.get()==null)
+				mDbListeners.remove(listener);
+			else if (l.get()==listener)
+				return;
+		}
+		if (mDataLoaded)
+			listener.onMemoryDbChanged(this);
+		mDbListeners.add(new WeakReference<InMemoryDbListener<E>>(listener));
+	}
+
+	/**
+	 * delete all the data in memory and in the database
+	 */
+	public final void clear() {
+		clearDataInMemory();
+		saveStoreHandler.sendEmptyMessage(MSG_CLEAR_DATABASE);
 	}
 
 	private void notifyAddItemFailed(E item, Throwable cause) {
-		if (mListener!=null) {
-			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
+		if (mErrorHandler!=null) {
+			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
-				mListener = null;
+				mErrorHandler = null;
 			else
-				listener.onAddItemFailed(InMemoryDbHelper.this, item, cause);
+				listener.onAddItemFailed(this, item, cause);
 		}
+		notifyDatabaseChanged();
+	}
+
+	private void notifyReplaceItemFailed(E srcItem, E replacement, Throwable cause) {
+		if (mErrorHandler!=null) {
+			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
+			if (listener==null)
+				mErrorHandler = null;
+			else
+				listener.onReplaceItemFailed(this, srcItem, replacement, cause);
+		}
+		notifyDatabaseChanged();
+	}
+
+	private void notifyUpdateItemFailed(E item, Throwable cause) {
+		if (mErrorHandler!=null) {
+			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
+			if (listener==null)
+				mErrorHandler = null;
+			else
+				listener.onAddItemFailed(this, item, cause);
+		}
+		notifyDatabaseChanged();
 	}
 
 	private void notifyRemoveItemFailed(E item, Throwable cause) {
-		if (mListener!=null) {
-			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
+		if (mErrorHandler!=null) {
+			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
-				mListener = null;
+				mErrorHandler = null;
 			else
-				listener.onRemoveItemFailed(InMemoryDbHelper.this, item, cause);
+				listener.onRemoveItemFailed(this, item, cause);
 		}
+		notifyDatabaseChanged();
 	}
 
 	/**
@@ -163,29 +280,34 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	/**
 	 * use the data in the {@link Cursor} to store them in the memory storage
 	 * @param c the Cursor to use
-	 * @see #getValuesFromData(Object)
+	 * @see #getValuesFromData(Object, SQLiteDatabase)
 	 */
 	protected abstract void addCursorInMemory(Cursor c);
 	/**
 	 * transform the element in memory into {@link ContentValues} that can be saved in the database
-	 * @param c the data to transform
+	 * <p> you can return null and fill the database yourself if you need to
+	 * @param data the data to transform
+	 * @param dbToFill the database that will receive new items
 	 * @return a ContentValues element with all data that can be used to restore the data later from the database
 	 * @see #addCursorInMemory(Cursor)
 	 */
-	protected abstract ContentValues getValuesFromData(E data);
+	protected abstract ContentValues getValuesFromData(E data, SQLiteDatabase dbToFill) throws RuntimeException;
 
 	/**
-	 * the where clause that should be used to delete the item
-	 * @param itemToDelete the data about to be deleted
-	 * @return a string for the whereClause in {@link SQLiteDatabase#delete(String, String, String[])}
+	 * the where clause that should be used to update/delete the item
+	 * <p> see {@link #getItemSelectArgs(Object)}
+	 * @param itemToSelect the item about to be selected in the database
+	 * @return a string for the whereClause in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
 	 */
-	protected abstract String getDeleteClause(E itemToDelete);
+	protected abstract String getItemSelectClause(E itemToSelect);
 	/**
-	 * the where arguments that should be used to delete the item
-	 * @param itemToDelete the data about to be deleted
-	 * @return a string array for the whereArgs in {@link SQLiteDatabase#delete(String, String, String[])}
+	 * the where arguments that should be used to update/delete the item
+	 * <p> see {@link #getItemSelectClause(Object)}
+	 * @param itemToSelect the item about to be selected in the database
+	 * @return a string array for the whereArgs in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
 	 */
-	protected abstract String[] getDeleteArgs(E itemToDelete);
+	protected abstract String[] getItemSelectArgs(E itemToSelect);
+
 
 	/**
 	 * request to store the item in the database, it should be kept in synch with the in memory storage
@@ -193,8 +315,35 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * will call the {@link InMemoryDbErrorHandler} in case of error
 	 * @param item
 	 */
-	protected void scheduleAddOperation(E item) {
+	protected final void scheduleAddOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEM, item));
+		notifyDatabaseChanged();
+	}
+
+	protected final void scheduleUpdateOperation(E item) {
+		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_UPDATE_ITEM, item));
+		notifyDatabaseChanged();
+	}
+
+	private class DoubleItems {
+		final E itemA;
+		final E itemB;
+
+		public DoubleItems(E itemA, E itemB) {
+			this.itemA = itemA;
+			this.itemB = itemB;
+		}
+
+	}
+
+	protected final void scheduleReplaceOperation(E original, E replacement) {
+		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEMS, new DoubleItems(original, replacement)));
+		notifyDatabaseChanged();
+	}
+
+	protected final void scheduleSwapOperation(E itemA, E itemB) {
+		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_SWAP_ITEMS, new DoubleItems(itemA, itemB)));
+		notifyDatabaseChanged();
 	}
 
 	/**
@@ -203,14 +352,17 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * will call the {@link InMemoryDbErrorHandler} in case of error
 	 * @param item
 	 */
-	protected void scheduleRemoveOperation(E item) {
+	protected final void scheduleRemoveOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
+		notifyDatabaseChanged();
 	}
 
 	/**
-	 * called when we are about to read the data from the disk
+	 * called when we are about to read all items from the disk
 	 */
-	protected void startLoadingInMemory() {}
+	protected void startLoadingInMemory() {
+		mDataLoaded = false;
+	}
 	/**
 	 * called when we have the cursor to read the data from
 	 * <p>
@@ -219,9 +371,21 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 */
 	protected void startLoadingFromCursor(Cursor c) {}
 	/**
-	 * called after the data have been read from the disk
+	 * called after all items have been read from the disk
 	 */
-	protected void finishLoadingInMemory() {}
-	
+	protected void finishLoadingInMemory() {
+		mDataLoaded = true;
+		notifyDatabaseChanged();
+	}
+
+	protected void notifyDatabaseChanged() {
+		for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
+			final InMemoryDbListener<E> listener = l.get();
+			if (listener==null)
+				mDbListeners.remove(l);
+			else
+				listener.onMemoryDbChanged(this);
+		}
+	}
 
 }

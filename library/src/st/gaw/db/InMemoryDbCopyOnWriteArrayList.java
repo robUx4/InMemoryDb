@@ -15,7 +15,7 @@ public abstract class InMemoryDbCopyOnWriteArrayList<E> extends InMemoryDbList<E
 	/**
 	 * the array where the data are stored, locked when writing on it
 	 */
-	private final CopyOnWriteArrayList<E> mData = new CopyOnWriteArrayList<E>();
+	private CopyOnWriteArrayList<E> mData;
 
 	/**
 	 * @param context to use to open or create the database
@@ -26,6 +26,12 @@ public abstract class InMemoryDbCopyOnWriteArrayList<E> extends InMemoryDbList<E
 	 */
 	protected InMemoryDbCopyOnWriteArrayList(Context context, String name, int version) {
 		super(context, name, version);
+	}
+	
+	@Override
+	protected void preloadInit() {
+		super.preloadInit();
+		mData = new CopyOnWriteArrayList<E>();
 	}
 	
 	@Override
