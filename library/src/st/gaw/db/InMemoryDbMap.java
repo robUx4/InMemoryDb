@@ -72,8 +72,10 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryD
 	
 	public V put(K key, V value) {
 		V result = getMap().put(key, value);
-		if (result!=null)
-			scheduleAddOperation(new MapEntry<K,V>(key, result));
+		if (result==null)
+			scheduleAddOperation(new MapEntry<K,V>(key, value));
+		else
+			scheduleUpdateOperation(new MapEntry<K,V>(key, value));
 		return result;
 	}
 	
