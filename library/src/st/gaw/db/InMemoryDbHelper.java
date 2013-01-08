@@ -29,13 +29,14 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	protected final static boolean DEBUG_DB = false;
 
 	private final Handler saveStoreHandler;
-	private static final int MSG_LOAD_IN_MEMORY = 100;
-	private static final int MSG_STORE_ITEM     = 101;
-	private static final int MSG_REMOVE_ITEM    = 102;
-	private static final int MSG_UPDATE_ITEM    = 103;
-	private static final int MSG_CLEAR_DATABASE = 104;
-	private static final int MSG_SWAP_ITEMS     = 106;
-	private static final int MSG_REPLACE_ITEMS  = 107;
+	private static final int MSG_LOAD_IN_MEMORY    = 100;
+	private static final int MSG_STORE_ITEM        = 101;
+	private static final int MSG_REMOVE_ITEM       = 102;
+	private static final int MSG_UPDATE_ITEM       = 103;
+	private static final int MSG_CLEAR_DATABASE    = 104;
+	private static final int MSG_SWAP_ITEMS        = 106;
+	private static final int MSG_REPLACE_ITEMS     = 107;
+	private static final int MSG_CUSTOM_OPERATION  = 108;
 
 	private WeakReference<InMemoryDbErrorHandler<E>> mErrorHandler; // not protected for now
 	private final CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>> mDbListeners = new CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>>();
@@ -59,6 +60,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 		saveStoreHandler = new Handler(handlerThread.getLooper()) {
 			public void handleMessage(Message msg) {
 				SQLiteDatabase db;
+
 				switch (msg.what) {
 				case MSG_LOAD_IN_MEMORY:
 					startLoadingInMemory();
@@ -179,6 +181,18 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						notifyUpdateItemFailed(itemsToSwap.itemB, e);
 					}
 					break;
+					
+				case MSG_CUSTOM_OPERATION:
+					try {
+						@SuppressWarnings("unchecked")
+						InMemoryDbOperation<E> operation = (InMemoryDbOperation<E>) msg.obj;
+						operation.runInMemoryDbOperation(InMemoryDbHelper.this);
+					} catch (Throwable e) {
+						Log.w(TAG, InMemoryDbHelper.this+" failed to run operation "+msg.obj,e);
+					}
+					break;
+
+
 				}
 
 				super.handleMessage(msg);
@@ -355,6 +369,14 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	protected final void scheduleRemoveOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
 		notifyDatabaseChanged();
+	}
+	
+	/**
+	 * run the operation in the internal thread
+	 * @param operation
+	 */
+	protected final void scheduleCustomOperation(InMemoryDbOperation<E> operation) {
+		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_CUSTOM_OPERATION, operation));
 	}
 
 	/**
