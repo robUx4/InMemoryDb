@@ -13,7 +13,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.util.Log;
 
 /**
  * the main helper class that saves/restore item in memory using a DB storage
@@ -80,7 +79,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 									c.close();
 								}
 						} catch (SQLException e) {
-							Log.w(TAG,"Can't query table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
+							LogManager.logger.w(TAG,"Can't query table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
 						}
 					} finally {
 						finishLoadingInMemory();
@@ -92,7 +91,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						db.delete(getMainTableName(), "1", null);
 					} catch (Throwable e) {
-						Log.w(TAG,"Failed to empty table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
+						LogManager.logger.w(TAG,"Failed to empty table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
 						sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
 					}
 					SQLiteDatabase.releaseMemory();
@@ -106,7 +105,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						ContentValues addValues = getValuesFromData(itemToAdd, db);
 						if (addValues!=null) {
 							long id = db.insertOrThrow(getMainTableName(), null, addValues);
-							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" insert "+addValues+" = "+id);
+							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" insert "+addValues+" = "+id);
 							if (id==-1)
 								notifyAddItemFailed(itemToAdd, new RuntimeException("failed to add values "+addValues+" in "+InMemoryDbHelper.this.getClass().getSimpleName()));
 						}
@@ -134,7 +133,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						ContentValues updateValues = getValuesFromData(itemToUpdate, db);
 						if (updateValues!=null) {
-							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
+							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
 							db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate));
 						}
 					} catch (Throwable e) {
@@ -149,7 +148,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						ContentValues newValues = getValuesFromData(itemsToReplace.itemA, db);
 						if (newValues!=null) {
-							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
+							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
 							db.update(getMainTableName(), newValues, getItemSelectClause(itemsToReplace.itemB), getItemSelectArgs(itemsToReplace.itemB));
 						}
 					} catch (Throwable e) {
@@ -164,7 +163,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						ContentValues newValuesA = getValuesFromData(itemsToSwap.itemB, db);
 						if (newValuesA!=null) {
-							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
+							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
 							db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.itemA), getItemSelectArgs(itemsToSwap.itemA));
 						}
 					} catch (Throwable e) {
@@ -174,7 +173,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						ContentValues newValuesB = getValuesFromData(itemsToSwap.itemA, db);
 						if (newValuesB!=null) {
-							if (DEBUG_DB) Log.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
+							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
 							db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.itemB), getItemSelectArgs(itemsToSwap.itemB));
 						}
 					} catch (Throwable e) {
@@ -188,7 +187,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						InMemoryDbOperation<E> operation = (InMemoryDbOperation<E>) msg.obj;
 						operation.runInMemoryDbOperation(InMemoryDbHelper.this);
 					} catch (Throwable e) {
-						Log.w(TAG, InMemoryDbHelper.this+" failed to run operation "+msg.obj,e);
+						LogManager.logger.w(TAG, InMemoryDbHelper.this+" failed to run operation "+msg.obj,e);
 					}
 					break;
 
