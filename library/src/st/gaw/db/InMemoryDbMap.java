@@ -10,8 +10,8 @@ import android.database.sqlite.SQLiteDatabase;
 
 public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryDbHelper<Map.Entry<K,V>> {
 
-	protected InMemoryDbMap(Context context, String name, int version) {
-		super(context, name, version);
+	protected InMemoryDbMap(Context context, String name, int version, Logger logger) {
+		super(context, name, version, logger);
 	}
 
 	/**

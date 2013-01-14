@@ -32,9 +32,10 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	 * @param version number of the database (starting at 1); if the database is older,
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
+	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryDbArrayList(Context context, String name, int version) {
-		super(context, name, version);
+	protected InMemoryDbArrayList(Context context, String name, int version, Logger logger) {
+		super(context, name, version, logger);
 	}
 
 	@Override

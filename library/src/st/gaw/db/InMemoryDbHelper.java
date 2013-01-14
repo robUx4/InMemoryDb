@@ -48,10 +48,14 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * @param version number of the database (starting at 1); if the database is older,
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
+	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	@SuppressLint("HandlerLeak")
-	protected InMemoryDbHelper(Context context, String name, int version) {
+	protected InMemoryDbHelper(Context context, String name, int version, Logger logger) {
 		super(context, name, null, version);
+		
+		if (logger!=null)
+			LogManager.setLogger(logger);
 
 		HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName(), android.os.Process.THREAD_PRIORITY_BACKGROUND);
 		handlerThread.start();

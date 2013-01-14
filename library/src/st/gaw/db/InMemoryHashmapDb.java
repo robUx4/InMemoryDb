@@ -17,8 +17,8 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	 */
 	protected ReentrantLock mDataLock;
 
-	protected InMemoryHashmapDb(Context context, String name, int version) {
-		super(context, name, version);
+	protected InMemoryHashmapDb(Context context, String name, int version, Logger logger) {
+		super(context, name, version, logger);
 	}
 
 	@Override
