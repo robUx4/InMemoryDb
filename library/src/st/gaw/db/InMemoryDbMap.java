@@ -26,7 +26,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryD
 	protected void addCursorInMemory(Cursor c) {
 		Map.Entry<K, V> entry = getEntryFromCursor(c);
 		if (entry!=null)
-			getMap().put(entry.getKey(), entry.getValue());
+			putEntry(entry);
 	}
 
 	protected abstract Map.Entry<K, V> getEntryFromCursor(Cursor c);
@@ -45,7 +45,11 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryD
 	 * @return a string array for the whereArgs in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
 	 */
 	protected abstract String[] getKeySelectArgs(K itemKey);
-	
+
+	protected void putEntry(Map.Entry<K, V> entry) {
+		getMap().put(entry.getKey(), entry.getValue());
+	}
+
 	@Override
 	protected final String getItemSelectClause(Entry<K, V> itemToSelect) {
 		return getKeySelectClause(itemToSelect.getKey());
