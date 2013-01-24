@@ -152,11 +152,11 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		return true;
 	}
 
-	public void swap(int positionA, int positionB) {
+	public boolean swap(int positionA, int positionB) {
 		if (positionA < 0 || positionA >= getList().size())
-			return;
+			return false;
 		if (positionB < 0 || positionB >= getList().size())
-			return;
+			return false;
 
 		E aa = getList().get(positionA);
 		E bb = getList().get(positionB);
@@ -164,6 +164,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		getList().set(positionA, bb);
 
 		scheduleSwapOperation(aa, bb);
+		return true;
 	}
 
 	public void onAddItemFailed(InMemoryDbHelper<E> db, E item, ContentValues values, Throwable cause) {

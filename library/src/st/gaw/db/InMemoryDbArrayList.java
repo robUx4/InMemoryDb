@@ -164,10 +164,10 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	};
 
 	@Override
-	public void swap(int positionA, int positionB) {
+	public boolean swap(int positionA, int positionB) {
 		mDataLock.lock();
 		try {
-			super.swap(positionA, positionB);
+			return super.swap(positionA, positionB);
 		} finally {
 			mDataLock.unlock();
 		}
