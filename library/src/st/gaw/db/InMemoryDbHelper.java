@@ -104,17 +104,18 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 				case MSG_STORE_ITEM:
 					@SuppressWarnings("unchecked")
 					E itemToAdd = (E) msg.obj;
+					ContentValues addValues = null;
 					try {
 						db = getWritableDatabase();
-						ContentValues addValues = getValuesFromData(itemToAdd, db);
+						addValues = getValuesFromData(itemToAdd, db);
 						if (addValues!=null) {
 							long id = db.insertOrThrow(getMainTableName(), null, addValues);
 							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" insert "+addValues+" = "+id);
 							if (id==-1)
-								notifyAddItemFailed(itemToAdd, new RuntimeException("failed to add values "+addValues+" in "+InMemoryDbHelper.this.getClass().getSimpleName()));
+								throw new RuntimeException("failed to add values "+addValues+" in "+InMemoryDbHelper.this.getClass().getSimpleName());
 						}
 					} catch (Throwable e) {
-						notifyAddItemFailed(itemToAdd, e);
+						notifyAddItemFailed(itemToAdd, addValues, e);
 					}
 					break;
 
@@ -133,15 +134,16 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 				case MSG_UPDATE_ITEM:
 					@SuppressWarnings("unchecked")
 					E itemToUpdate = (E) msg.obj;
+					ContentValues updateValues = null;
 					try {
 						db = getWritableDatabase();
-						ContentValues updateValues = getValuesFromData(itemToUpdate, db);
+						updateValues = getValuesFromData(itemToUpdate, db);
 						if (updateValues!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
 							db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate));
 						}
 					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemToUpdate, e);
+						notifyUpdateItemFailed(itemToUpdate, updateValues, e);
 					}
 					break;
 
@@ -163,28 +165,30 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 				case MSG_SWAP_ITEMS:
 					@SuppressWarnings("unchecked")
 					DoubleItems itemsToSwap = (DoubleItems) msg.obj;
+					ContentValues newValuesA = null;
 					try {
 						db = getWritableDatabase();
-						ContentValues newValuesA = getValuesFromData(itemsToSwap.itemB, db);
+						newValuesA = getValuesFromData(itemsToSwap.itemB, db);
 						if (newValuesA!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
 							db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.itemA), getItemSelectArgs(itemsToSwap.itemA));
 						}
 					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemsToSwap.itemA, e);
+						notifyUpdateItemFailed(itemsToSwap.itemA, newValuesA, e);
 					}
+					ContentValues newValuesB = null;
 					try {
 						db = getWritableDatabase();
-						ContentValues newValuesB = getValuesFromData(itemsToSwap.itemA, db);
+						newValuesB = getValuesFromData(itemsToSwap.itemA, db);
 						if (newValuesB!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
 							db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.itemB), getItemSelectArgs(itemsToSwap.itemB));
 						}
 					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemsToSwap.itemB, e);
+						notifyUpdateItemFailed(itemsToSwap.itemB, newValuesB, e);
 					}
 					break;
-					
+
 				case MSG_CUSTOM_OPERATION:
 					try {
 						@SuppressWarnings("unchecked")
@@ -244,13 +248,13 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 		saveStoreHandler.sendEmptyMessage(MSG_CLEAR_DATABASE);
 	}
 
-	private void notifyAddItemFailed(E item, Throwable cause) {
+	private void notifyAddItemFailed(E item, ContentValues values, Throwable cause) {
 		if (mErrorHandler!=null) {
 			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
 				mErrorHandler = null;
 			else
-				listener.onAddItemFailed(this, item, cause);
+				listener.onAddItemFailed(this, item, values, cause);
 		}
 		notifyDatabaseChanged();
 	}
@@ -266,13 +270,13 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 		notifyDatabaseChanged();
 	}
 
-	private void notifyUpdateItemFailed(E item, Throwable cause) {
+	private void notifyUpdateItemFailed(E item, ContentValues values, Throwable cause) {
 		if (mErrorHandler!=null) {
 			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
 				mErrorHandler = null;
 			else
-				listener.onAddItemFailed(this, item, cause);
+				listener.onAddItemFailed(this, item, values, cause);
 		}
 		notifyDatabaseChanged();
 	}

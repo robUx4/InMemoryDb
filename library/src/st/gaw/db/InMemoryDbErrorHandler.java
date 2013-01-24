@@ -1,5 +1,7 @@
 package st.gaw.db;
 
+import android.content.ContentValues;
+
 /**
  * interface used to receive errors from the {@link InMemoryDbHelper}
  * @see InMemoryDbHelper#setDbErrorHandler(InMemoryDbErrorHandler)
@@ -13,9 +15,10 @@ public interface InMemoryDbErrorHandler<E> {
 	 * called when the database failed to store the item
 	 * @param db the database that tried to store
 	 * @param item the data that failed to store
+	 * @param values the values that failed to be added
 	 * @param cause an exception explaining why it failed
 	 */
-	void onAddItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause);
+	void onAddItemFailed(InMemoryDbHelper<E> db, E item, ContentValues values, Throwable cause);
 	
 	/**
 	 * called when the database failed to update an item

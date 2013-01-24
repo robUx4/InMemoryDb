@@ -166,7 +166,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		scheduleSwapOperation(aa, bb);
 	}
 
-	public void onAddItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause) {
+	public void onAddItemFailed(InMemoryDbHelper<E> db, E item, ContentValues values, Throwable cause) {
 		// revert the failed change in memory
 		remove(item);
 
@@ -175,7 +175,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 			if (listener==null)
 				mListener = null;
 			else
-				listener.onAddItemFailed(db, item, cause);
+				listener.onAddItemFailed(db, item, values, cause);
 		}
 	};
 
