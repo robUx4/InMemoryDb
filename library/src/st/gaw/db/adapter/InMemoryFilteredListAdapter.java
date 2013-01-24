@@ -18,18 +18,20 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 	public interface DbFilter<E> {
 		List<E> getFilteredData(InMemoryDbList<E,?> source);
 	}
-	
+
 	private final InMemoryDbArrayList<E> mArray;
 	private final LayoutInflater mInflater;
 	private final int layoutId;
 	private final DbFilter<E> filter;
+	private final AbstractUIHandler uiHandler;
 	private List<E> mData;
-	
-	public InMemoryFilteredListAdapter(Context context, InMemoryDbArrayList<E> array, int layoutResourceId, DbFilter<E> filter) {
+
+	public InMemoryFilteredListAdapter(Context context, AbstractUIHandler uiHandler, InMemoryDbArrayList<E> array, int layoutResourceId, DbFilter<E> filter) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
 		this.filter = filter;
+		this.uiHandler = uiHandler;
 		mData = filter.getFilteredData(mArray);
 		mArray.addListener(this);
 	}
@@ -48,7 +50,7 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 	public boolean hasStableIds() {
 		return true;
 	}
-	
+
 	@Override
 	public long getItemId(int position) {
 		return mData.get(position).hashCode();
@@ -61,13 +63,24 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 
 		TextView vt = (TextView) convertView.findViewById(android.R.id.text1);
 		vt.setText(mData.get(position).toString());
-		
+
 		return convertView;
 	}
 
 	@Override
 	public void onMemoryDbChanged(InMemoryDbHelper<E> db) {
-		mData = filter.getFilteredData(mArray);
-		notifyDataSetChanged();
+		final List<E> newData = filter.getFilteredData(mArray);
+		Runnable runner = new Runnable() {
+			@Override
+			public void run() {
+				mData = newData;
+				notifyDataSetChanged();
+			}
+		};
+
+		if (uiHandler!=null)
+			uiHandler.runOnUiThread(runner);
+		else
+			runner.run();
 	}
 }

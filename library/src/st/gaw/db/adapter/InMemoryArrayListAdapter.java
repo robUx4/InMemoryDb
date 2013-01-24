@@ -15,11 +15,13 @@ public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemory
 	private final InMemoryDbArrayList<E> mArray;
 	private final LayoutInflater mInflater;
 	private final int layoutId;
+	private final AbstractUIHandler uiHandler;
 	
-	public InMemoryArrayListAdapter(Context context, InMemoryDbArrayList<E> array, int layoutResourceId) {
+	public InMemoryArrayListAdapter(Context context, AbstractUIHandler uiHandler, InMemoryDbArrayList<E> array, int layoutResourceId) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
+		this.uiHandler = uiHandler;
 		mArray.addListener(this);
 	}
 
@@ -56,6 +58,16 @@ public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemory
 
 	@Override
 	public void onMemoryDbChanged(InMemoryDbHelper<E> db) {
-		notifyDataSetChanged();
+		Runnable runner = new Runnable() {
+			@Override
+			public void run() {
+				notifyDataSetChanged();
+			}
+		};
+
+		if (uiHandler!=null)
+			uiHandler.runOnUiThread(runner);
+		else
+			runner.run();
 	}
 }
