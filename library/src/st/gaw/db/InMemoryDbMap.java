@@ -19,7 +19,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryD
 	 * @return
 	 */
 	abstract protected H getMap();
-	
+
 	protected void onDataCleared() {}
 
 	@Override
@@ -30,7 +30,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryD
 	}
 
 	protected abstract Map.Entry<K, V> getEntryFromCursor(Cursor c);
-	
+
 	/**
 	 * the where clause that should be used to update/delete the item
 	 * <p> see {@link #getKeySelectArgs(Object)}
@@ -50,12 +50,12 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryD
 	protected final String getItemSelectClause(Entry<K, V> itemToSelect) {
 		return getKeySelectClause(itemToSelect.getKey());
 	}
-	
+
 	@Override
 	protected final String[] getItemSelectArgs(Entry<K, V> itemToSelect) {
 		return getKeySelectArgs(itemToSelect.getKey());
 	}
-	
+
 	@Override
 	protected void clearDataInMemory() {
 		getMap().clear();
@@ -69,7 +69,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryD
 			scheduleRemoveOperation(new MapEntry<K,V>(key,result));
 		return result;
 	}
-	
+
 	public V put(K key, V value) {
 		V result = getMap().put(key, value);
 		if (result==null)
@@ -78,18 +78,22 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends InMemoryD
 			scheduleUpdateOperation(new MapEntry<K,V>(key, value));
 		return result;
 	}
-	
+
 	public V get(K key) {
 		return getMap().get(key);
 	}
-	
+
 	public boolean containsKey(K key) {
 		return getMap().containsKey(key);
 	}
-	
+
 	public void notifyItemChanged(K key) {
 		V value = getMap().get(key);
 		if (value!=null)
 			scheduleUpdateOperation(new MapEntry<K,V>(key, value));
+	}
+
+	public int size() {
+		return getMap().size();
 	}
 }

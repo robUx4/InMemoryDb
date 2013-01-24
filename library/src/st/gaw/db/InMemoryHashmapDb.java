@@ -26,7 +26,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 		mDataLock = new ReentrantLock();
 		super.preloadInit();
 	}
-	
+
 	@Override
 	protected HashMap<K, V> getMap() {
 		if (!mDataLock.isHeldByCurrentThread()) throw new IllegalStateException("we need a lock on mDataLock to access mData in "+this);
@@ -34,13 +34,13 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 			mData = new HashMap<K,V>(0);
 		return mData;
 	}
-	
+
 	@Override
 	protected void startLoadingInMemory() {
 		mDataLock.lock();
 		super.startLoadingInMemory();
 	}
-	
+
 	@Override
 	protected void finishLoadingInMemory() {
 		super.finishLoadingInMemory();
@@ -57,7 +57,8 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 			mDataLock.unlock();
 		}
 	}
-	
+
+	@Override
 	public boolean containsKey(K key) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -68,6 +69,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 		}
 	};
 
+	@Override
 	public V remove(K key) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -78,6 +80,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 		}
 	};
 
+	@Override
 	public V put(K key, V value) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -88,6 +91,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 		}
 	};
 
+	@Override
 	public V get(K key) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -97,4 +101,15 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 			mDataLock.unlock();
 		}
 	};
+
+	@Override
+	public int size() {
+		// protect the data coherence
+		mDataLock.lock();
+		try {
+			return super.size();
+		} finally {
+			mDataLock.unlock();
+		}
+	}
 }
