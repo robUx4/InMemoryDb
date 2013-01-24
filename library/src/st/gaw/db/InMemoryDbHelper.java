@@ -68,23 +68,21 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 				case MSG_LOAD_IN_MEMORY:
 					startLoadingInMemory();
 					try {
-						try {
-							Cursor c = getReadableDatabase().query(getMainTableName(), null, null, null, null, null, null);
-							if (c!=null)
-								try {
-									if (c.moveToFirst()) {
-										startLoadingFromCursor(c);
-										do {
-											addCursorInMemory(c);
-										} while (c.moveToNext());
-									}
-
-								} finally {
-									c.close();
+						Cursor c = getReadableDatabase().query(getMainTableName(), null, null, null, null, null, null);
+						if (c!=null)
+							try {
+								if (c.moveToFirst()) {
+									startLoadingFromCursor(c);
+									do {
+										addCursorInMemory(c);
+									} while (c.moveToNext());
 								}
-						} catch (SQLException e) {
-							LogManager.logger.w(TAG,"Can't query table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
-						}
+
+							} finally {
+								c.close();
+							}
+					} catch (SQLException e) {
+						LogManager.logger.w(TAG,"Can't query table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
 					} finally {
 						finishLoadingInMemory();
 					}
