@@ -2,6 +2,7 @@ package st.gaw.db;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
@@ -41,7 +42,8 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	private final CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>> mDbListeners = new CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>>();
 
 	private boolean mDataLoaded;
-
+	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
+	
 	/**
 	 * @param context to use to open or create the database
 	 * @param name of the database file, or null for an in-memory database
@@ -209,10 +211,28 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 
 		saveStoreHandler.sendEmptyMessage(MSG_LOAD_IN_MEMORY);
 	}
-
-	protected void clearDataInMemory() {
-		notifyDatabaseChanged();
+	
+	/**
+	 * tell the InMemory database that we are about to modify its data
+	 * <p> see also {@link #popModifyingTransaction()} 
+	 */
+	protected void pushModifyingTransaction() {
+		modifyingTransactionLevel.incrementAndGet();
 	}
+
+	/**
+	 * tell the InMemory database we have finish modifying the data at this level.
+	 * Once the pop matches all the push {@link #notifyDatabaseChanged()} is called
+	 * <p> this is useful to avoid multiple calls to {@link #notifyDatabaseChanged()} during a batch of changes 
+	 * <p> see also {@link #pushModifyingTransaction()} 
+	 */
+	protected void popModifyingTransaction() {
+		if (modifyingTransactionLevel.decrementAndGet()==0) {
+			notifyDatabaseChanged();
+		}
+	}
+
+	protected void clearDataInMemory() {}
 
 	protected void preloadInit() {}
 
@@ -243,7 +263,9 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * delete all the data in memory and in the database
 	 */
 	public final void clear() {
+		pushModifyingTransaction();
 		clearDataInMemory();
+		popModifyingTransaction();
 		saveStoreHandler.sendEmptyMessage(MSG_CLEAR_DATABASE);
 	}
 
@@ -256,7 +278,8 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 			else
 				listener.onAddItemFailed(this, item, values, cause);
 		}
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
 
 	private void notifyReplaceItemFailed(E srcItem, E replacement, Throwable cause) {
@@ -268,7 +291,8 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 			else
 				listener.onReplaceItemFailed(this, srcItem, replacement, cause);
 		}
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
 
 	private void notifyUpdateItemFailed(E item, ContentValues values, Throwable cause) {
@@ -280,7 +304,8 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 			else
 				listener.onAddItemFailed(this, item, values, cause);
 		}
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
 
 	private void notifyRemoveItemFailed(E item, Throwable cause) {
@@ -292,7 +317,8 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 			else
 				listener.onRemoveItemFailed(this, item, cause);
 		}
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
 
 	/**
@@ -341,12 +367,14 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 */
 	protected final void scheduleAddOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEM, item));
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
 
 	protected final void scheduleUpdateOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_UPDATE_ITEM, item));
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
 
 	private class DoubleItems {
@@ -362,12 +390,14 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 
 	protected final void scheduleReplaceOperation(E original, E replacement) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEMS, new DoubleItems(original, replacement)));
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
 
 	protected final void scheduleSwapOperation(E itemA, E itemB) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_SWAP_ITEMS, new DoubleItems(itemA, itemB)));
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
 
 	/**
@@ -378,9 +408,10 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 */
 	protected final void scheduleRemoveOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
-		notifyDatabaseChanged();
+		pushModifyingTransaction();
+		popModifyingTransaction();
 	}
-	
+
 	/**
 	 * run the operation in the internal thread
 	 * @param operation
@@ -393,6 +424,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * called when we are about to read all items from the disk
 	 */
 	protected void startLoadingInMemory() {
+		pushModifyingTransaction();
 		mDataLoaded = false;
 	}
 	/**
@@ -407,7 +439,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 */
 	protected void finishLoadingInMemory() {
 		mDataLoaded = true;
-		notifyDatabaseChanged();
+		popModifyingTransaction();
 	}
 
 	protected void notifyDatabaseChanged() {
