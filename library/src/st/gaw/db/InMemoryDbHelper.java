@@ -39,7 +39,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 
 	private WeakReference<InMemoryDbErrorHandler<E>> mErrorHandler; // not protected for now
 	private final CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>> mDbListeners = new CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>>();
-	
+
 	private boolean mDataLoaded;
 
 	/**
@@ -53,7 +53,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	@SuppressLint("HandlerLeak")
 	protected InMemoryDbHelper(Context context, String name, int version, Logger logger) {
 		super(context, name, null, version);
-		
+
 		if (logger!=null)
 			LogManager.setLogger(logger);
 
@@ -124,6 +124,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 					E itemToDelete = (E) msg.obj;
 					try {
 						db = getWritableDatabase();
+						if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" remove "+itemToDelete);
 						if (db.delete(getMainTableName(), getItemSelectClause(itemToDelete), getItemSelectArgs(itemToDelete))==0)
 							notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+InMemoryDbHelper.this.getClass().getSimpleName()));
 					} catch (Throwable e) {
@@ -249,6 +250,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	}
 
 	private void notifyAddItemFailed(E item, ContentValues values, Throwable cause) {
+		LogManager.logger.i(TAG, this+" failed to add item "+item+(DEBUG_DB ? (" values"+values) : ""), cause);
 		if (mErrorHandler!=null) {
 			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
@@ -260,6 +262,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	}
 
 	private void notifyReplaceItemFailed(E srcItem, E replacement, Throwable cause) {
+		LogManager.logger.i(TAG, this+" failed to replace item "+srcItem+" with "+replacement, cause);
 		if (mErrorHandler!=null) {
 			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
@@ -271,6 +274,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	}
 
 	private void notifyUpdateItemFailed(E item, ContentValues values, Throwable cause) {
+		LogManager.logger.i(TAG, this+" failed to update item "+item+(DEBUG_DB ? (" values"+values) : ""), cause);
 		if (mErrorHandler!=null) {
 			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
@@ -282,6 +286,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	}
 
 	private void notifyRemoveItemFailed(E item, Throwable cause) {
+		LogManager.logger.i(TAG, this+" failed to remove item "+item, cause);
 		if (mErrorHandler!=null) {
 			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
