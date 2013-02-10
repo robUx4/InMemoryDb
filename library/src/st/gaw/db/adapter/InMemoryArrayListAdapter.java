@@ -15,9 +15,9 @@ public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemory
 	private final InMemoryDbArrayList<E> mArray;
 	private final LayoutInflater mInflater;
 	private final int layoutId;
-	private final AbstractUIHandler uiHandler;
+	private final UIHandler uiHandler;
 	
-	public InMemoryArrayListAdapter(Context context, AbstractUIHandler uiHandler, InMemoryDbArrayList<E> array, int layoutResourceId) {
+	public InMemoryArrayListAdapter(Context context, UIHandler uiHandler, InMemoryDbArrayList<E> array, int layoutResourceId) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;

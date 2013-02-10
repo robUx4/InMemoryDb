@@ -3,7 +3,7 @@ package st.gaw.db.adapter;
 /**
  * interface to run some code on the UI thread
  */
-public interface AbstractUIHandler {
+public interface UIHandler {
 	/**
 	 * run the code in the UI thread
 	 * @param runnable

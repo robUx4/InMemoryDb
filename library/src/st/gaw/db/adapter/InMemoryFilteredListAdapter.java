@@ -23,10 +23,10 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 	private final LayoutInflater mInflater;
 	private final int layoutId;
 	private final DbFilter<E> filter;
-	private final AbstractUIHandler uiHandler;
+	private final UIHandler uiHandler;
 	private List<E> mData;
 
-	public InMemoryFilteredListAdapter(Context context, AbstractUIHandler uiHandler, InMemoryDbArrayList<E> array, int layoutResourceId, DbFilter<E> filter) {
+	public InMemoryFilteredListAdapter(Context context, UIHandler uiHandler, InMemoryDbArrayList<E> array, int layoutResourceId, DbFilter<E> filter) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
