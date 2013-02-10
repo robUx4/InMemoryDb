@@ -53,7 +53,9 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 
 	@Override
 	public long getItemId(int position) {
-		return mData.get(position).hashCode();
+		if (position<mData.size())
+			return mData.get(position).hashCode();
+		return -1;
 	}
 
 	@Override
