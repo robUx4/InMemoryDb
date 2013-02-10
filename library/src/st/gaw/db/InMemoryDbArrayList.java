@@ -144,6 +144,16 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	}
 	
 	@Override
+	public int indexOf(E item) {
+		mDataLock.lock();
+		try {
+			return super.indexOf(item);
+		} finally {
+			mDataLock.unlock();
+		}
+	};
+	
+	@Override
 	public E findItem(E similar) {
 		mDataLock.lock();
 		try {

@@ -127,6 +127,10 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		return getList().get(found);
 	}
 
+	public int indexOf(E similar) {
+		return getList().indexOf(similar);
+	}
+
 	public void notifyItemChanged(E item) {
 		int itemPos = getList().indexOf(item);
 		if (itemPos>=0) {
