@@ -2,7 +2,7 @@ package st.gaw.db.adapter;
 
 import java.util.List;
 
-import st.gaw.db.InMemoryDbHelper;
+import st.gaw.db.AsynchronousDbHelper;
 import st.gaw.db.InMemoryDbListener;
 import st.gaw.db.InMemoryDbSet;
 import android.content.Context;
@@ -78,7 +78,7 @@ public class InMemoryFilteredTreeAdapter<E> extends BaseAdapter implements InMem
 	}
 
 	@Override
-	public void onMemoryDbChanged(InMemoryDbHelper<E> db) {
+	public void onMemoryDbChanged(AsynchronousDbHelper<E> db) {
 		final List<E> newData = filter.getFilteredData(mArray);
 		Runnable runner = new Runnable() {
 			@Override

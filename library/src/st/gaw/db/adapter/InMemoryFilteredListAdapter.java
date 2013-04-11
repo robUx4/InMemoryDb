@@ -3,7 +3,7 @@ package st.gaw.db.adapter;
 import java.util.List;
 
 import st.gaw.db.InMemoryDbArrayList;
-import st.gaw.db.InMemoryDbHelper;
+import st.gaw.db.AsynchronousDbHelper;
 import st.gaw.db.InMemoryDbList;
 import st.gaw.db.InMemoryDbListener;
 import android.content.Context;
@@ -70,7 +70,7 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 	}
 
 	@Override
-	public void onMemoryDbChanged(InMemoryDbHelper<E> db) {
+	public void onMemoryDbChanged(AsynchronousDbHelper<E> db) {
 		final List<E> newData = filter.getFilteredData(mArray);
 		Runnable runner = new Runnable() {
 			@Override

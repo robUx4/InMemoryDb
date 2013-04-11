@@ -15,7 +15,7 @@ import android.database.sqlite.SQLiteDatabase;
  * @param <E> the type of items stored in memory by the {@link InMemoryDbList}
  * @param <L> the type of in memory storage that will be used
  */
-public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHelper<E> implements InMemoryDbErrorHandler<E>/*, List<E>*/ {
+public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousDbHelper<E> implements InMemoryDbErrorHandler<E>/*, List<E>*/ {
 
 	private WeakReference<InMemoryDbErrorHandler<E>> mListener;
 
@@ -171,7 +171,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		return true;
 	}
 
-	public void onAddItemFailed(InMemoryDbHelper<E> db, E item, ContentValues values, Throwable cause) {
+	public void onAddItemFailed(AsynchronousDbHelper<E> db, E item, ContentValues values, Throwable cause) {
 		// revert the failed change in memory
 		remove(item);
 
@@ -184,7 +184,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		}
 	};
 
-	public void onRemoveItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause) {
+	public void onRemoveItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
 		// revert the failed change in memory
 		add(item);
 
@@ -197,7 +197,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		}
 	};
 
-	public void onUpdateItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause) {
+	public void onUpdateItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
 		if (mListener!=null) {
 			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
@@ -207,7 +207,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends InMemoryDbHel
 		}
 	};
 
-	public void onReplaceItemFailed(InMemoryDbHelper<E> db, E original, E replacement, Throwable cause) {
+	public void onReplaceItemFailed(AsynchronousDbHelper<E> db, E original, E replacement, Throwable cause) {
 		// revert the failed change in memory
 		int prevIndex = getList().indexOf(replacement); // TODO: we may store the position somewhere
 		if (prevIndex>=0)

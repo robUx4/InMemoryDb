@@ -1,6 +1,6 @@
 package st.gaw.db.adapter;
 
-import st.gaw.db.InMemoryDbHelper;
+import st.gaw.db.AsynchronousDbHelper;
 import st.gaw.db.InMemoryDbListener;
 import st.gaw.db.InMemoryDbTreeSet;
 import android.content.Context;
@@ -57,7 +57,7 @@ public class InMemoryTreeSetAdapter<E> extends BaseAdapter implements InMemoryDb
 	}
 
 	@Override
-	public void onMemoryDbChanged(InMemoryDbHelper<E> db) {
+	public void onMemoryDbChanged(AsynchronousDbHelper<E> db) {
 		Runnable runner = new Runnable() {
 			@Override
 			public void run() {

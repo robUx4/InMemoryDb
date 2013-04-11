@@ -23,7 +23,7 @@ import android.os.Message;
  *
  * @param <E> the type of items stored in memory
  */
-public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
+public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	protected final static String TAG = "MemoryDb";
 	protected final static boolean DEBUG_DB = false;
@@ -53,7 +53,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	@SuppressLint("HandlerLeak")
-	protected InMemoryDbHelper(Context context, String name, int version, Logger logger) {
+	protected AsynchronousDbHelper(Context context, String name, int version, Logger logger) {
 		super(context, name, null, version);
 
 		if (logger!=null)
@@ -84,7 +84,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 								c.close();
 							}
 					} catch (SQLException e) {
-						LogManager.logger.w(TAG,"Can't query table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
+						LogManager.logger.w(TAG,"Can't query table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
 					} finally {
 						finishLoadingInMemory();
 					}
@@ -95,7 +95,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						db.delete(getMainTableName(), "1", null);
 					} catch (Throwable e) {
-						LogManager.logger.w(TAG,"Failed to empty table "+getMainTableName()+" in "+InMemoryDbHelper.this, e);
+						LogManager.logger.w(TAG,"Failed to empty table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
 						sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
 					}
 					SQLiteDatabase.releaseMemory();
@@ -110,9 +110,9 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						addValues = getValuesFromData(itemToAdd, db);
 						if (addValues!=null) {
 							long id = db.insertOrThrow(getMainTableName(), null, addValues);
-							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" insert "+addValues+" = "+id);
+							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
 							if (id==-1)
-								throw new RuntimeException("failed to add values "+addValues+" in "+InMemoryDbHelper.this.getClass().getSimpleName());
+								throw new RuntimeException("failed to add values "+addValues+" in "+AsynchronousDbHelper.this.getClass().getSimpleName());
 						}
 					} catch (Throwable e) {
 						notifyAddItemFailed(itemToAdd, addValues, e);
@@ -124,9 +124,9 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 					E itemToDelete = (E) msg.obj;
 					try {
 						db = getWritableDatabase();
-						if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" remove "+itemToDelete);
+						if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" remove "+itemToDelete);
 						if (db.delete(getMainTableName(), getItemSelectClause(itemToDelete), getItemSelectArgs(itemToDelete))==0)
-							notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+InMemoryDbHelper.this.getClass().getSimpleName()));
+							notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+AsynchronousDbHelper.this.getClass().getSimpleName()));
 					} catch (Throwable e) {
 						notifyRemoveItemFailed(itemToDelete, e);
 					}
@@ -140,7 +140,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						updateValues = getValuesFromData(itemToUpdate, db);
 						if (updateValues!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
+							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
 							db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate));
 						}
 					} catch (Throwable e) {
@@ -155,7 +155,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						ContentValues newValues = getValuesFromData(itemsToReplace.itemA, db);
 						if (newValues!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
+							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
 							db.update(getMainTableName(), newValues, getItemSelectClause(itemsToReplace.itemB), getItemSelectArgs(itemsToReplace.itemB));
 						}
 					} catch (Throwable e) {
@@ -171,7 +171,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						newValuesA = getValuesFromData(itemsToSwap.itemB, db);
 						if (newValuesA!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
+							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
 							db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.itemA), getItemSelectArgs(itemsToSwap.itemA));
 						}
 					} catch (Throwable e) {
@@ -182,7 +182,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						newValuesB = getValuesFromData(itemsToSwap.itemA, db);
 						if (newValuesB!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, InMemoryDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
+							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
 							db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.itemB), getItemSelectArgs(itemsToSwap.itemB));
 						}
 					} catch (Throwable e) {
@@ -193,10 +193,10 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 				case MSG_CUSTOM_OPERATION:
 					try {
 						@SuppressWarnings("unchecked")
-						InMemoryDbOperation<E> operation = (InMemoryDbOperation<E>) msg.obj;
-						operation.runInMemoryDbOperation(InMemoryDbHelper.this);
+						AsynchronousDbOperation<E> operation = (AsynchronousDbOperation<E>) msg.obj;
+						operation.runInMemoryDbOperation(AsynchronousDbHelper.this);
 					} catch (Throwable e) {
-						LogManager.logger.w(TAG, InMemoryDbHelper.this+" failed to run operation "+msg.obj,e);
+						LogManager.logger.w(TAG, AsynchronousDbHelper.this+" failed to run operation "+msg.obj,e);
 					}
 					break;
 
@@ -416,7 +416,7 @@ public abstract class InMemoryDbHelper<E> extends SQLiteOpenHelper {
 	 * run the operation in the internal thread
 	 * @param operation
 	 */
-	protected final void scheduleCustomOperation(InMemoryDbOperation<E> operation) {
+	protected final void scheduleCustomOperation(AsynchronousDbOperation<E> operation) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_CUSTOM_OPERATION, operation));
 	}
 

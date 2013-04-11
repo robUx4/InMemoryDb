@@ -1,7 +1,7 @@
 package st.gaw.db.adapter;
 
 import st.gaw.db.InMemoryDbArrayList;
-import st.gaw.db.InMemoryDbHelper;
+import st.gaw.db.AsynchronousDbHelper;
 import st.gaw.db.InMemoryDbListener;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -57,7 +57,7 @@ public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemory
 	}
 
 	@Override
-	public void onMemoryDbChanged(InMemoryDbHelper<E> db) {
+	public void onMemoryDbChanged(AsynchronousDbHelper<E> db) {
 		Runnable runner = new Runnable() {
 			@Override
 			public void run() {

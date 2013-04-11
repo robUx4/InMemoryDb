@@ -18,7 +18,7 @@ import android.database.sqlite.SQLiteDatabase;
  * @param <E> the type of items stored in memory by the {@link InMemoryDbSet}
  * @param <S> the type of in memory storage that will be used
  */
-public abstract class InMemoryDbSet<E, S extends Set<E>> extends InMemoryDbHelper<E> implements InMemoryDbErrorHandler<E>/*, Set<E>*/ {
+public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbHelper<E> implements InMemoryDbErrorHandler<E>/*, Set<E>*/ {
 
 	private WeakReference<InMemoryDbErrorHandler<E>> mListener;
 
@@ -147,7 +147,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends InMemoryDbHelpe
 		onDataCleared();
 	}
 
-	public void onAddItemFailed(InMemoryDbHelper<E> db, E item, ContentValues values, Throwable cause) {
+	public void onAddItemFailed(AsynchronousDbHelper<E> db, E item, ContentValues values, Throwable cause) {
 		// revert the failed change in memory
 		remove(item);
 
@@ -160,7 +160,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends InMemoryDbHelpe
 		}
 	};
 
-	public void onRemoveItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause) {
+	public void onRemoveItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
 		// revert the failed change in memory
 		add(item);
 
@@ -173,7 +173,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends InMemoryDbHelpe
 		}
 	};
 
-	public void onUpdateItemFailed(InMemoryDbHelper<E> db, E item, Throwable cause) {
+	public void onUpdateItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
 		if (mListener!=null) {
 			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
@@ -183,7 +183,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends InMemoryDbHelpe
 		}
 	};
 
-	public void onReplaceItemFailed(InMemoryDbHelper<E> db, E original, E replacement, Throwable cause) {
+	public void onReplaceItemFailed(AsynchronousDbHelper<E> db, E original, E replacement, Throwable cause) {
 		// do nothing
 	};
 }
