@@ -261,7 +261,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	public void addListener(InMemoryDbListener<E> listener) {
 		for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
 			if (l.get()==null)
-				mDbListeners.remove(listener);
+				mDbListeners.remove(l);
 			else if (l.get()==listener)
 				return;
 		}
