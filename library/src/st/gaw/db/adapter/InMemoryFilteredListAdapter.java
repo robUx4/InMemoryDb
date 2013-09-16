@@ -2,8 +2,8 @@ package st.gaw.db.adapter;
 
 import java.util.List;
 
-import st.gaw.db.InMemoryDbArrayList;
 import st.gaw.db.AsynchronousDbHelper;
+import st.gaw.db.InMemoryDbArrayList;
 import st.gaw.db.InMemoryDbList;
 import st.gaw.db.InMemoryDbListener;
 import android.content.Context;

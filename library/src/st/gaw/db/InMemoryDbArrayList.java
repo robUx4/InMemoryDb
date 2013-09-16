@@ -121,7 +121,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 			mDataLock.unlock();
 		}
 	}
-
+	
 	public int getCount() {
 		mDataLock.lock();
 		try {
@@ -140,7 +140,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 			mDataLock.unlock();
 		}
 	}
-	
+
 	@Override
 	public int indexOf(E item) {
 		mDataLock.lock();
@@ -150,7 +150,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 			mDataLock.unlock();
 		}
 	};
-	
+
 	@Override
 	public E findItem(E similar) {
 		mDataLock.lock();
@@ -160,7 +160,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 			mDataLock.unlock();
 		}
 	}
-	
+
 	@Override
 	public boolean replace(int index, E newData) {
 		mDataLock.lock();

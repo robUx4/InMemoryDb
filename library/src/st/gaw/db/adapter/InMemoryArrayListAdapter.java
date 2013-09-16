@@ -1,7 +1,7 @@
 package st.gaw.db.adapter;
 
-import st.gaw.db.InMemoryDbArrayList;
 import st.gaw.db.AsynchronousDbHelper;
+import st.gaw.db.InMemoryDbArrayList;
 import st.gaw.db.InMemoryDbListener;
 import android.content.Context;
 import android.view.LayoutInflater;

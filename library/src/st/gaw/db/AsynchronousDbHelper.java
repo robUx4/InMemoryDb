@@ -43,7 +43,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	private boolean mDataLoaded;
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
-	
+
 	/**
 	 * @param context to use to open or create the database
 	 * @param name of the database file, or null for an in-memory database
@@ -69,138 +69,138 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 				SQLiteDatabase db;
 
 				switch (msg.what) {
-				case MSG_LOAD_IN_MEMORY:
-					startLoadingInMemory();
-					try {
+					case MSG_LOAD_IN_MEMORY:
+						startLoadingInMemory();
+						try {
 						Cursor c = getReadableDatabase().query(getMainTableName(), null, null, null, null, null, null);
-						if (c!=null)
-							try {
-								if (c.moveToFirst()) {
-									startLoadingFromCursor(c);
-									do {
-										addCursorInMemory(c);
-									} while (c.moveToNext());
+							if (c!=null)
+								try {
+									if (c.moveToFirst()) {
+										startLoadingFromCursor(c);
+										do {
+											addCursorInMemory(c);
+										} while (c.moveToNext());
+									}
+
+								} finally {
+									c.close();
 								}
-
-							} finally {
-								c.close();
-							}
-					} catch (SQLException e) {
+						} catch (SQLException e) {
 						LogManager.logger.w(TAG,"Can't query table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
-					} finally {
-						finishLoadingInMemory();
-					}
-					break;
-
-				case MSG_CLEAR_DATABASE:
-					try {
-						db = getWritableDatabase();
-						db.delete(getMainTableName(), "1", null);
-					} catch (Throwable e) {
-						LogManager.logger.w(TAG,"Failed to empty table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
-						sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
-					}
-					SQLiteDatabase.releaseMemory();
-					break;
-
-				case MSG_STORE_ITEM:
-					@SuppressWarnings("unchecked")
-					E itemToAdd = (E) msg.obj;
-					ContentValues addValues = null;
-					try {
-						db = getWritableDatabase();
-						addValues = getValuesFromData(itemToAdd, db);
-						if (addValues!=null) {
-							long id = db.insertOrThrow(getMainTableName(), null, addValues);
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
-							if (id==-1)
-								throw new RuntimeException("failed to add values "+addValues+" in "+AsynchronousDbHelper.this.getClass().getSimpleName());
+						} finally {
+							finishLoadingInMemory();
 						}
-					} catch (Throwable e) {
-						notifyAddItemFailed(itemToAdd, addValues, e);
-					}
-					break;
+						break;
 
-				case MSG_REMOVE_ITEM:
-					@SuppressWarnings("unchecked")
-					E itemToDelete = (E) msg.obj;
-					try {
-						db = getWritableDatabase();
-						if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" remove "+itemToDelete);
-						if (db.delete(getMainTableName(), getItemSelectClause(itemToDelete), getItemSelectArgs(itemToDelete))==0)
-							notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+AsynchronousDbHelper.this.getClass().getSimpleName()));
-					} catch (Throwable e) {
-						notifyRemoveItemFailed(itemToDelete, e);
-					}
-					break;
-
-				case MSG_UPDATE_ITEM:
-					@SuppressWarnings("unchecked")
-					E itemToUpdate = (E) msg.obj;
-					ContentValues updateValues = null;
-					try {
-						db = getWritableDatabase();
-						updateValues = getValuesFromData(itemToUpdate, db);
-						if (updateValues!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
-							db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate));
+					case MSG_CLEAR_DATABASE:
+						try {
+							db = getWritableDatabase();
+							db.delete(getMainTableName(), "1", null);
+						} catch (Throwable e) {
+							LogManager.logger.w(TAG,"Failed to empty table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
+							sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
 						}
-					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemToUpdate, updateValues, e);
-					}
-					break;
+						SQLiteDatabase.releaseMemory();
+						break;
 
-				case MSG_REPLACE_ITEMS:
-					@SuppressWarnings("unchecked")
-					DoubleItems itemsToReplace = (DoubleItems) msg.obj;
-					try {
-						db = getWritableDatabase();
-						ContentValues newValues = getValuesFromData(itemsToReplace.itemA, db);
-						if (newValues!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
-							db.update(getMainTableName(), newValues, getItemSelectClause(itemsToReplace.itemB), getItemSelectArgs(itemsToReplace.itemB));
-						}
-					} catch (Throwable e) {
-						notifyReplaceItemFailed(itemsToReplace.itemA, itemsToReplace.itemB, e);
-					}
-					break;
-
-				case MSG_SWAP_ITEMS:
-					@SuppressWarnings("unchecked")
-					DoubleItems itemsToSwap = (DoubleItems) msg.obj;
-					ContentValues newValuesA = null;
-					try {
-						db = getWritableDatabase();
-						newValuesA = getValuesFromData(itemsToSwap.itemB, db);
-						if (newValuesA!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
-							db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.itemA), getItemSelectArgs(itemsToSwap.itemA));
-						}
-					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemsToSwap.itemA, newValuesA, e);
-					}
-					ContentValues newValuesB = null;
-					try {
-						db = getWritableDatabase();
-						newValuesB = getValuesFromData(itemsToSwap.itemA, db);
-						if (newValuesB!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
-							db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.itemB), getItemSelectArgs(itemsToSwap.itemB));
-						}
-					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemsToSwap.itemB, newValuesB, e);
-					}
-					break;
-
-				case MSG_CUSTOM_OPERATION:
-					try {
+					case MSG_STORE_ITEM:
 						@SuppressWarnings("unchecked")
-						AsynchronousDbOperation<E> operation = (AsynchronousDbOperation<E>) msg.obj;
-						operation.runInMemoryDbOperation(AsynchronousDbHelper.this);
-					} catch (Throwable e) {
-						LogManager.logger.w(TAG, AsynchronousDbHelper.this+" failed to run operation "+msg.obj,e);
-					}
-					break;
+						E itemToAdd = (E) msg.obj;
+						ContentValues addValues = null;
+						try {
+							db = getWritableDatabase();
+							addValues = getValuesFromData(itemToAdd, db);
+							if (addValues!=null) {
+								long id = db.insertOrThrow(getMainTableName(), null, addValues);
+								if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
+								if (id==-1)
+									throw new RuntimeException("failed to add values "+addValues+" in "+AsynchronousDbHelper.this.getClass().getSimpleName());
+							}
+						} catch (Throwable e) {
+							notifyAddItemFailed(itemToAdd, addValues, e);
+						}
+						break;
+
+					case MSG_REMOVE_ITEM:
+						@SuppressWarnings("unchecked")
+						E itemToDelete = (E) msg.obj;
+						try {
+							db = getWritableDatabase();
+							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" remove "+itemToDelete);
+							if (db.delete(getMainTableName(), getItemSelectClause(itemToDelete), getItemSelectArgs(itemToDelete))==0)
+								notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+AsynchronousDbHelper.this.getClass().getSimpleName()));
+						} catch (Throwable e) {
+							notifyRemoveItemFailed(itemToDelete, e);
+						}
+						break;
+
+					case MSG_UPDATE_ITEM:
+						@SuppressWarnings("unchecked")
+						E itemToUpdate = (E) msg.obj;
+						ContentValues updateValues = null;
+						try {
+							db = getWritableDatabase();
+							updateValues = getValuesFromData(itemToUpdate, db);
+							if (updateValues!=null) {
+								if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
+							db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate));
+							}
+						} catch (Throwable e) {
+							notifyUpdateItemFailed(itemToUpdate, updateValues, e);
+						}
+						break;
+
+					case MSG_REPLACE_ITEMS:
+						@SuppressWarnings("unchecked")
+						DoubleItems itemsToReplace = (DoubleItems) msg.obj;
+						try {
+							db = getWritableDatabase();
+							ContentValues newValues = getValuesFromData(itemsToReplace.itemA, db);
+							if (newValues!=null) {
+								if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
+								db.update(getMainTableName(), newValues, getItemSelectClause(itemsToReplace.itemB), getItemSelectArgs(itemsToReplace.itemB));
+							}
+						} catch (Throwable e) {
+							notifyReplaceItemFailed(itemsToReplace.itemA, itemsToReplace.itemB, e);
+						}
+						break;
+
+					case MSG_SWAP_ITEMS:
+						@SuppressWarnings("unchecked")
+						DoubleItems itemsToSwap = (DoubleItems) msg.obj;
+						ContentValues newValuesA = null;
+						try {
+							db = getWritableDatabase();
+							newValuesA = getValuesFromData(itemsToSwap.itemB, db);
+							if (newValuesA!=null) {
+								if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
+								db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.itemA), getItemSelectArgs(itemsToSwap.itemA));
+							}
+						} catch (Throwable e) {
+							notifyUpdateItemFailed(itemsToSwap.itemA, newValuesA, e);
+						}
+						ContentValues newValuesB = null;
+						try {
+							db = getWritableDatabase();
+							newValuesB = getValuesFromData(itemsToSwap.itemA, db);
+							if (newValuesB!=null) {
+								if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
+								db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.itemB), getItemSelectArgs(itemsToSwap.itemB));
+							}
+						} catch (Throwable e) {
+							notifyUpdateItemFailed(itemsToSwap.itemB, newValuesB, e);
+						}
+						break;
+
+					case MSG_CUSTOM_OPERATION:
+						try {
+							@SuppressWarnings("unchecked")
+							AsynchronousDbOperation<E> operation = (AsynchronousDbOperation<E>) msg.obj;
+							operation.runInMemoryDbOperation(AsynchronousDbHelper.this);
+						} catch (Throwable e) {
+							LogManager.logger.w(TAG, AsynchronousDbHelper.this+" failed to run operation "+msg.obj,e);
+						}
+						break;
 
 
 				}
@@ -390,7 +390,6 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 			this.itemA = itemA;
 			this.itemB = itemB;
 		}
-
 	}
 
 	protected final void scheduleReplaceOperation(E original, E replacement) {
