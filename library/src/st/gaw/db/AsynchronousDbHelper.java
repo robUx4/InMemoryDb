@@ -26,6 +26,7 @@ import android.os.Message;
 public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	protected final static String TAG = "MemoryDb";
+	protected final static String STARTUP_TAG = "Startup";
 	protected final static boolean DEBUG_DB = false;
 
 	private final Handler saveStoreHandler;
@@ -86,7 +87,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 									c.close();
 								}
 						} catch (SQLException e) {
-						LogManager.logger.w(TAG,"Can't query table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
+							LogManager.logger.w(STARTUP_TAG,"Can't query table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
 						} finally {
 							finishLoadingInMemory();
 						}
