@@ -8,6 +8,7 @@ public class MapEntry<K, V> implements Map.Entry<K, V> {
 	private V mVal;
 
 	public MapEntry(K key, V val) {
+		if (null==key) throw new NullPointerException();
 		mKey = key;
 		mVal = val;
 	}
