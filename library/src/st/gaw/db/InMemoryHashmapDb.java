@@ -58,8 +58,10 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	@Override
 	protected HashMap<K, V> getMap() {
 		if (!mDataLock.isHeldByCurrentThread()) throw new IllegalStateException("we need a lock on mDataLock to access mData in "+this);
+		boolean waited = false;
 		if (!isDataLoaded() && !mIsLoading)
 			try {
+				waited = true;
 				// we're trying to read the data but they are not loading yet
 				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this);
 				long now = System.currentTimeMillis();
@@ -68,7 +70,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 				//Thread.sleep(1000);
 			} catch (InterruptedException e1) {
 			}
-		if (null==mData) throw new NullPointerException();
+		if (null==mData) throw new NullPointerException("no HashMap, waited for the data to load:"+waited);
 		return mData;
 	}
 
