@@ -59,6 +59,8 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 		if (logger!=null)
 			LogManager.setLogger(logger);
 
+		preloadInit();
+
 		HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName(), android.os.Process.THREAD_PRIORITY_BACKGROUND);
 		handlerThread.start();
 
@@ -207,11 +209,14 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 			}
 		};
 
-		preloadInit();
-
 		saveStoreHandler.sendEmptyMessage(MSG_LOAD_IN_MEMORY);
 	}
-	
+
+	/**
+	 * Method called at the end of constructor, just before the data start loading
+	 */
+	protected void preloadInit() {}
+
 	/**
 	 * tell the InMemory database that we are about to modify its data
 	 * <p> see also {@link #popModifyingTransaction()} 

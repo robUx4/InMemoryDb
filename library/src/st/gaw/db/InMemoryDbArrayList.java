@@ -19,7 +19,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	/**
 	 * the array where the data are stored, locked when writing on it
 	 */
-	private ArrayList<E> mData;
+	private final ArrayList<E> mData = new ArrayList<E>();
 
 	/**
 	 * ReentrantLock used to protect {@link #mData} when reading/writing/iterating it
@@ -40,8 +40,9 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 
 	@Override
 	protected void preloadInit() {
-		super.preloadInit();
 		mDataLock = new ReentrantLock();
+		dataLoaded = mDataLock.newCondition();
+		super.preloadInit();
 	}
 
 	@Override
@@ -66,10 +67,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 
 	@Override
 	protected void startLoadingFromCursor(Cursor c) {
-		if (mData==null)
-			mData = new ArrayList<E>(c.getCount());
-		else
-			mData.ensureCapacity(c.getCount());
+		getList().ensureCapacity(c.getCount());
 	}
 
 	public boolean add(E item) {
