@@ -457,4 +457,14 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 		}
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(48);
+		sb.append('{');
+		sb.append(getClass().getSimpleName());
+		sb.append(' ');
+		sb.append(Integer.toHexString(System.identityHashCode(this)));
+		sb.append('}');
+		return sb.toString();
+	}
 }

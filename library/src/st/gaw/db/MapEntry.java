@@ -42,6 +42,6 @@ public class MapEntry<K, V> implements Map.Entry<K, V> {
 	
 	@Override
 	public String toString() {
-		return mKey+":"+mVal;
+		return mKey.toString()+':'+(null==mVal ? null : mVal.toString());
 	}
 }
