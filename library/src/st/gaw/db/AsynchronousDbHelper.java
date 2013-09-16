@@ -2,6 +2,7 @@ package st.gaw.db;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import android.annotation.SuppressLint;
@@ -42,7 +43,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	private WeakReference<InMemoryDbErrorHandler<E>> mErrorHandler; // not protected for now
 	private final CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>> mDbListeners = new CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>>();
 
-	private boolean mDataLoaded;
+	private AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
 
 	/**
@@ -265,7 +266,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 			else if (l.get()==listener)
 				return;
 		}
-		if (mDataLoaded)
+		if (mDataLoaded.get())
 			listener.onMemoryDbChanged(this);
 		mDbListeners.add(new WeakReference<InMemoryDbListener<E>>(listener));
 	}
@@ -444,8 +445,9 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 */
 	protected void startLoadingInMemory() {
 		pushModifyingTransaction();
-		mDataLoaded = false;
+		mDataLoaded.set(false);
 	}
+
 	/**
 	 * called when we have the cursor to read the data from
 	 * <p>
@@ -453,11 +455,12 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * @param c the {@link Cursor} that will be used to read the data
 	 */
 	protected void startLoadingFromCursor(Cursor c) {}
+
 	/**
 	 * called after all items have been read from the disk
 	 */
 	protected void finishLoadingInMemory() {
-		mDataLoaded = true;
+		mDataLoaded.set(true);
 		popModifyingTransaction();
 	}
 
@@ -470,6 +473,13 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 				listener.onMemoryDbChanged(this);
 		}
 	}
+
+	public boolean isDataLoaded() {
+		return mDataLoaded.get();
+	}
+
+	/** Wait until the data are loaded */
+	public void waitForDataLoaded() {}
 
 	@Override
 	public String toString() {

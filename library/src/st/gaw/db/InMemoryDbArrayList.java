@@ -1,6 +1,7 @@
 package st.gaw.db;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
@@ -22,9 +23,19 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	private final ArrayList<E> mData = new ArrayList<E>();
 
 	/**
+	 * Field to tell when the data are being reloaded from the DB
+	 */
+	private boolean mIsLoading;
+
+	/**
 	 * ReentrantLock used to protect {@link #mData} when reading/writing/iterating it
 	 */
 	protected ReentrantLock mDataLock;
+
+	/**
+	 * Condition to block the {@link #mData} access before the data are loaded
+	 */
+	private Condition dataLoaded;
 
 	/**
 	 * @param context to use to open or create the database
@@ -37,7 +48,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	protected InMemoryDbArrayList(Context context, String name, int version, Logger logger) {
 		super(context, name, version, logger);
 	}
-
+	
 	@Override
 	protected void preloadInit() {
 		mDataLock = new ReentrantLock();
@@ -46,22 +57,32 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	}
 
 	@Override
-	protected synchronized ArrayList<E> getList() {
+	protected ArrayList<E> getList() {
 		if (!mDataLock.isHeldByCurrentThread()) throw new IllegalStateException("we need a lock on mDataLock to access mData in "+this);
-		if (mData==null)
-			mData = new ArrayList<E>(0);
+		if (!isDataLoaded() && !mIsLoading)
+			try {
+				// we're trying to read the data but they are not loading yet
+				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this);
+				long now = System.currentTimeMillis();
+				dataLoaded.await();
+				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this+" finished after "+(System.currentTimeMillis()-now));
+			} catch (InterruptedException e1) {
+			}
 		return mData;
 	}
 
 	@Override
 	protected void startLoadingInMemory() {
 		mDataLock.lock();
+		mIsLoading = true;
 		super.startLoadingInMemory();
 	}
 
 	@Override
 	protected void finishLoadingInMemory() {
 		super.finishLoadingInMemory();
+		mIsLoading = false;
+		dataLoaded.signalAll();
 		mDataLock.unlock();
 	}
 
@@ -125,7 +146,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	public int getCount() {
 		mDataLock.lock();
 		try {
-			return mData==null ? 0 : mData.size();
+			return null==mData ? 0 : mData.size();
 		} finally {
 			mDataLock.unlock();
 		}
@@ -176,6 +197,17 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		mDataLock.lock();
 		try {
 			return super.swap(positionA, positionB);
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
+	public void waitForDataLoaded() {
+		mDataLock.lock();
+		try {
+			getList();
+		    super.waitForDataLoaded();
 		} finally {
 			mDataLock.unlock();
 		}

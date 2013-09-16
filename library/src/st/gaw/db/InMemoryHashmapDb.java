@@ -1,6 +1,7 @@
 package st.gaw.db;
 
 import java.util.HashMap;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
@@ -10,12 +11,38 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	/**
 	 * the array where the data are stored, locked when writing on it
 	 */
-	private HashMap<K,V> mData;
+	private final HashMap<K,V> mData = new HashMap<K,V>();
+
+	/**
+	 * Field to tell when the data are being reloaded from the DB
+	 */
+	private boolean mIsLoading;
 
 	/**
 	 * ReentrantLock used to protect {@link #mData} when reading/writing/iterating it
 	 */
 	protected ReentrantLock mDataLock;
+	
+	protected final boolean DEBUG_LOCK = false;
+
+/*
+	private static class FakeLock extends ReentrantLock {
+		@Override
+		public void lock() {}
+		
+		@Override
+		public void unlock() {}
+		
+		@Override
+		public boolean isHeldByCurrentThread() {
+			return true;
+		}
+	}
+*/
+	/**
+	 * Condition to block the {@link #mData} access before the data are loaded
+	 */
+	private Condition dataLoaded;
 
 	protected InMemoryHashmapDb(Context context, String name, int version, Logger logger) {
 		super(context, name, version, logger);
@@ -24,26 +51,39 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	@Override
 	protected void preloadInit() {
 		mDataLock = new ReentrantLock();
+		dataLoaded = mDataLock.newCondition();
 		super.preloadInit();
 	}
 
 	@Override
 	protected HashMap<K, V> getMap() {
 		if (!mDataLock.isHeldByCurrentThread()) throw new IllegalStateException("we need a lock on mDataLock to access mData in "+this);
-		if (mData==null)
-			mData = new HashMap<K,V>(0);
+		if (!isDataLoaded() && !mIsLoading)
+			try {
+				// we're trying to read the data but they are not loading yet
+				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this);
+				long now = System.currentTimeMillis();
+				dataLoaded.await();
+				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this+" finished after "+(System.currentTimeMillis()-now));
+				//Thread.sleep(1000);
+			} catch (InterruptedException e1) {
+			}
+		if (null==mData) throw new NullPointerException();
 		return mData;
 	}
 
 	@Override
 	protected void startLoadingInMemory() {
 		mDataLock.lock();
+		mIsLoading = true;
 		super.startLoadingInMemory();
 	}
 
 	@Override
 	protected void finishLoadingInMemory() {
 		super.finishLoadingInMemory();
+		mIsLoading = false;
+		dataLoaded.signalAll();
 		mDataLock.unlock();
 	}
 
@@ -61,21 +101,38 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	@Override
 	public boolean containsKey(K key) {
 		// protect the data coherence
+		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock containsKey");
 		mDataLock.lock();
 		try {
 			return super.containsKey(key);
 		} finally {
+			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock containsKey");
 			mDataLock.unlock();
 		}
 	};
 
 	@Override
+	public K getStoredKey(K key) {
+		// protect the data coherence
+		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock getStoredKey");
+		mDataLock.lock();
+		try {
+			return super.getStoredKey(key);
+		} finally {
+			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock getStoredKey");
+			mDataLock.unlock();
+		}
+	}
+	
+	@Override
 	public V remove(K key) {
 		// protect the data coherence
+		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock remove");
 		mDataLock.lock();
 		try {
 			return super.remove(key);
 		} finally {
+			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock remove");
 			mDataLock.unlock();
 		}
 	};
@@ -83,10 +140,12 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	@Override
 	public V put(K key, V value) {
 		// protect the data coherence
+		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock put");
 		mDataLock.lock();
 		try {
 			return super.put(key, value);
 		} finally {
+			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock put");
 			mDataLock.unlock();
 		}
 	};
@@ -94,10 +153,12 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	@Override
 	public V get(K key) {
 		// protect the data coherence
+		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock get");
 		mDataLock.lock();
 		try {
 			return super.get(key);
 		} finally {
+			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock get");
 			mDataLock.unlock();
 		}
 	};
@@ -105,10 +166,25 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	@Override
 	public int size() {
 		// protect the data coherence
+		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock size");
 		mDataLock.lock();
 		try {
-			return super.size();
+			return null==mData ? 0 : mData.size();
 		} finally {
+			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock size");
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
+	public void waitForDataLoaded() {
+		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock waitForDataLoaded");
+		mDataLock.lock();
+		try {
+			getMap();
+		    super.waitForDataLoaded();
+		} finally {
+			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock waitForDataLoaded");
 			mDataLock.unlock();
 		}
 	}

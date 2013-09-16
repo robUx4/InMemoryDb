@@ -3,10 +3,10 @@ package st.gaw.db;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
-import android.database.Cursor;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link TreeSet}
@@ -19,9 +19,14 @@ import android.database.Cursor;
 public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> {
 
 	/**
-	 * the array where the data are stored, locked when writing on it
+	 * The array where the data are stored, locked when writing on it
 	 */
 	private TreeSet<E> mData;
+
+	/**
+	 * Field to tell when the data are being reloaded from the DB
+	 */
+	private boolean mIsLoading;
 
 	private final Comparator<E> comparator;
 
@@ -29,6 +34,11 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	 * ReentrantLock used to protect {@link #mData} when reading/writing/iterating it
 	 */
 	protected ReentrantLock mDataLock;
+
+	/**
+	 * Condition to block the {@link #mData} access before the data are loaded
+	 */
+	private Condition dataLoaded;
 
 	/**
 	 * @param context to use to open or create the database
@@ -46,34 +56,40 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 
 	@Override
 	protected void preloadInit() {
-		super.preloadInit();
 		mDataLock = new ReentrantLock();
+		dataLoaded = mDataLock.newCondition();
+		mData = new TreeSet<E>(comparator);
+		super.preloadInit();
 	}
 
 	@Override
 	protected synchronized TreeSet<E> getSet() {
 		if (!mDataLock.isHeldByCurrentThread()) throw new IllegalStateException("we need a lock on mDataLock to access mData in "+this);
-		if (mData==null)
-			mData = new TreeSet<E>(comparator);
+		if (!isDataLoaded() && !mIsLoading)
+			try {
+				// we're trying to read the data but they are not loading yet
+				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this);
+				long now = System.currentTimeMillis();
+				dataLoaded.await();
+				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this+" finished after "+(System.currentTimeMillis()-now));
+			} catch (InterruptedException e1) {
+			}
 		return mData;
 	}
 
 	@Override
 	protected void startLoadingInMemory() {
 		mDataLock.lock();
+		mIsLoading = true;
 		super.startLoadingInMemory();
 	}
 
 	@Override
 	protected void finishLoadingInMemory() {
 		super.finishLoadingInMemory();
+		mIsLoading = false;
+		dataLoaded.signalAll();
 		mDataLock.unlock();
-	}
-
-	@Override
-	protected void startLoadingFromCursor(Cursor c) {
-		if (mData==null)
-			mData = new TreeSet<E>(comparator);
 	}
 
 	@Override
@@ -145,7 +161,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	public int size() {
 		mDataLock.lock();
 		try {
-			return mData==null ? 0 : mData.size();
+			return null==mData ? 0 : mData.size();
 		} finally {
 			mDataLock.unlock();
 		}
@@ -156,6 +172,17 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 		mDataLock.lock();
 		try {
 			return super.get(position);
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
+	public void waitForDataLoaded() {
+		mDataLock.lock();
+		try {
+			getSet();
+		    super.waitForDataLoaded();
 		} finally {
 			mDataLock.unlock();
 		}

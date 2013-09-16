@@ -2,6 +2,7 @@ package st.gaw.db;
 
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -24,7 +25,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 
 	@Override
 	protected void addCursorInMemory(Cursor c) {
-		Map.Entry<K, V> entry = getEntryFromCursor(c);
+		final Map.Entry<K, V> entry = getEntryFromCursor(c);
 		if (entry!=null)
 			putEntry(entry);
 	}
@@ -47,7 +48,9 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 	protected abstract String[] getKeySelectArgs(K itemKey);
 
 	protected void putEntry(Map.Entry<K, V> entry) {
-		getMap().put(entry.getKey(), entry.getValue());
+		final H map = getMap();
+		if (null==map) throw new NullPointerException();
+		map.put(entry.getKey(), entry.getValue());
 	}
 
 	@Override
@@ -69,7 +72,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 
 	public V remove(K key) {
 		V result = getMap().remove(key);
-		if (result!=null)
+		//if (result!=null)
 			scheduleRemoveOperation(new MapEntry<K,V>(key,result));
 		return result;
 	}
@@ -89,6 +92,19 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 
 	public boolean containsKey(K key) {
 		return getMap().containsKey(key);
+	}
+	
+	public K getStoredKey(K key) {
+		if (DEBUG_DB) LogManager.logger.d("colors", "looking for "+key);
+		Set<K> keys = getMap().keySet();
+		for (K k : keys ){
+			if (DEBUG_DB) LogManager.logger.d("colors", " testing key "+k);
+			if (k.equals(key)) {
+				if (DEBUG_DB) LogManager.logger.d("colors", " using "+k);
+				return k;
+			}
+		}
+		return null;
 	}
 
 	public void notifyItemChanged(K key) {
