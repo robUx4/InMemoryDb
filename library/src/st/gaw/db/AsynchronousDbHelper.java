@@ -270,6 +270,15 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 		mDbListeners.add(new WeakReference<InMemoryDbListener<E>>(listener));
 	}
 
+	public void removeListener(InMemoryDbListener<E> listener) {
+		for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
+			if (l.get()==null)
+				mDbListeners.remove(l);
+			else if (l.get()==listener)
+				mDbListeners.remove(l);
+		}
+	}
+
 	/**
 	 * delete all the data in memory and in the database
 	 */
