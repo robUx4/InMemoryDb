@@ -71,9 +71,10 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 				switch (msg.what) {
 					case MSG_LOAD_IN_MEMORY:
+						db = getWritableDatabase();
 						startLoadingInMemory();
 						try {
-						Cursor c = getReadableDatabase().query(getMainTableName(), null, null, null, null, null, null);
+							Cursor c = db.query(getMainTableName(), null, null, null, null, null, null);
 							if (c!=null)
 								try {
 									if (c.moveToFirst()) {
@@ -240,7 +241,11 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	protected void clearDataInMemory() {}
 
-	protected void preloadInit() {}
+	@Override
+	@Deprecated
+	public SQLiteDatabase getReadableDatabase() {
+		return super.getReadableDatabase();
+	}
 
 	/**
 	 * set the listener that will receive error events
