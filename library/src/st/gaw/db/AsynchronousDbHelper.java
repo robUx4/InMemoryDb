@@ -146,7 +146,9 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 							updateValues = getValuesFromData(itemToUpdate, db);
 							if (updateValues!=null) {
 								if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
-							db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate));
+								if (db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate)/*, SQLiteDatabase.CONFLICT_NONE*/)==0) {
+									notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update "+updateValues+" in "+AsynchronousDbHelper.this.getClass().getSimpleName()));
+								}
 							}
 						} catch (Throwable e) {
 							notifyUpdateItemFailed(itemToUpdate, updateValues, e);
