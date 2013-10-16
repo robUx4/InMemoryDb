@@ -72,9 +72,9 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 				switch (msg.what) {
 					case MSG_LOAD_IN_MEMORY:
-						db = getWritableDatabase();
 						startLoadingInMemory();
 						try {
+							db = getWritableDatabase();
 							Cursor c = db.query(getMainTableName(), null, null, null, null, null, null);
 							if (c!=null)
 								try {
