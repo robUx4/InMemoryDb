@@ -1,6 +1,7 @@
 package st.gaw.db;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -96,6 +97,16 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		mDataLock.lock();
 		try {
 			return super.add(item);
+		} finally {
+			mDataLock.unlock();
+		}
+	};
+
+	public boolean addAll(Collection<? extends E> items) {
+		// protect the data coherence
+		mDataLock.lock();
+		try {
+			return super.addAll(items);
 		} finally {
 			mDataLock.unlock();
 		}

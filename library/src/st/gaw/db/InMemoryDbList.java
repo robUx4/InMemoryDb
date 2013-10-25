@@ -1,6 +1,7 @@
 package st.gaw.db;
 
 import java.lang.ref.WeakReference;
+import java.util.Collection;
 import java.util.List;
 
 import android.content.ContentValues;
@@ -85,6 +86,18 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 				scheduleAddOperation(item);
 				return true;
 			}
+		}
+		return false;
+	}
+	
+	/**
+	 * add new elements in memory (synchronous) and in the database (asynchronous)
+	 * @param items to add
+	 */
+	public boolean addAll(Collection<? extends E> items) {
+		if (getList().addAll(items)) {
+			scheduleAddOperation(items);
+			return true;
 		}
 		return false;
 	}
