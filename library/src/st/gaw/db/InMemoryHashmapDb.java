@@ -70,7 +70,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 				//Thread.sleep(1000);
 			} catch (InterruptedException e1) {
 			}
-		if (null==mData) throw new NullPointerException("no HashMap, waited for the data to load:"+waited);
+		if (null==mData) throw new NullPointerException("no HashMap, waited:"+waited+" mIsLoading:"+mIsLoading);
 		return mData;
 	}
 
