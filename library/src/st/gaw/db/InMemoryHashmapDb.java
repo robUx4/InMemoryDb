@@ -43,9 +43,12 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	 * Condition to block the {@link #mData} access before the data are loaded
 	 */
 	private Condition dataLoaded;
+	
+	private final boolean constructorPassed;
 
 	protected InMemoryHashmapDb(Context context, String name, int version, Logger logger) {
 		super(context, name, version, logger);
+		this.constructorPassed = true;
 	}
 
 	@Override
@@ -70,7 +73,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 				//Thread.sleep(1000);
 			} catch (InterruptedException e1) {
 			}
-		if (null==mData) throw new NullPointerException("no HashMap, waited:"+waited+" mIsLoading:"+mIsLoading);
+		if (null==mData) throw new NullPointerException("no HashMap, waited:"+waited+" mIsLoading:"+mIsLoading+" constructorPassed:"+constructorPassed);
 		return mData;
 	}
 
