@@ -38,4 +38,12 @@ public class UIHandler extends Handler {
 		if (!isUIThread())
 			throw new IllegalThreadStateException();
 	}
+
+	/**
+	 * Assert that we are NOT running in the UI thread
+	 */
+	public static void assertNotUIThread() throws IllegalThreadStateException {
+		if (!isUIThread())
+			throw new IllegalThreadStateException();
+	}
 }
