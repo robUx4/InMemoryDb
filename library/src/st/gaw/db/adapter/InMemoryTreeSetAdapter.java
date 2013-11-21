@@ -15,13 +15,12 @@ public class InMemoryTreeSetAdapter<E> extends BaseAdapter implements InMemoryDb
 	private final InMemoryDbTreeSet<E> mArray;
 	private final LayoutInflater mInflater;
 	private final int layoutId;
-	private final UIHandler uiHandler;
+	private UIHandler uiHandler;
 	
-	public InMemoryTreeSetAdapter(Context context, UIHandler uiHandler, InMemoryDbTreeSet<E> array, int layoutResourceId) {
+	public InMemoryTreeSetAdapter(Context context, InMemoryDbTreeSet<E> array, int layoutResourceId) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
-		this.uiHandler = uiHandler;
 		mArray.addListener(this);
 	}
 
@@ -65,9 +64,8 @@ public class InMemoryTreeSetAdapter<E> extends BaseAdapter implements InMemoryDb
 			}
 		};
 
-		if (uiHandler!=null)
-			uiHandler.runOnUiThread(runner);
-		else
-			runner.run();
+		if (null==uiHandler)
+			uiHandler = new UIHandler();
+		uiHandler.runOnUiThread(runner);
 	}
 }

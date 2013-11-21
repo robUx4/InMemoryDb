@@ -27,15 +27,14 @@ public class InMemoryFilteredTreeAdapter<E> extends BaseAdapter implements InMem
 	private final LayoutInflater mInflater;
 	private final int layoutId;
 	private final DbFilter<E> filter;
-	private final UIHandler uiHandler;
+	private UIHandler uiHandler;
 	private List<E> mData;
 
-	public InMemoryFilteredTreeAdapter(Context context, UIHandler uiHandler, InMemoryDbSet<E, ?> array, int layoutResourceId, DbFilter<E> filter) {
+	public InMemoryFilteredTreeAdapter(Context context, InMemoryDbSet<E, ?> array, int layoutResourceId, DbFilter<E> filter) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
 		this.filter = filter;
-		this.uiHandler = uiHandler;
 		mData = filter.getFilteredData(mArray);
 		mArray.addListener(this);
 	}
@@ -88,9 +87,8 @@ public class InMemoryFilteredTreeAdapter<E> extends BaseAdapter implements InMem
 			}
 		};
 
-		if (uiHandler!=null)
-			uiHandler.runOnUiThread(runner);
-		else
-			runner.run();
+		if (null==uiHandler)
+			uiHandler = new UIHandler();
+		uiHandler.runOnUiThread(runner);
 	}
 }

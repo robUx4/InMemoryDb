@@ -1,17 +1,41 @@
 package st.gaw.db.adapter;
 
+import android.os.Handler;
+import android.os.Looper;
+
 /**
- * interface to run some code on the UI thread
+ * A {@link android.os.Handler Handler} that runs the code in the UI thread
  */
-public interface UIHandler {
+public class UIHandler extends Handler {
+
+	public UIHandler() {
+		super(Looper.getMainLooper());
+	}
+
 	/**
-	 * run the code in the UI thread
-	 * @param runnable
+	 * Run the {@code Runnable} in the UI thread
+	 * @param r The Runnable that will be executed.
 	 */
-	void runOnUiThread(Runnable runnable);
+	public void runOnUiThread(Runnable r) {
+		if (isUIThread())
+			r.run();
+		else
+			post(r);
+	}
+
 	/**
-	 * indicates if we are running on the UI thread
-	 * @return
+	 * Indicates the current thread is the UI thread
+	 * @return {@code true} if the current Thread is the UI thread
 	 */
-	boolean isUIThread();
+	public static boolean isUIThread() {
+		return Thread.currentThread()==Looper.getMainLooper().getThread();
+	}
+
+	/**
+	 * Assert that we are running in the UI thread
+	 */
+	public static void assertUIThread() throws IllegalThreadStateException {
+		if (!isUIThread())
+			throw new IllegalThreadStateException();
+	}
 }

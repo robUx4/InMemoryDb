@@ -15,13 +15,12 @@ public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemory
 	private final InMemoryDbArrayList<E> mArray;
 	private final LayoutInflater mInflater;
 	private final int layoutId;
-	private final UIHandler uiHandler;
-	
-	public InMemoryArrayListAdapter(Context context, UIHandler uiHandler, InMemoryDbArrayList<E> array, int layoutResourceId) {
+	private UIHandler uiHandler;
+
+	public InMemoryArrayListAdapter(Context context, InMemoryDbArrayList<E> array, int layoutResourceId) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
-		this.uiHandler = uiHandler;
 		mArray.addListener(this);
 	}
 
@@ -39,7 +38,7 @@ public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemory
 	public boolean hasStableIds() {
 		return true;
 	}
-	
+
 	@Override
 	public long getItemId(int position) {
 		return mArray.get(position).hashCode();
@@ -52,7 +51,7 @@ public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemory
 
 		TextView vt = (TextView) convertView.findViewById(android.R.id.text1);
 		vt.setText(mArray.get(position).toString());
-		
+
 		return convertView;
 	}
 
@@ -65,9 +64,8 @@ public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemory
 			}
 		};
 
-		if (uiHandler!=null)
-			uiHandler.runOnUiThread(runner);
-		else
-			runner.run();
+		if (null==uiHandler)
+			uiHandler = new UIHandler();
+		uiHandler.runOnUiThread(runner);
 	}
 }
