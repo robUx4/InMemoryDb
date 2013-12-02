@@ -1,48 +1,28 @@
 package st.gaw.db;
 
-import java.util.Map;
+import android.util.Pair;
 
-public class MapEntry<K, V> implements Map.Entry<K, V> {
-
-	private final K mKey;
-	private V mVal;
+public class MapEntry<K, V> extends Pair<K,V> {
 
 	public MapEntry(K key, V val) {
-		if (null==key) throw new NullPointerException();
-		mKey = key;
-		mVal = val;
+		super(key, val);
+		if (null==key) throw new IllegalArgumentException();
 	}
 
-	@Override
 	public K getKey() {
-		return mKey;
+		return first;
 	}
 
-	@Override
 	public V getValue() {
-		return mVal;
+		return second;
 	}
 	
-	@Override
-	public boolean equals(Object o) {
-		if (this==o) return true;
-		if (!(o instanceof MapEntry)) return false;
-		return mKey.equals(((MapEntry<?, ?>) o).mKey);
-	}
-	
-	@Override
 	public int hashCode() {
-		return mKey.hashCode();
-	}
-
-	@Override
-	public V setValue(V newVal) {
-		mVal = newVal;
-		return mVal;
+		return first.hashCode();
 	}
 	
 	@Override
 	public String toString() {
-		return mKey.toString()+':'+(null==mVal ? null : mVal.toString());
+		return first.toString()+':'+(null==second ? null : second.toString());
 	}
 }
