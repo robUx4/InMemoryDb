@@ -11,10 +11,10 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	/**
 	 * the array where the data are stored, locked when writing on it
 	 */
-	private final HashMap<K,V> mData = new HashMap<K,V>();
+	private HashMap<K,V> mData;
 
 	/**
-	 * Field to tell when the data are being reloaded from the DB
+	 * Field to tell when the data are being reloaded from the DB, between {@link #startLoadingInMemory()} and {@link #finishLoadingInMemory()}
 	 */
 	private boolean mIsLoading;
 
@@ -56,6 +56,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
 		super.preloadInit();
+		mData = new HashMap<K,V>();
 	}
 
 	@Override
@@ -80,6 +81,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	@Override
 	protected void startLoadingInMemory() {
 		mDataLock.lock();
+		mData.clear();
 		mIsLoading = true;
 		super.startLoadingInMemory();
 	}

@@ -21,7 +21,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	/**
 	 * the array where the data are stored, locked when writing on it
 	 */
-	private final ArrayList<E> mData = new ArrayList<E>();
+	private ArrayList<E> mData;
 
 	/**
 	 * Field to tell when the data are being reloaded from the DB
@@ -55,6 +55,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
 		super.preloadInit();
+		mData = new ArrayList<E>();
 	}
 
 	@Override
@@ -75,6 +76,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	@Override
 	protected void startLoadingInMemory() {
 		mDataLock.lock();
+		mData.clear();
 		mIsLoading = true;
 		super.startLoadingInMemory();
 	}

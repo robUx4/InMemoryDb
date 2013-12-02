@@ -58,8 +58,8 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	protected void preloadInit() {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		mData = new TreeSet<E>(comparator);
 		super.preloadInit();
+		mData = new TreeSet<E>(comparator);
 	}
 
 	@Override
@@ -80,6 +80,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	@Override
 	protected void startLoadingInMemory() {
 		mDataLock.lock();
+		mData.clear();
 		mIsLoading = true;
 		super.startLoadingInMemory();
 	}
