@@ -1,7 +1,6 @@
 package st.gaw.db;
 
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import android.content.ContentValues;
@@ -9,7 +8,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<Map.Entry<K,V>> {
+public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<MapEntry<K,V>> {
 
 	protected InMemoryDbMap(Context context, String name, int version, Logger logger) {
 		super(context, name, version, logger);
@@ -25,12 +24,12 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 
 	@Override
 	protected void addCursorInMemory(Cursor c) {
-		final Map.Entry<K, V> entry = getEntryFromCursor(c);
+		final MapEntry<K, V> entry = getEntryFromCursor(c);
 		if (entry!=null)
 			putEntry(entry);
 	}
 
-	protected abstract Map.Entry<K, V> getEntryFromCursor(Cursor c);
+	protected abstract MapEntry<K, V> getEntryFromCursor(Cursor c);
 
 	/**
 	 * the where clause that should be used to update/delete the item
@@ -47,20 +46,19 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 	 */
 	protected abstract String[] getKeySelectArgs(K itemKey);
 
-	protected void putEntry(Map.Entry<K, V> entry) {
+	protected void putEntry(MapEntry<K, V> entry) {
 		final H map = getMap();
-		if (null==map) throw new NullPointerException();
-		map.put(entry.getKey(), entry.getValue());
+		map.put(entry.first, entry.second);
 	}
 
 	@Override
-	protected final String getItemSelectClause(Entry<K, V> itemToSelect) {
-		return getKeySelectClause(itemToSelect.getKey());
+	protected final String getItemSelectClause(MapEntry<K, V> itemToSelect) {
+		return getKeySelectClause(itemToSelect.first);
 	}
 
 	@Override
-	protected final String[] getItemSelectArgs(Entry<K, V> itemToSelect) {
-		return getKeySelectArgs(itemToSelect.getKey());
+	protected final String[] getItemSelectArgs(MapEntry<K, V> itemToSelect) {
+		return getKeySelectArgs(itemToSelect.first);
 	}
 
 	@Override
