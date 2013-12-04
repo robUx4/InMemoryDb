@@ -29,7 +29,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	protected InMemoryDbList(Context context, String name, int version, Logger logger) {
-		super(context, name, version, logger);
+		super(context, name, version, logger, null);
 		super.setDbErrorHandler(this);
 	}
 

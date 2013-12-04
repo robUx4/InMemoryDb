@@ -55,15 +55,16 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
 	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
 	 */
 	@SuppressLint("HandlerLeak")
-	protected AsynchronousDbHelper(Context context, String name, int version, Logger logger) {
+	protected AsynchronousDbHelper(Context context, String name, int version, Logger logger, Object initCookie) {
 		super(context, name, null, version);
 
 		if (logger!=null)
 			LogManager.setLogger(logger);
 
-		preloadInit();
+		preloadInit(initCookie);
 
 		HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName(), android.os.Process.THREAD_PRIORITY_BACKGROUND);
 		handlerThread.start();
@@ -242,8 +243,9 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	/**
 	 * Method called at the end of constructor, just before the data start loading
+	 * @param cookie Data that may be needed to initialize all internal storage
 	 */
-	protected void preloadInit() {}
+	protected void preloadInit(Object cookie) {}
 
 	/**
 	 * tell the InMemory database that we are about to modify its data

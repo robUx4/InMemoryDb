@@ -31,7 +31,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	protected InMemoryDbSet(Context context, String name, int version, Logger logger) {
-		super(context, name, version, logger);
+		super(context, name, version, logger, null);
 		super.setDbErrorHandler(this);
 	}
 

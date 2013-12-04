@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<MapEntry<K,V>> {
 
 	protected InMemoryDbMap(Context context, String name, int version, Logger logger) {
-		super(context, name, version, logger);
+		super(context, name, version, logger, null);
 	}
 
 	/**

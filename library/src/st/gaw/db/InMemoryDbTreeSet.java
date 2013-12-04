@@ -55,10 +55,10 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	}
 
 	@Override
-	protected void preloadInit() {
+	protected void preloadInit(Object cookie) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		super.preloadInit();
+		super.preloadInit(cookie);
 		mData = new TreeSet<E>(comparator);
 	}
 

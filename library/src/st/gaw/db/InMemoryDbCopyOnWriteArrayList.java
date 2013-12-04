@@ -30,8 +30,8 @@ public abstract class InMemoryDbCopyOnWriteArrayList<E> extends InMemoryDbList<E
 	}
 	
 	@Override
-	protected void preloadInit() {
-		super.preloadInit();
+	protected void preloadInit(Object cookie) {
+		super.preloadInit(cookie);
 		mData = new CopyOnWriteArrayList<E>();
 	}
 	

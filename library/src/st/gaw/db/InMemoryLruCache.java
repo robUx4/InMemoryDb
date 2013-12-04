@@ -1,6 +1,5 @@
 package st.gaw.db;
 
-import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -60,9 +59,17 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 	 * @param maxSize for caches that do not override {@link #sizeOf}, this is the maximum number of entries in the cache. For all other caches, this is the maximum sum of the sizes of the entries in this cache
 	 * @param logger
 	 */
-	protected InMemoryLruCache(Context context, String name, int version, int maxSize, Logger logger) {
-		super(context, name, version, logger);
-		mData = new LruCache<K, V>(maxSize) {
+	protected InMemoryLruCache(Context context, String name, int version, final int maxSize, Logger logger) {
+		super(context, name, version, logger, Integer.valueOf(maxSize));
+		this.constructorPassed = true;
+	}
+	
+	@Override
+	protected void preloadInit(Object cookie) {
+		mDataLock = new ReentrantLock();
+		dataLoaded = mDataLock.newCondition();
+		super.preloadInit(cookie);
+		mData = new LruCache<K, V>((Integer) cookie) {
 			@Override
 			protected int sizeOf(K key, V value) {
 				return InMemoryLruCache.this.sizeOf(key, value);
@@ -73,14 +80,6 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 				InMemoryLruCache.this.entryRemoved(evicted, key, oldValue, newValue);
 			}
 		};
-		this.constructorPassed = true;
-	}
-
-	@Override
-	protected void preloadInit() {
-		mDataLock = new ReentrantLock();
-		dataLoaded = mDataLock.newCondition();
-		super.preloadInit();
 	}
 
 	@Override
@@ -180,12 +179,12 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 		mDataLock.unlock();
 	}
 
-    /**
-     * Returns the value for {@code key} if it exists in the cache or can be
-     * created by {@link #create}. If a value was returned, it is moved to the
-     * head of the queue. This returns null if a value is not cached and cannot
-     * be created.
-     */
+	/**
+	 * Returns the value for {@code key} if it exists in the cache or can be
+	 * created by {@link #create}. If a value was returned, it is moved to the
+	 * head of the queue. This returns null if a value is not cached and cannot
+	 * be created.
+	 */
 	public V get(K key) {
 		// protect the data coherence
 		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock get");
@@ -198,12 +197,12 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 		}
 	};
 
-    /**
-     * Caches {@code value} for {@code key}. The value is moved to the head of
-     * the queue.
-     *
-     * @return the previous value mapped by {@code key}.
-     */
+	/**
+	 * Caches {@code value} for {@code key}. The value is moved to the head of
+	 * the queue.
+	 *
+	 * @return the previous value mapped by {@code key}.
+	 */
 	public V put(K key, V value) {
 		// protect the data coherence
 		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock put");
@@ -221,14 +220,14 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 		}
 	};
 
-    /**
-     * Remove the eldest entries until the total of remaining entries is at or
-     * below the requested size.
-     *
-     * @param maxSize the maximum size of the cache before returning. May be -1
-     *            to evict even 0-sized elements.
-     */
-    public void trimToSize(int maxSize) {
+	/**
+	 * Remove the eldest entries until the total of remaining entries is at or
+	 * below the requested size.
+	 *
+	 * @param maxSize the maximum size of the cache before returning. May be -1
+	 *            to evict even 0-sized elements.
+	 */
+	public void trimToSize(int maxSize) {
 		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock trimToSize");
 		mDataLock.lock();
 		try {
@@ -237,14 +236,14 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock trimToSize");
 			mDataLock.unlock();
 		}
-    }
+	}
 
-    /**
-     * Removes the entry for {@code key} if it exists.
-     *
-     * @return the previous value mapped by {@code key}.
-     */
-    public final V remove(K key) {
+	/**
+	 * Removes the entry for {@code key} if it exists.
+	 *
+	 * @return the previous value mapped by {@code key}.
+	 */
+	public final V remove(K key) {
 		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock remove");
 		mDataLock.lock();
 		try {
@@ -253,24 +252,24 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock remove");
 			mDataLock.unlock();
 		}
-    }
+	}
 
-    /**
-     * Called after a cache miss to compute a value for the corresponding key.
-     * Returns the computed value or null if no value can be computed. The
-     * default implementation returns null.
-     *
-     * <p>The method is called without synchronization: other threads may
-     * access the cache while this method is executing.
-     *
-     * <p>If a value for {@code key} exists in the cache when this method
-     * returns, the created value will be released with {@link #entryRemoved}
-     * and discarded. This can occur when multiple threads request the same key
-     * at the same time (causing multiple values to be created), or when one
-     * thread calls {@link #put} while another is creating a value for the same
-     * key.
-     */
-    protected V create(K key) {
+	/**
+	 * Called after a cache miss to compute a value for the corresponding key.
+	 * Returns the computed value or null if no value can be computed. The
+	 * default implementation returns null.
+	 *
+	 * <p>The method is called without synchronization: other threads may
+	 * access the cache while this method is executing.
+	 *
+	 * <p>If a value for {@code key} exists in the cache when this method
+	 * returns, the created value will be released with {@link #entryRemoved}
+	 * and discarded. This can occur when multiple threads request the same key
+	 * at the same time (causing multiple values to be created), or when one
+	 * thread calls {@link #put} while another is creating a value for the same
+	 * key.
+	 */
+	protected V create(K key) {
 		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock create");
 		mDataLock.lock();
 		try {
@@ -279,12 +278,12 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock create");
 			mDataLock.unlock();
 		}
-    }
+	}
 
-    /**
-     * Clear the cache, calling {@link #entryRemoved} on each removed entry.
-     */
-    public final void evictAll() {
+	/**
+	 * Clear the cache, calling {@link #entryRemoved} on each removed entry.
+	 */
+	public final void evictAll() {
 		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock evictAll");
 		mDataLock.lock();
 		try {
@@ -293,14 +292,14 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock evictAll");
 			mDataLock.unlock();
 		}
-    }
+	}
 
-    /**
-     * For caches that do not override {@link #sizeOf}, this returns the number
-     * of entries in the cache. For all other caches, this returns the sum of
-     * the sizes of the entries in this cache.
-     */
-    public synchronized final int size() {
+	/**
+	 * For caches that do not override {@link #sizeOf}, this returns the number
+	 * of entries in the cache. For all other caches, this returns the sum of
+	 * the sizes of the entries in this cache.
+	 */
+	public synchronized final int size() {
 		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock size");
 		mDataLock.lock();
 		try {
@@ -309,14 +308,14 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock size");
 			mDataLock.unlock();
 		}
-    }
+	}
 
-    /**
-     * For caches that do not override {@link #sizeOf}, this returns the maximum
-     * number of entries in the cache. For all other caches, this returns the
-     * maximum sum of the sizes of the entries in this cache.
-     */
-    public synchronized final int maxSize() {
+	/**
+	 * For caches that do not override {@link #sizeOf}, this returns the maximum
+	 * number of entries in the cache. For all other caches, this returns the
+	 * maximum sum of the sizes of the entries in this cache.
+	 */
+	public synchronized final int maxSize() {
 		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock maxSize");
 		mDataLock.lock();
 		try {
@@ -325,6 +324,6 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock maxSize");
 			mDataLock.unlock();
 		}
-    }
+	}
 
 }

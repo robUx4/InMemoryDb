@@ -52,10 +52,10 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	}
 
 	@Override
-	protected void preloadInit() {
+	protected void preloadInit(Object cookie) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		super.preloadInit();
+		super.preloadInit(cookie);
 		mData = new HashMap<K,V>();
 	}
 
