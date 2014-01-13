@@ -50,7 +50,21 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	 * @param comparator comparator to sort the elements 
 	 */
 	protected InMemoryDbTreeSet(Context context, String name, int version, Logger logger, Comparator<E> comparator) {
-		super(context, name, version, logger);
+		this(context, name, version, logger, comparator, null);
+	}
+
+	/**
+	 * @param context to use to open or create the database
+	 * @param name of the database file, or null for an in-memory database
+	 * @param version number of the database (starting at 1); if the database is older,
+	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
+	 *     newer, {@link #onDowngrade} will be used to downgrade the database
+	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param comparator comparator to sort the elements 
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
+	 */
+	protected InMemoryDbTreeSet(Context context, String name, int version, Logger logger, Comparator<E> comparator, Object initCookie) {
+		super(context, name, version, logger, initCookie);
 		this.comparator = comparator;
 	}
 

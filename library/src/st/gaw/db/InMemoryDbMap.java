@@ -10,8 +10,29 @@ import android.database.sqlite.SQLiteDatabase;
 
 public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<MapEntry<K,V>> {
 
+	/**
+	 * @param context Used to open or create the database
+	 * @param name Database filename on disk
+	 * @param version Version number of the database (starting at 1); if the database is older,
+	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
+	 *     newer, {@link #onDowngrade} will be used to downgrade the database
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 */
 	protected InMemoryDbMap(Context context, String name, int version, Logger logger) {
-		super(context, name, version, logger, null);
+		this(context, name, version, logger, null);
+	}
+
+	/**
+	 * @param context Used to open or create the database
+	 * @param name Database filename on disk
+	 * @param version Version number of the database (starting at 1); if the database is older,
+	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
+	 *     newer, {@link #onDowngrade} will be used to downgrade the database
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
+	 */
+	protected InMemoryDbMap(Context context, String name, int version, Logger logger, Object initCookie) {
+		super(context, name, version, logger, initCookie);
 	}
 
 	/**

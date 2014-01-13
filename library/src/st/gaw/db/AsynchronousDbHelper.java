@@ -49,12 +49,12 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
 
 	/**
-	 * @param context to use to open or create the database
-	 * @param name of the database file, or null for an in-memory database
-	 * @param version number of the database (starting at 1); if the database is older,
+	 * @param context Used to open or create the database
+	 * @param name Database filename on disk
+	 * @param version Version number of the database (starting at 1); if the database is older,
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
 	 */
 	@SuppressLint("HandlerLeak")

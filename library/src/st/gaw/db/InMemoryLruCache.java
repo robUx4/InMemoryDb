@@ -52,12 +52,13 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 	protected abstract String[] getKeySelectArgs(K itemKey);
 
 	/**
-	 * 
-	 * @param context
-	 * @param name
-	 * @param version
+	 * @param context Used to open or create the database
+	 * @param name Database filename on disk
+	 * @param version Version number of the database (starting at 1); if the database is older,
+	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
+	 *     newer, {@link #onDowngrade} will be used to downgrade the database
 	 * @param maxSize for caches that do not override {@link #sizeOf}, this is the maximum number of entries in the cache. For all other caches, this is the maximum sum of the sizes of the entries in this cache
-	 * @param logger
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	protected InMemoryLruCache(Context context, String name, int version, final int maxSize, Logger logger) {
 		super(context, name, version, logger, Integer.valueOf(maxSize));
