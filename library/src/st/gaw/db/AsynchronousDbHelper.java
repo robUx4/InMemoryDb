@@ -119,10 +119,9 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						addValues = getValuesFromData(itemToAdd, db);
 						if (addValues!=null) {
-							long id = db.insertOrThrow(getMainTableName(), null, addValues);
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
-							if (id==-1)
+							if (!directStoreItem(db, addValues)) {
 								throw new RuntimeException("failed to add values "+addValues+" in "+AsynchronousDbHelper.this.getClass().getSimpleName());
+							}
 						}
 					} catch (Throwable e) {
 						notifyAddItemFailed(itemToAdd, addValues, e);
@@ -138,10 +137,10 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 							db = getWritableDatabase();
 							addValues = getValuesFromData(item, db);
 							if (addValues!=null) {
-								long id = db.insertOrThrow(getMainTableName(), null, addValues);
-								if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
-								if (id==-1)
+								if (!directStoreItem(db, addValues)) {
+									if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues);
 									throw new RuntimeException("failed to add values "+addValues+" in "+AsynchronousDbHelper.this.getClass().getSimpleName());
+								}
 							}
 						} catch (Throwable e) {
 							notifyAddItemFailed(item, addValues, e);
@@ -169,11 +168,8 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					try {
 						db = getWritableDatabase();
 						updateValues = getValuesFromData(itemToUpdate, db);
-						if (updateValues!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
-							if (db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate)/*, SQLiteDatabase.CONFLICT_NONE*/)==0) {
-								notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update "+updateValues+" in "+AsynchronousDbHelper.this.getClass().getSimpleName()));
-							}
+						if (!directUpdate(db, itemToUpdate, updateValues)) {
+							notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update "+updateValues+" in "+AsynchronousDbHelper.this.getClass().getSimpleName()));
 						}
 					} catch (Throwable e) {
 						notifyUpdateItemFailed(itemToUpdate, updateValues, e);
@@ -186,10 +182,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					try {
 						db = getWritableDatabase();
 						ContentValues newValues = getValuesFromData(itemsToReplace.first, db);
-						if (newValues!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
-							db.update(getMainTableName(), newValues, getItemSelectClause(itemsToReplace.second), getItemSelectArgs(itemsToReplace.second));
-						}
+						directUpdate(db, itemsToReplace.second, newValues);
 					} catch (Throwable e) {
 						notifyReplaceItemFailed(itemsToReplace.first, itemsToReplace.second, e);
 					}
@@ -204,7 +197,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 						newValuesA = getValuesFromData(itemsToSwap.second, db);
 						if (newValuesA!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.second+" with "+newValuesA);
-							db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.first), getItemSelectArgs(itemsToSwap.first));
+							directUpdate(db, itemsToSwap.first, newValuesA);
 						}
 					} catch (Throwable e) {
 						notifyUpdateItemFailed(itemsToSwap.first, newValuesA, e);
@@ -215,7 +208,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 						newValuesB = getValuesFromData(itemsToSwap.first, db);
 						if (newValuesB!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.first+" with "+newValuesB);
-							db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.second), getItemSelectArgs(itemsToSwap.second));
+							directUpdate(db, itemsToSwap.second, newValuesB);
 						}
 					} catch (Throwable e) {
 						notifyUpdateItemFailed(itemsToSwap.second, newValuesB, e);
@@ -240,6 +233,33 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 		};
 
 		saveStoreHandler.sendEmptyMessage(MSG_LOAD_IN_MEMORY);
+	}
+
+	/**
+	 * Method to call to insert data directly in the database
+	 * @param db Database where data will be written
+	 * @param addValues Values that will be written in the database
+	 * @return {@code true} if the data were written successfully
+	 */
+	protected final boolean directStoreItem(SQLiteDatabase db, ContentValues addValues) {
+		long id = db.insertOrThrow(getMainTableName(), null, addValues);
+		if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
+		return id!=-1;
+	}
+
+	/**
+	 * Method to call to update the data directly in the database
+	 * @param db Database where data will be updated
+	 * @param itemToUpdate Item in the database that needs to be updated
+	 * @param updateValues Values that will be updated in the database
+	 * @return {@code true} if the data were updated successfully
+	 */
+	protected final boolean directUpdate(SQLiteDatabase db, E itemToUpdate, ContentValues updateValues) {
+		if (updateValues!=null) {
+			if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
+			return db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate)/*, SQLiteDatabase.CONFLICT_NONE*/)!=0;
+		}
+		return false;
 	}
 
 	/**
