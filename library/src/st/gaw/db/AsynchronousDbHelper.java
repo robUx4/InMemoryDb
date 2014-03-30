@@ -16,6 +16,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.util.Pair;
 
 /**
  * the main helper class that saves/restore item in memory using a DB storage
@@ -181,43 +182,43 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 				case MSG_REPLACE_ITEMS:
 					@SuppressWarnings("unchecked")
-					DoubleItems itemsToReplace = (DoubleItems) msg.obj;
+					Pair<E,E> itemsToReplace = (Pair<E,E>) msg.obj;
 					try {
 						db = getWritableDatabase();
-						ContentValues newValues = getValuesFromData(itemsToReplace.itemA, db);
+						ContentValues newValues = getValuesFromData(itemsToReplace.first, db);
 						if (newValues!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" replace "+itemsToReplace+" with "+newValues);
-							db.update(getMainTableName(), newValues, getItemSelectClause(itemsToReplace.itemB), getItemSelectArgs(itemsToReplace.itemB));
+							db.update(getMainTableName(), newValues, getItemSelectClause(itemsToReplace.second), getItemSelectArgs(itemsToReplace.second));
 						}
 					} catch (Throwable e) {
-						notifyReplaceItemFailed(itemsToReplace.itemA, itemsToReplace.itemB, e);
+						notifyReplaceItemFailed(itemsToReplace.first, itemsToReplace.second, e);
 					}
 					break;
 
 				case MSG_SWAP_ITEMS:
 					@SuppressWarnings("unchecked")
-					DoubleItems itemsToSwap = (DoubleItems) msg.obj;
+					Pair<E,E> itemsToSwap = (Pair<E,E>) msg.obj;
 					ContentValues newValuesA = null;
 					try {
 						db = getWritableDatabase();
-						newValuesA = getValuesFromData(itemsToSwap.itemB, db);
+						newValuesA = getValuesFromData(itemsToSwap.second, db);
 						if (newValuesA!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.itemB+" with "+newValuesA);
-							db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.itemA), getItemSelectArgs(itemsToSwap.itemA));
+							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.second+" with "+newValuesA);
+							db.update(getMainTableName(), newValuesA, getItemSelectClause(itemsToSwap.first), getItemSelectArgs(itemsToSwap.first));
 						}
 					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemsToSwap.itemA, newValuesA, e);
+						notifyUpdateItemFailed(itemsToSwap.first, newValuesA, e);
 					}
 					ContentValues newValuesB = null;
 					try {
 						db = getWritableDatabase();
-						newValuesB = getValuesFromData(itemsToSwap.itemA, db);
+						newValuesB = getValuesFromData(itemsToSwap.first, db);
 						if (newValuesB!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.itemA+" with "+newValuesB);
-							db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.itemB), getItemSelectArgs(itemsToSwap.itemB));
+							if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+itemsToSwap.first+" with "+newValuesB);
+							db.update(getMainTableName(), newValuesB, getItemSelectClause(itemsToSwap.second), getItemSelectArgs(itemsToSwap.second));
 						}
 					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemsToSwap.itemB, newValuesB, e);
+						notifyUpdateItemFailed(itemsToSwap.second, newValuesB, e);
 					}
 					break;
 
@@ -431,24 +432,14 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 		popModifyingTransaction();
 	}
 
-	private class DoubleItems {
-		final E itemA;
-		final E itemB;
-
-		public DoubleItems(E itemA, E itemB) {
-			this.itemA = itemA;
-			this.itemB = itemB;
-		}
-	}
-
 	protected final void scheduleReplaceOperation(E original, E replacement) {
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEMS, new DoubleItems(original, replacement)));
+		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEMS, new Pair<E,E>(original, replacement)));
 		pushModifyingTransaction();
 		popModifyingTransaction();
 	}
 
 	protected final void scheduleSwapOperation(E itemA, E itemB) {
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_SWAP_ITEMS, new DoubleItems(itemA, itemB)));
+		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_SWAP_ITEMS, new Pair<E,E>(itemA, itemB)));
 		pushModifyingTransaction();
 		popModifyingTransaction();
 	}
