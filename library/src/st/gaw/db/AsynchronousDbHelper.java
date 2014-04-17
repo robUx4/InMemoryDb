@@ -94,7 +94,10 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 								c.close();
 							}
 					} catch (SQLException e) {
-						LogManager.logger.w(STARTUP_TAG,"Can't query table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
+						if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
+							LogManager.logger.e(STARTUP_TAG, "table "+getMainTableName()+" is corrupted in "+AsynchronousDbHelper.this, e);
+						else
+							LogManager.logger.w(STARTUP_TAG,"Can't query table "+getMainTableName()+" in "+AsynchronousDbHelper.this, e);
 					} finally {
 						finishLoadingInMemory();
 					}
