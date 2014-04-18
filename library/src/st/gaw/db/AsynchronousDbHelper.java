@@ -12,6 +12,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Handler;
@@ -61,7 +62,22 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 */
 	@SuppressLint("HandlerLeak")
 	protected AsynchronousDbHelper(Context context, final String name, int version, Logger logger, Object initCookie) {
-		super(context, name, null, version);
+		this(context, name, null, version, logger, initCookie);
+	}
+	
+	/**
+	 * @param context Used to open or create the database
+	 * @param name Database filename on disk
+	 * @param factory to use for creating cursor objects, or null for the default
+	 * @param version Version number of the database (starting at 1); if the database is older,
+	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
+	 *     newer, {@link #onDowngrade} will be used to downgrade the database
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 */
+	@SuppressLint("HandlerLeak")
+	protected AsynchronousDbHelper(Context context, final String name, CursorFactory factory, int version, Logger logger, Object initCookie) {
+		super(context, name, factory, version);
 
 		preloadInit(initCookie, logger);
 
