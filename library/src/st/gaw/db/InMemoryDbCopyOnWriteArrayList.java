@@ -36,15 +36,15 @@ public abstract class InMemoryDbCopyOnWriteArrayList<E> extends InMemoryDbList<E
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
 	protected InMemoryDbCopyOnWriteArrayList(Context context, String name, int version, Logger logger, Object initCookie) {
 		super(context, name, version, logger, initCookie);
 	}
 	
 	@Override
-	protected void preloadInit(Object cookie) {
-		super.preloadInit(cookie);
+	protected void preloadInit(Object cookie, Logger logger) {
+		super.preloadInit(cookie, logger);
 		mData = new CopyOnWriteArrayList<E>();
 	}
 	

@@ -61,7 +61,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
 	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param comparator comparator to sort the elements 
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
 	protected InMemoryDbTreeSet(Context context, String name, int version, Logger logger, Comparator<E> comparator, Object initCookie) {
 		super(context, name, version, logger, initCookie);
@@ -69,10 +69,10 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	}
 
 	@Override
-	protected void preloadInit(Object cookie) {
+	protected void preloadInit(Object cookie, Logger logger) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		super.preloadInit(cookie);
+		super.preloadInit(cookie, logger);
 		mData = new TreeSet<E>(comparator);
 	}
 

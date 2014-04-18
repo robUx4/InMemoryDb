@@ -57,17 +57,17 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
 	protected InMemoryDbArrayList(Context context, String name, int version, Logger logger, Object initCookie) {
 		super(context, name, version, logger, initCookie);
 	}
 	
 	@Override
-	protected void preloadInit(Object cookie) {
+	protected void preloadInit(Object cookie, Logger logger) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		super.preloadInit(cookie);
+		super.preloadInit(cookie, logger);
 		mData = new ArrayList<E>();
 	}
 

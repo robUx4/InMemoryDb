@@ -66,10 +66,10 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 	}
 	
 	@Override
-	protected void preloadInit(Object cookie) {
+	protected void preloadInit(Object cookie, Logger logger) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		super.preloadInit(cookie);
+		super.preloadInit(cookie, logger);
 		mData = new LruCache<K, V>((Integer) cookie) {
 			@Override
 			protected int sizeOf(K key, V value) {

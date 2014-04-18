@@ -39,7 +39,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
 	protected InMemoryDbList(Context context, String name, int version, Logger logger, Object initCookie) {
 		super(context, name, version, logger, initCookie);
