@@ -68,7 +68,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 		preloadInit(initCookie);
 
-		HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName(), android.os.Process.THREAD_PRIORITY_BACKGROUND);
+		HandlerThread handlerThread = new HandlerThread(name, android.os.Process.THREAD_PRIORITY_BACKGROUND);
 		handlerThread.start();
 
 		saveStoreHandler = new Handler(handlerThread.getLooper()) {
