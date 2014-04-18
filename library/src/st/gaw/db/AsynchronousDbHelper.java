@@ -76,29 +76,30 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 				switch (msg.what) {
 				case MSG_LOAD_IN_MEMORY:
 					startLoadingInMemory();
-					try {
-						db = getWritableDatabase();
-						Cursor c = db.query(getMainTableName(), null, null, null, null, null, null);
-						if (c!=null)
-							try {
-								if (c.moveToFirst()) {
-									startLoadingFromCursor(c);
-									do {
-										addCursorInMemory(c);
-									} while (c.moveToNext());
-								}
+					if (shouldReloadAllData())
+						try {
+							db = getWritableDatabase();
+							Cursor c = db.query(getMainTableName(), null, null, null, null, null, null);
+							if (c!=null)
+								try {
+									if (c.moveToFirst()) {
+										startLoadingFromCursor(c);
+										do {
+											addCursorInMemory(c);
+										} while (c.moveToNext());
+									}
 
-							} finally {
-								c.close();
-							}
-					} catch (SQLException e) {
-						if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
-							LogManager.logger.e(STARTUP_TAG, "table "+getMainTableName()+" is corrupted in "+name);
-						else
-							LogManager.logger.w(STARTUP_TAG, "Can't query table "+getMainTableName()+" in "+name, e);
-					} finally {
-						finishLoadingInMemory();
-					}
+								} finally {
+									c.close();
+								}
+						} catch (SQLException e) {
+							if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
+								LogManager.logger.e(STARTUP_TAG, "table "+getMainTableName()+" is corrupted in "+name);
+							else
+								LogManager.logger.w(STARTUP_TAG, "Can't query table "+getMainTableName()+" in "+name, e);
+						} finally {
+							finishLoadingInMemory();
+						}
 					break;
 
 				case MSG_CLEAR_DATABASE:
@@ -511,6 +512,14 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	protected void finishLoadingInMemory() {
 		mDataLoaded.set(true);
 		popModifyingTransaction();
+	}
+
+	/**
+	 * Tell whether the database loading should be done or not
+	 * <p>If you don't store the elements in memory, you don't need to load the whole data 
+	 */
+	protected boolean shouldReloadAllData() {
+		return true;
 	}
 
 	protected void notifyDatabaseChanged() {
