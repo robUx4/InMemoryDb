@@ -255,7 +255,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * @return {@code true} if the data were written successfully
 	 * @throws RuntimeException if the insertion failed
 	 */
-	protected final boolean directStoreItem(SQLiteDatabase db, ContentValues addValues) throws SQLException {
+	protected boolean directStoreItem(SQLiteDatabase db, ContentValues addValues) throws SQLException {
 		long id = db.insertOrThrow(getMainTableName(), null, addValues);
 		if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
 		if (id==-1) throw new RuntimeException("failed to add values "+addValues+" in "+db.getPath());
@@ -269,7 +269,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * @param updateValues Values that will be updated in the database
 	 * @return {@code true} if the data were updated successfully
 	 */
-	protected final boolean directUpdate(SQLiteDatabase db, E itemToUpdate, ContentValues updateValues) {
+	protected boolean directUpdate(SQLiteDatabase db, E itemToUpdate, ContentValues updateValues) {
 		if (updateValues!=null) {
 			if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
 			return db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate)/*, SQLiteDatabase.CONFLICT_NONE*/)!=0;
