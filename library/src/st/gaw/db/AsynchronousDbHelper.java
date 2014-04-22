@@ -137,9 +137,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 						db = getWritableDatabase();
 						addValues = getValuesFromData(itemToAdd, db);
 						if (addValues!=null) {
-							if (!directStoreItem(db, addValues)) {
-								throw new RuntimeException("failed to add values "+addValues+" in "+name);
-							}
+							directStoreItem(db, addValues);
 						}
 					} catch (Throwable e) {
 						notifyAddItemFailed(itemToAdd, addValues, e);
@@ -155,10 +153,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 							db = getWritableDatabase();
 							addValues = getValuesFromData(item, db);
 							if (addValues!=null) {
-								if (!directStoreItem(db, addValues)) {
-									if (DEBUG_DB) LogManager.logger.d(TAG, name+" insert "+addValues);
-									throw new RuntimeException("failed to add values "+addValues+" in "+name);
-								}
+								directStoreItem(db, addValues);
 							}
 						} catch (Throwable e) {
 							notifyAddItemFailed(item, addValues, e);
@@ -258,10 +253,12 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * @param db Database where data will be written
 	 * @param addValues Values that will be written in the database
 	 * @return {@code true} if the data were written successfully
+	 * @throws RuntimeException if the insertion failed
 	 */
-	protected final boolean directStoreItem(SQLiteDatabase db, ContentValues addValues) {
+	protected final boolean directStoreItem(SQLiteDatabase db, ContentValues addValues) throws SQLException {
 		long id = db.insertOrThrow(getMainTableName(), null, addValues);
 		if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
+		if (id==-1) throw new RuntimeException("failed to add values "+addValues+" in "+db.getPath());
 		return id!=-1;
 	}
 

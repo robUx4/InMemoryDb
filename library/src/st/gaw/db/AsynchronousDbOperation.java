@@ -6,7 +6,7 @@ package st.gaw.db;
  */
 public interface AsynchronousDbOperation<E> {
 	/**
-	 * callback of the operation to run in the internal thread of db
+	 * Callback of the operation to run in the internal thread of db
 	 * @param db the database on which this operation is processed
 	 */
 	void runInMemoryDbOperation(AsynchronousDbHelper<E> db);
