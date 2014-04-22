@@ -64,7 +64,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	protected AsynchronousDbHelper(Context context, final String name, int version, Logger logger, Object initCookie) {
 		this(context, name, null, version, logger, initCookie);
 	}
-	
+
 	/**
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
@@ -424,6 +424,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * @see #getValuesFromData(Object, SQLiteDatabase)
 	 */
 	protected abstract void addCursorInMemory(Cursor c);
+	
 	/**
 	 * transform the element in memory into {@link ContentValues} that can be saved in the database
 	 * <p> you can return null and fill the database yourself if you need to
@@ -451,10 +452,9 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 
 	/**
-	 * request to store the item in the database, it should be kept in synch with the in memory storage
-	 * <p>
-	 * will call the {@link InMemoryDbErrorHandler} in case of error
-	 * @param item
+	 * Request to store the item in the database asynchronously
+	 * <p>Will call the {@link InMemoryDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, ContentValues, Throwable) InMemoryDbErrorHandler.onAddItemFailed()} on failure
+	 * @param item to add
 	 */
 	protected final void scheduleAddOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEM, item));
@@ -462,18 +462,37 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 		popModifyingTransaction();
 	}
 
+	/**
+	 * Request to store the items in the database asynchronously
+	 * <p>Will call {@link InMemoryDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, ContentValues, Throwable) InMemoryDbErrorHandler.onAddItemFailed()} on each item failing
+	 * @param items to add
+	 */
 	protected final void scheduleAddOperation(Collection<? extends E> items) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEMS, items));
 		pushModifyingTransaction();
 		popModifyingTransaction();
 	}
 
+	/**
+	 * Request to update the item in the database asynchronously
+	 * <p>{@link AsynchronousDbHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
+	 * <p>Will call {@link InMemoryDbErrorHandler#onUpdateItemFailed(AsynchronousDbHelper, Object, Throwable) InMemoryDbErrorHandler.onUpdateItemFailed()} on failure
+	 * @see #getValuesFromData(Object, SQLiteDatabase)
+	 * @param item to update
+	 */
 	protected final void scheduleUpdateOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_UPDATE_ITEM, item));
 		pushModifyingTransaction();
 		popModifyingTransaction();
 	}
 
+	/**
+	 * Request to replace an item in the databse with another asynchronously
+	 * <p>{@link AsynchronousDbHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
+	 * <p>Will call {@link InMemoryDbErrorHandler#onReplaceItemFailed(AsynchronousDbHelper, Object, Object, Throwable) InMemoryDbErrorHandler.onReplaceItemFailed()} on failure
+	 * @param original Item to replace
+	 * @param replacement Item to replace with
+	 */
 	protected final void scheduleReplaceOperation(E original, E replacement) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEMS, new Pair<E,E>(original, replacement)));
 		pushModifyingTransaction();
@@ -487,10 +506,9 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	}
 
 	/**
-	 * request to delete the item from the database, it should be kept in synch with the in memory storage
-	 * <p>
-	 * will call the {@link InMemoryDbErrorHandler} in case of error
-	 * @param item
+	 * Request to delete the item from the database
+	 * <p>Will call the {@link InMemoryDbErrorHandler#onRemoveItemFailed(AsynchronousDbHelper, Object, Throwable) InMemoryDbErrorHandler.onRemoveItemFailed()} on failure
+	 * @param item to remove
 	 */
 	protected final void scheduleRemoveOperation(E item) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
