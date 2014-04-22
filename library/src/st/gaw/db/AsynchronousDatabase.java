@@ -1,5 +1,7 @@
 package st.gaw.db;
 
+import java.util.Collection;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -47,4 +49,48 @@ public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
 	protected final boolean shouldReloadAllData() {
 		return false;
 	}
+
+	/**
+	 * Add a new element in the database (asynchronous)
+	 * <p>Helper call for {@link #scheduleAddOperation(E)}
+	 * <p>If adding failed {@link InMemoryDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) InMemoryDbErrorHandler.onAddItemFailed()} will be called
+	 * @param item to add
+	 * @see #scheduleAddOperation(E)
+	 */
+	public void add(E item) {
+		scheduleAddOperation(item);
+	}
+
+	/**
+	 * Add new elements in the database (asynchronous)
+	 * <p>Helper call for {@link #scheduleAddOperation(Collection)}
+	 * <p>{@link InMemoryDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) InMemoryDbErrorHandler.onAddItemFailed()} will be called for each addition failure
+	 * @param items to add
+	 * @see #scheduleAddOperation(Collection)
+	 */
+	public void addAll(Collection<E> items) {
+		scheduleAddOperation(items);
+	}
+
+	/**
+	 * Update an element in the database
+	 * <p>Helper call for {@link #scheduleUpdateOperation(E)}
+	 * @param item to update
+	 * @see #scheduleUpdateOperation(E)
+	 */
+	public void update(E item) {
+		scheduleUpdateOperation(item);
+	}
+
+	/**
+	 * Remove an element from the database (asynchronous)
+	 * <p>Helper call for {@link #scheduleRemoveOperation(E)}
+	 * <p>If the removal fails {@link InMemoryDbErrorHandler#onRemoveItemFailed(AsynchronousDbHelper, Object, Throwable) InMemoryDbErrorHandler.onRemoveItemFailed()} will be called
+	 * @param item to remove
+	 * @see #scheduleRemoveOperation(E)
+	 */
+	public void remove(E item) {
+		scheduleRemoveOperation(item);
+	}
+
 }
