@@ -1,5 +1,6 @@
 package st.gaw.db;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -76,7 +77,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
 	@SuppressLint("HandlerLeak")
-	protected AsynchronousDbHelper(Context context, final String name, CursorFactory factory, int version, Logger logger, Object initCookie) {
+	protected AsynchronousDbHelper(final Context context, final String name, CursorFactory factory, int version, Logger logger, Object initCookie) {
 		super(context, name, factory, version);
 
 		preloadInit(initCookie, logger);
@@ -114,7 +115,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 							}
 						} catch (SQLException e) {
 							if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
-								notifyDatabaseCorrupted(name, e);
+								notifyDatabaseCorrupted(context, name, e);
 							else
 								LogManager.logger.w(STARTUP_TAG, "Can't open database "+name, e);
 						} finally {
@@ -129,6 +130,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 						db.delete(getMainTableName(), "1", null);
 					} catch (Throwable e) {
 						LogManager.logger.w(TAG,"Failed to empty table "+getMainTableName()+" in "+name, e);
+					} finally {
 						sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
 					}
 					SQLiteDatabase.releaseMemory();
@@ -414,7 +416,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 		popModifyingTransaction();
 	}
 
-	private void notifyDatabaseCorrupted(String name, Throwable cause) {
+	private void notifyDatabaseCorrupted(Context context, String name, Throwable cause) {
 		LogManager.logger.e(STARTUP_TAG, "table "+getMainTableName()+" is corrupted in "+name);
 		if (mErrorHandler!=null) {
 			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
@@ -424,6 +426,8 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 				listener.onCorruption(this);
 		}
 		pushModifyingTransaction();
+		File corruptedDbFile = context.getDatabasePath(name);
+		corruptedDbFile.delete();
 		popModifyingTransaction();
 	}
 
