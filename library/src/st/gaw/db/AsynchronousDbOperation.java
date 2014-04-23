@@ -1,13 +1,14 @@
 package st.gaw.db;
 
 /**
- * interface for operations that can be run via {@link AsynchronousDbHelper#scheduleCustomOperation(InMemoryDbOperation)}
- * <p> said operation is run in the internal thread of the {@link AsynchronousDbHelper}
+ * Interface for operations run in the internal thread of the {@link AsynchronousDbHelper} via
+ * {@link AsynchronousDbHelper#scheduleCustomOperation(InMemoryDbOperation) scheduleCustomOperation()} 
  */
 public interface AsynchronousDbOperation<E> {
 	/**
-	 * Callback of the operation to run in the internal thread of db
-	 * @param db the database on which this operation is processed
+	 * Callback of the operation to run in the internal thread of {@code db}
+	 * 
+	 * @param db on which this operation is processed
 	 */
 	void runInMemoryDbOperation(AsynchronousDbHelper<E> db);
 }

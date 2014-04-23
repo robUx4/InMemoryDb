@@ -233,8 +233,8 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 						@SuppressWarnings("unchecked")
 						AsynchronousDbOperation<E> operation = (AsynchronousDbOperation<E>) msg.obj;
 						operation.runInMemoryDbOperation(AsynchronousDbHelper.this);
-					} catch (Throwable e) {
-						LogManager.logger.w(TAG, name+" failed to run operation "+msg.obj,e);
+					} catch (Exception e) {
+						LogManager.logger.w(TAG, name+" failed to run operation "+msg.obj, e);
 					}
 					break;
 
