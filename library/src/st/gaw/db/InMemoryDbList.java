@@ -16,9 +16,9 @@ import android.database.sqlite.SQLiteDatabase;
  * @param <E> the type of items stored in memory by the {@link InMemoryDbList}
  * @param <L> the type of in memory storage that will be used
  */
-public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousDbHelper<E> implements InMemoryDbErrorHandler<E>/*, List<E>*/ {
+public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousDbHelper<E> implements AsynchronousDbErrorHandler<E>/*, List<E>*/ {
 
-	private WeakReference<InMemoryDbErrorHandler<E>> mListener;
+	private WeakReference<AsynchronousDbErrorHandler<E>> mListener;
 
 	/**
 	 * @param context Used to open or create the database
@@ -76,11 +76,11 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	};
 
 	@Override
-	public void setDbErrorHandler(InMemoryDbErrorHandler<E> listener) {
+	public void setDbErrorHandler(AsynchronousDbErrorHandler<E> listener) {
 		if (listener==null)
 			mListener = null;
 		else
-			mListener = new WeakReference<InMemoryDbErrorHandler<E>>(listener);
+			mListener = new WeakReference<AsynchronousDbErrorHandler<E>>(listener);
 	}
 
 	@Override
@@ -202,36 +202,36 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 		remove(item);
 
 		if (mListener!=null) {
-			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
 			else
 				listener.onAddItemFailed(db, item, values, cause);
 		}
-	};
+	}
 
 	public void onRemoveItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
 		// revert the failed change in memory
 		add(item);
 
 		if (mListener!=null) {
-			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
 			else
 				listener.onRemoveItemFailed(db, item, cause);
 		}
-	};
+	}
 
 	public void onUpdateItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
 		if (mListener!=null) {
-			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
 			else
 				listener.onUpdateItemFailed(db, item, cause);
 		}
-	};
+	}
 
 	public void onReplaceItemFailed(AsynchronousDbHelper<E> db, E original, E replacement, Throwable cause) {
 		// revert the failed change in memory
@@ -240,12 +240,12 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 			getList().set(prevIndex, original);
 
 		if (mListener!=null) {
-			final InMemoryDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
 			else
 				listener.onReplaceItemFailed(db, original, replacement, cause);
 		}
-	};
+	}
 
 }

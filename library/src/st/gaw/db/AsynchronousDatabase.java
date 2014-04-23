@@ -53,7 +53,7 @@ public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
 	/**
 	 * Add a new element in the database (asynchronous)
 	 * <p>Helper call for {@link #scheduleAddOperation(E)}
-	 * <p>If adding failed {@link InMemoryDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) InMemoryDbErrorHandler.onAddItemFailed()} will be called
+	 * <p>If adding failed {@link AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} will be called
 	 * @param item to add
 	 * @see #scheduleAddOperation(E)
 	 */
@@ -64,7 +64,7 @@ public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
 	/**
 	 * Add new elements in the database (asynchronous)
 	 * <p>Helper call for {@link #scheduleAddOperation(Collection)}
-	 * <p>{@link InMemoryDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) InMemoryDbErrorHandler.onAddItemFailed()} will be called for each addition failure
+	 * <p>{@link AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} will be called for each addition failure
 	 * @param items to add
 	 * @see #scheduleAddOperation(Collection)
 	 */
@@ -85,7 +85,7 @@ public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
 	/**
 	 * Remove an element from the database (asynchronous)
 	 * <p>Helper call for {@link #scheduleRemoveOperation(E)}
-	 * <p>If the removal fails {@link InMemoryDbErrorHandler#onRemoveItemFailed(AsynchronousDbHelper, Object, Throwable) InMemoryDbErrorHandler.onRemoveItemFailed()} will be called
+	 * <p>If the removal fails {@link AsynchronousDbErrorHandler#onRemoveItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onRemoveItemFailed()} will be called
 	 * @param item to remove
 	 * @see #scheduleRemoveOperation(E)
 	 */

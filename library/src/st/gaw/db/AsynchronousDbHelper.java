@@ -45,7 +45,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	private static final int MSG_REPLACE_ITEMS     = 107;
 	private static final int MSG_CUSTOM_OPERATION  = 108;
 
-	private WeakReference<InMemoryDbErrorHandler<E>> mErrorHandler; // not protected for now
+	private WeakReference<AsynchronousDbErrorHandler<E>> mErrorHandler; // not protected for now
 	private final CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>> mDbListeners = new CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>>();
 
 	private AtomicBoolean mDataLoaded = new AtomicBoolean();
@@ -319,11 +319,11 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * set the listener that will receive error events
 	 * @param listener null to remove the listener
 	 */
-	public void setDbErrorHandler(InMemoryDbErrorHandler<E> listener) {
+	public void setDbErrorHandler(AsynchronousDbErrorHandler<E> listener) {
 		if (listener==null)
 			mErrorHandler = null;
 		else
-			mErrorHandler = new WeakReference<InMemoryDbErrorHandler<E>>(listener);
+			mErrorHandler = new WeakReference<AsynchronousDbErrorHandler<E>>(listener);
 	}
 
 	public void addListener(InMemoryDbListener<E> listener) {
@@ -360,7 +360,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	private void notifyAddItemFailed(E item, ContentValues values, Throwable cause) {
 		LogManager.logger.i(TAG, this+" failed to add item "+item+(DEBUG_DB ? (" values"+values) : ""), cause);
 		if (mErrorHandler!=null) {
-			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
 				mErrorHandler = null;
 			else
@@ -373,7 +373,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	private void notifyReplaceItemFailed(E srcItem, E replacement, Throwable cause) {
 		LogManager.logger.i(TAG, this+" failed to replace item "+srcItem+" with "+replacement, cause);
 		if (mErrorHandler!=null) {
-			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
 				mErrorHandler = null;
 			else
@@ -386,7 +386,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	private void notifyUpdateItemFailed(E item, ContentValues values, Throwable cause) {
 		LogManager.logger.i(TAG, this+" failed to update item "+item+(DEBUG_DB ? (" values"+values) : ""), cause);
 		if (mErrorHandler!=null) {
-			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
 				mErrorHandler = null;
 			else
@@ -399,7 +399,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	private void notifyRemoveItemFailed(E item, Throwable cause) {
 		LogManager.logger.i(TAG, this+" failed to remove item "+item, cause);
 		if (mErrorHandler!=null) {
-			final InMemoryDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
 			if (listener==null)
 				mErrorHandler = null;
 			else
@@ -421,7 +421,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * @see #getValuesFromData(Object, SQLiteDatabase)
 	 */
 	protected abstract void addCursorInMemory(Cursor c);
-	
+
 	/**
 	 * transform the element in memory into {@link ContentValues} that can be saved in the database
 	 * <p> you can return null and fill the database yourself if you need to
@@ -450,7 +450,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	/**
 	 * Request to store the item in the database asynchronously
-	 * <p>Will call the {@link InMemoryDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, ContentValues, Throwable) InMemoryDbErrorHandler.onAddItemFailed()} on failure
+	 * <p>Will call the {@link AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on failure
 	 * @param item to add
 	 */
 	protected final void scheduleAddOperation(E item) {
@@ -461,7 +461,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	/**
 	 * Request to store the items in the database asynchronously
-	 * <p>Will call {@link InMemoryDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, ContentValues, Throwable) InMemoryDbErrorHandler.onAddItemFailed()} on each item failing
+	 * <p>Will call {@link AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on each item failing
 	 * @param items to add
 	 */
 	protected final void scheduleAddOperation(Collection<? extends E> items) {
@@ -473,7 +473,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	/**
 	 * Request to update the item in the database asynchronously
 	 * <p>{@link AsynchronousDbHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
-	 * <p>Will call {@link InMemoryDbErrorHandler#onUpdateItemFailed(AsynchronousDbHelper, Object, Throwable) InMemoryDbErrorHandler.onUpdateItemFailed()} on failure
+	 * <p>Will call {@link AsynchronousDbErrorHandler#onUpdateItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onUpdateItemFailed()} on failure
 	 * @see #getValuesFromData(Object, SQLiteDatabase)
 	 * @param item to update
 	 */
@@ -486,7 +486,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	/**
 	 * Request to replace an item in the databse with another asynchronously
 	 * <p>{@link AsynchronousDbHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
-	 * <p>Will call {@link InMemoryDbErrorHandler#onReplaceItemFailed(AsynchronousDbHelper, Object, Object, Throwable) InMemoryDbErrorHandler.onReplaceItemFailed()} on failure
+	 * <p>Will call {@link AsynchronousDbErrorHandler#onReplaceItemFailed(AsynchronousDbHelper, Object, Object, Throwable) AsynchronousDbErrorHandler.onReplaceItemFailed()} on failure
 	 * @param original Item to replace
 	 * @param replacement Item to replace with
 	 */
@@ -504,7 +504,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	/**
 	 * Request to delete the item from the database
-	 * <p>Will call the {@link InMemoryDbErrorHandler#onRemoveItemFailed(AsynchronousDbHelper, Object, Throwable) InMemoryDbErrorHandler.onRemoveItemFailed()} on failure
+	 * <p>Will call the {@link AsynchronousDbErrorHandler#onRemoveItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onRemoveItemFailed()} on failure
 	 * @param item to remove
 	 */
 	protected final void scheduleRemoveOperation(E item) {
