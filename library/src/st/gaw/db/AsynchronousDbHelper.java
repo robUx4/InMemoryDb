@@ -91,31 +91,36 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 				switch (msg.what) {
 				case MSG_LOAD_IN_MEMORY:
-					startLoadingInMemory();
-					if (shouldReloadAllData())
+					if (shouldReloadAllData()) {
+						startLoadingInMemory();
 						try {
 							db = getWritableDatabase();
-							Cursor c = db.query(getMainTableName(), null, null, null, null, null, null);
-							if (c!=null)
-								try {
-									if (c.moveToFirst()) {
-										startLoadingFromCursor(c);
-										do {
-											addCursorInMemory(c);
-										} while (c.moveToNext());
-									}
+							try {
+								Cursor c = db.query(getMainTableName(), null, null, null, null, null, null);
+								if (c!=null)
+									try {
+										if (c.moveToFirst()) {
+											startLoadingFromCursor(c);
+											do {
+												addCursorInMemory(c);
+											} while (c.moveToNext());
+										}
 
-								} finally {
-									c.close();
-								}
+									} finally {
+										c.close();
+									}
+							} catch (SQLException e) {
+								LogManager.logger.w(STARTUP_TAG, "Can't query table "+getMainTableName()+" in "+name, e);
+							}
 						} catch (SQLException e) {
 							if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
-								LogManager.logger.e(STARTUP_TAG, "table "+getMainTableName()+" is corrupted in "+name);
+								notifyDatabaseCorrupted(name, e);
 							else
-								LogManager.logger.w(STARTUP_TAG, "Can't query table "+getMainTableName()+" in "+name, e);
+								LogManager.logger.w(STARTUP_TAG, "Can't open database "+name, e);
 						} finally {
 							finishLoadingInMemory();
 						}
+					}
 					break;
 
 				case MSG_CLEAR_DATABASE:
@@ -404,6 +409,19 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 				mErrorHandler = null;
 			else
 				listener.onRemoveItemFailed(this, item, cause);
+		}
+		pushModifyingTransaction();
+		popModifyingTransaction();
+	}
+
+	private void notifyDatabaseCorrupted(String name, Throwable cause) {
+		LogManager.logger.e(STARTUP_TAG, "table "+getMainTableName()+" is corrupted in "+name);
+		if (mErrorHandler!=null) {
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
+			if (listener==null)
+				mErrorHandler = null;
+			else
+				listener.onCorruption(this);
 		}
 		pushModifyingTransaction();
 		popModifyingTransaction();

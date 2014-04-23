@@ -248,4 +248,14 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 		}
 	}
 
+	@Override
+	public void onCorruption(AsynchronousDbHelper<E> db) {
+		if (mListener!=null) {
+			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			if (listener==null)
+				mListener = null;
+			else
+				listener.onCorruption(db);
+		}
+	}
 }

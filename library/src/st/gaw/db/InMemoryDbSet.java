@@ -199,4 +199,15 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 	public void onReplaceItemFailed(AsynchronousDbHelper<E> db, E original, E replacement, Throwable cause) {
 		// do nothing
 	}
+	
+	@Override
+	public void onCorruption(AsynchronousDbHelper<E> db) {
+		if (mListener!=null) {
+			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			if (listener==null)
+				mListener = null;
+			else
+				listener.onCorruption(db);
+		}
+	}
 }
