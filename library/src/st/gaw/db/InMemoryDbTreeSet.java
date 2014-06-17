@@ -77,7 +77,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	}
 
 	@Override
-	protected synchronized TreeSet<E> getSet() {
+	protected TreeSet<E> getSet() {
 		if (!mDataLock.isHeldByCurrentThread()) throw new IllegalStateException("we need a lock on mDataLock to access mData in "+this);
 		if (!isDataLoaded() && !mIsLoading)
 			try {
