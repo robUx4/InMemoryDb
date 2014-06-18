@@ -1,7 +1,5 @@
 apply plugin: 'android-library'
 
-archivesBaseName = 'InMemoryDb'
-
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
 }
