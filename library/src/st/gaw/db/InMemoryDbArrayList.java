@@ -115,7 +115,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	public boolean addAll(Collection<? extends E> items) {
 		// protect the data coherence
@@ -125,7 +125,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	public boolean remove(E item) {
 		// protect the data coherence
@@ -135,7 +135,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public boolean remove(int index) {
@@ -156,7 +156,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	protected void clearDataInMemory() {
@@ -196,7 +196,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public E findItem(E similar) {
@@ -216,7 +216,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public boolean swap(int positionA, int positionB) {

@@ -137,7 +137,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock containsKey");
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public K getStoredKey(K key) {
@@ -163,7 +163,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock remove");
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public V put(K key, V value) {
@@ -176,7 +176,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock put");
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public V get(K key) {
@@ -189,7 +189,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock get");
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public int size() {

@@ -196,7 +196,7 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock get");
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	/**
 	 * Caches {@code value} for {@code key}. The value is moved to the head of
@@ -219,7 +219,7 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock put");
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	/**
 	 * Remove the eldest entries until the total of remaining entries is at or

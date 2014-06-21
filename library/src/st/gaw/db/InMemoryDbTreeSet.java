@@ -116,7 +116,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public boolean add(E item) {
@@ -127,8 +127,8 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 		} finally {
 			mDataLock.unlock();
 		}
-	};
-	
+	}
+
 	@Override
 	public boolean replace(E item) {
 		// protect the data coherence
@@ -138,7 +138,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public boolean remove(E item) {
@@ -149,7 +149,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 		} finally {
 			mDataLock.unlock();
 		}
-	};
+	}
 
 	@Override
 	public boolean removeAll(Collection<E> collection) {

@@ -73,7 +73,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	@Override
 	protected final ContentValues getValuesFromData(E data, SQLiteDatabase dbToFill) throws RuntimeException {
 		return getValuesFromData(data); // we don't need to know the database in Lists
-	};
+	}
 
 	@Override
 	public void setDbErrorHandler(AsynchronousDbErrorHandler<E> listener) {
