@@ -49,7 +49,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	private WeakReference<AsynchronousDbErrorHandler<E>> mErrorHandler; // not protected for now
 	private final CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>> mDbListeners = new CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>>();
 
-	private AtomicBoolean mDataLoaded = new AtomicBoolean();
+	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
 
 	/**
