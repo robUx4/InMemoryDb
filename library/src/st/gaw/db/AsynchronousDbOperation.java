@@ -2,7 +2,7 @@ package st.gaw.db;
 
 /**
  * Interface for operations run in the internal thread of the {@link AsynchronousDbHelper} via
- * {@link AsynchronousDbHelper#scheduleCustomOperation(InMemoryDbOperation) scheduleCustomOperation()} 
+ * {@link AsynchronousDbHelper#scheduleCustomOperation(AsynchronousDbOperation) scheduleCustomOperation()}
  */
 public interface AsynchronousDbOperation<E> {
 	/**

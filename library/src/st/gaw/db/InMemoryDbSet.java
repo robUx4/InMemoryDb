@@ -75,7 +75,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 	@Override
 	protected final ContentValues getValuesFromData(E data, SQLiteDatabase dbToFill) throws RuntimeException {
 		return getValuesFromData(data); // we don't need to know the database in Lists
-	};
+	}
 
 	@Override
 	public void setDbErrorHandler(AsynchronousDbErrorHandler<E> listener) {
@@ -104,7 +104,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 	}
 	
 	/**
-	 * replace an existing element by the same element with other values not included in {@link E#equals()}
+	 * replace an existing element by the same element with other values not included in {@link E#equals(Object)}
 	 * @param item
 	 * @return true if the element was replaced
 	 */
