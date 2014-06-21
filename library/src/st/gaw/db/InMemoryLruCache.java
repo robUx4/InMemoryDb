@@ -102,7 +102,7 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 				dataLoaded.await();
 				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this+" finished after "+(System.currentTimeMillis()-now));
 				//Thread.sleep(1000);
-			} catch (InterruptedException e1) {
+			} catch (InterruptedException ignored) {
 			}
 		if (null==mData) throw new NullPointerException("no HashMap, waited:"+waited+" mIsLoading:"+mIsLoading+" constructorPassed:"+constructorPassed);
 		return mData;

@@ -81,7 +81,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 				long now = System.currentTimeMillis();
 				dataLoaded.await();
 				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this+" finished after "+(System.currentTimeMillis()-now));
-			} catch (InterruptedException e1) {
+			} catch (InterruptedException ignored) {
 			}
 		return mData;
 	}
