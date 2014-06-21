@@ -61,7 +61,7 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	protected InMemoryLruCache(Context context, String name, int version, final int maxSize, Logger logger) {
-		super(context, name, version, logger, Integer.valueOf(maxSize));
+		super(context, name, version, logger, maxSize);
 		this.constructorPassed = true;
 	}
 	
