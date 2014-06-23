@@ -326,7 +326,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * set the listener that will receive error events
 	 * @param listener null to remove the listener
 	 */
-	public void setDbErrorHandler(AsynchronousDbErrorHandler<E> listener) {
+	protected void setDbErrorHandler(AsynchronousDbErrorHandler<E> listener) {
 		if (listener==null)
 			mErrorHandler = null;
 		else

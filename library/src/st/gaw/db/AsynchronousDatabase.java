@@ -36,7 +36,7 @@ public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
 	 */
-	public AsynchronousDatabase(Context context, String name, CursorFactory factory, int version) {
+	protected AsynchronousDatabase(Context context, String name, CursorFactory factory, int version) {
 		super(context, name, factory, version, null, null);
 	}
 
