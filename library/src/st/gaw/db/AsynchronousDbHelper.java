@@ -259,14 +259,12 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 	 * Method to call to insert data directly in the database
 	 * @param db Database where data will be written
 	 * @param addValues Values that will be written in the database
-	 * @return {@code true} if the data were written successfully
 	 * @throws RuntimeException if the insertion failed
 	 */
-	protected boolean directStoreItem(SQLiteDatabase db, ContentValues addValues) throws SQLException {
+	protected void directStoreItem(SQLiteDatabase db, ContentValues addValues) throws SQLException {
 		long id = db.insertOrThrow(getMainTableName(), null, addValues);
 		if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
 		if (id==-1) throw new RuntimeException("failed to add values "+addValues+" in "+db.getPath());
-		return id!=-1;
 	}
 
 	/**
