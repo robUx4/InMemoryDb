@@ -1,4 +1,4 @@
-package st.gaw.db.adapter;
+package org.gawst.asyncdb.adapter;
 
 import android.os.Handler;
 import android.os.Looper;

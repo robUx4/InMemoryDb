@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package st.gaw.db;
+package org.gawst.asyncdb;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

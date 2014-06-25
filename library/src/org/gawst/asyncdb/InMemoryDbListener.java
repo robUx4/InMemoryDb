@@ -1,4 +1,4 @@
-package st.gaw.db;
+package org.gawst.asyncdb;
 
 /**
  * listener interface to be notified when the data changes in a {@link AsynchronousDbHelper}

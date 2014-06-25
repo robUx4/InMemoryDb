@@ -1,8 +1,10 @@
-package st.gaw.db;
+package org.gawst.asyncdb;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -13,10 +15,10 @@ import android.database.sqlite.SQLiteDatabase;
  * a basic helper class to keep the content of a flat database in an {@link List}
  * @author Steve Lhomme
  *
- * @param <E> the type of items stored in memory by the {@link InMemoryDbList}
- * @param <L> the type of in memory storage that will be used
+ * @param <E> the type of items stored in memory by the {@link InMemoryDbSet}
+ * @param <S> the type of in memory storage that will be used
  */
-public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousDbHelper<E> implements AsynchronousDbErrorHandler<E>/*, List<E>*/ {
+public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbHelper<E> implements AsynchronousDbErrorHandler<E>/*, Set<E>*/ {
 
 	private WeakReference<AsynchronousDbErrorHandler<E>> mListener;
 
@@ -28,7 +30,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryDbList(Context context, String name, int version, Logger logger) {
+	protected InMemoryDbSet(Context context, String name, int version, Logger logger) {
 		this(context, name, version, logger, null);
 	}
 
@@ -41,7 +43,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
-	protected InMemoryDbList(Context context, String name, int version, Logger logger, Object initCookie) {
+	protected InMemoryDbSet(Context context, String name, int version, Logger logger, Object initCookie) {
 		super(context, name, version, logger, initCookie);
 		super.setDbErrorHandler(this);
 	}
@@ -50,7 +52,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 * return the object used to the in-memory elements
 	 * @return
 	 */
-	abstract protected L getList();
+	abstract protected S getSet();
 
 	/**
 	 * transform the {@link Cursor} into an element that can be used in memory
@@ -67,7 +69,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 * @see #addCursorInMemory(Cursor)
 	 */
 	protected abstract ContentValues getValuesFromData(E data);
-	
+
 	protected void onDataCleared() {}
 
 	@Override
@@ -86,7 +88,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	@Override
 	protected final void addCursorInMemory(Cursor c) {
 		E item = getDataFromCursor(c);
-		getList().add(item);
+		getSet().add(item);
 	}
 
 	/**
@@ -94,107 +96,68 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 * @param item to add
 	 */
 	public boolean add(E item) {
-		if (!getList().contains(item)) {
-			if (getList().add(item)) {
-				scheduleAddOperation(item);
-				return true;
-			}
+		if (getSet().add(item)) {
+			scheduleAddOperation(item);
+			return true;
 		}
 		return false;
 	}
 	
 	/**
-	 * add new elements in memory (synchronous) and in the database (asynchronous)
-	 * @param items to add
+	 * replace an existing element by the same element with other values not included in {@link E#equals(Object)}
+	 * @param item
+	 * @return true if the element was replaced
 	 */
-	public boolean addAll(Collection<? extends E> items) {
-		if (getList().addAll(items)) {
-			scheduleAddOperation(items);
-			return true;
-		}
-		return false;
+	public boolean replace(E item) {
+		if (!getSet().contains(item))
+			return false;
+		getSet().remove(item);
+		getSet().add(item);
+		scheduleUpdateOperation(item);
+		return true;
 	}
-
+	
 	/**
 	 * remove and item from memory (synchronous) and from the database (asynchronous)
 	 * @param item
 	 * @return true if the element was removed
 	 */
 	public boolean remove(E item) {
-		if (!getList().remove(item))
+		if (!getSet().remove(item))
 			return false;
 
 		scheduleRemoveOperation(item);
 		return true;
 	}
 
-	public boolean remove(int index) {
-		if (index < 0 || index >= getList().size())
+	public boolean removeAll(Collection<E> collection) {
+		if (!getSet().removeAll(collection))
 			return false;
-		E removedItem = getList().remove(index);
-		if (removedItem==null)
-			return false;
-
-		scheduleRemoveOperation(removedItem);
+		pushModifyingTransaction();
+		for (E e : collection)
+			scheduleRemoveOperation(e);
+		popModifyingTransaction();
 		return true;
 	}
 
+	public boolean contains(E object) {
+		return getSet().contains(object);
+	}
+
 	public E get(int position) {
-		if (position >= getList().size())
+		if (position >= getSet().size())
 			return null;
-		return getList().get(position);
-	}
-
-	public E findItem(E similar) {
-		int found = getList().indexOf(similar);
-		if (found<0)
-			return null;
-
-		return getList().get(found);
-	}
-
-	public int indexOf(E similar) {
-		return getList().indexOf(similar);
-	}
-
-	public void notifyItemChanged(E item) {
-		int itemPos = getList().indexOf(item);
-		if (itemPos>=0) {
-			getList().set(itemPos, item);
-			scheduleUpdateOperation(item);
-		}
+		Iterator<E> it = getSet().iterator();
+		while (position-- > 0 && it.hasNext())
+			it.next();
+		return it.next();
 	}
 
 	@Override
 	protected void clearDataInMemory() {
-		getList().clear();
+		getSet().clear();
 		super.clearDataInMemory();
 		onDataCleared();
-	}
-
-	public boolean replace(int index, E newData) {
-		if (index < 0 || index >= getList().size())
-			return false;
-
-		E prevValue = getList().get(index); 
-		getList().set(index, newData);
-		scheduleReplaceOperation(prevValue, newData);
-		return true;
-	}
-
-	public boolean swap(int positionA, int positionB) {
-		if (positionA < 0 || positionA >= getList().size())
-			return false;
-		if (positionB < 0 || positionB >= getList().size())
-			return false;
-
-		E aa = getList().get(positionA);
-		E bb = getList().get(positionB);
-		getList().set(positionB, aa);
-		getList().set(positionA, bb);
-
-		scheduleSwapOperation(aa, bb);
-		return true;
 	}
 
 	public void onAddItemFailed(AsynchronousDbHelper<E> db, E item, ContentValues values, Throwable cause) {
@@ -234,20 +197,9 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	}
 
 	public void onReplaceItemFailed(AsynchronousDbHelper<E> db, E original, E replacement, Throwable cause) {
-		// revert the failed change in memory
-		int prevIndex = getList().indexOf(replacement); // TODO: we may store the position somewhere
-		if (prevIndex>=0)
-			getList().set(prevIndex, original);
-
-		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
-			if (listener==null)
-				mListener = null;
-			else
-				listener.onReplaceItemFailed(db, original, replacement, cause);
-		}
+		// do nothing
 	}
-
+	
 	@Override
 	public void onCorruption(AsynchronousDbHelper<E> db) {
 		if (mListener!=null) {

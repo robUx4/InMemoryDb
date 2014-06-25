@@ -1,4 +1,4 @@
-package st.gaw.db;
+package org.gawst.asyncdb;
 
 import android.util.Pair;
 

@@ -1,4 +1,4 @@
-package st.gaw.db;
+package org.gawst.asyncdb;
 
 import java.io.File;
 import java.lang.ref.WeakReference;

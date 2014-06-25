@@ -1,4 +1,4 @@
-package st.gaw.db;
+package org.gawst.asyncdb;
 
 import java.util.HashMap;
 import java.util.concurrent.locks.Condition;

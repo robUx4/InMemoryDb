@@ -1,34 +1,32 @@
-package st.gaw.db;
+package org.gawst.asyncdb;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.TreeSet;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
+import android.database.Cursor;
 
 /**
- * a basic helper class to keep the content of a flat database in an {@link TreeSet}
+ * a basic helper class to keep the content of a flat database in an {@link ArrayList}
  * <p>
- * you should use the {@link #mDataLock} when iterating through the {@link TreeSet}
+ * you should use the {@link #mDataLock} when iterating through the {@link ArrayList}
  * @author Steve Lhomme
  *
- * @param <E> the type of items stored in memory by the {@link InMemoryDbTreeSet}
+ * @param <E> the type of items stored in memory by the {@link InMemoryDbArrayList}
  */
-public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> {
+public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList<E>> {
 
 	/**
-	 * The array where the data are stored, locked when writing on it
+	 * the array where the data are stored, locked when writing on it
 	 */
-	private TreeSet<E> mData;
+	private ArrayList<E> mData;
 
 	/**
 	 * Field to tell when the data are being reloaded from the DB
 	 */
 	private boolean mIsLoading;
-
-	private final Comparator<E> comparator;
 
 	/**
 	 * ReentrantLock used to protect {@link #mData} when reading/writing/iterating it
@@ -41,43 +39,40 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	private Condition dataLoaded;
 
 	/**
-	 * @param context to use to open or create the database
-	 * @param name of the database file, or null for an in-memory database
-	 * @param version number of the database (starting at 1); if the database is older,
+	 * @param context Used to open or create the database
+	 * @param name Database filename on disk
+	 * @param version Version number of the database (starting at 1); if the database is older,
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param comparator comparator to sort the elements 
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryDbTreeSet(Context context, String name, int version, Logger logger, Comparator<E> comparator) {
-		this(context, name, version, logger, comparator, null);
+	protected InMemoryDbArrayList(Context context, String name, int version, Logger logger) {
+		this(context, name, version, logger, null);
 	}
-
+	
 	/**
-	 * @param context to use to open or create the database
-	 * @param name of the database file, or null for an in-memory database
-	 * @param version number of the database (starting at 1); if the database is older,
+	 * @param context Used to open or create the database
+	 * @param name Database filename on disk
+	 * @param version Version number of the database (starting at 1); if the database is older,
 	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
 	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param comparator comparator to sort the elements 
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
-	protected InMemoryDbTreeSet(Context context, String name, int version, Logger logger, Comparator<E> comparator, Object initCookie) {
+	protected InMemoryDbArrayList(Context context, String name, int version, Logger logger, Object initCookie) {
 		super(context, name, version, logger, initCookie);
-		this.comparator = comparator;
 	}
-
+	
 	@Override
 	protected void preloadInit(Object cookie, Logger logger) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
 		super.preloadInit(cookie, logger);
-		mData = new TreeSet<E>(comparator);
+		mData = new ArrayList<E>();
 	}
 
 	@Override
-	protected TreeSet<E> getSet() {
+	protected ArrayList<E> getList() {
 		if (!mDataLock.isHeldByCurrentThread()) throw new IllegalStateException("we need a lock on mDataLock to access mData in "+this);
 		if (!isDataLoaded() && !mIsLoading)
 			try {
@@ -108,17 +103,10 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	}
 
 	@Override
-	public boolean contains(E object) {
-		// protect the data coherence
-		mDataLock.lock();
-		try {
-			return super.contains(object);
-		} finally {
-			mDataLock.unlock();
-		}
+	protected void startLoadingFromCursor(Cursor c) {
+		getList().ensureCapacity(c.getCount());
 	}
 
-	@Override
 	public boolean add(E item) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -129,18 +117,16 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 		}
 	}
 
-	@Override
-	public boolean replace(E item) {
+	public boolean addAll(Collection<? extends E> items) {
 		// protect the data coherence
 		mDataLock.lock();
 		try {
-			return super.replace(item);
+			return super.addAll(items);
 		} finally {
 			mDataLock.unlock();
 		}
 	}
 
-	@Override
 	public boolean remove(E item) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -152,11 +138,21 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	}
 
 	@Override
-	public boolean removeAll(Collection<E> collection) {
+	public boolean remove(int index) {
 		// protect the data coherence
 		mDataLock.lock();
 		try {
-			return super.removeAll(collection);
+			return super.remove(index);
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	public void notifyItemChanged(E item) {
+		// protect the data coherence
+		mDataLock.lock();
+		try {
+			super.notifyItemChanged(item);
 		} finally {
 			mDataLock.unlock();
 		}
@@ -172,8 +168,8 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 			mDataLock.unlock();
 		}
 	}
-
-	public int size() {
+	
+	public int getCount() {
 		mDataLock.lock();
 		try {
 			return null==mData ? 0 : mData.size();
@@ -193,10 +189,50 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	}
 
 	@Override
+	public int indexOf(E item) {
+		mDataLock.lock();
+		try {
+			return super.indexOf(item);
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
+	public E findItem(E similar) {
+		mDataLock.lock();
+		try {
+			return super.findItem(similar);
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
+	public boolean replace(int index, E newData) {
+		mDataLock.lock();
+		try {
+			return super.replace(index, newData);
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
+	public boolean swap(int positionA, int positionB) {
+		mDataLock.lock();
+		try {
+			return super.swap(positionA, positionB);
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
 	public void waitForDataLoaded() {
 		mDataLock.lock();
 		try {
-			getSet();
+			getList();
 		    super.waitForDataLoaded();
 		} finally {
 			mDataLock.unlock();

@@ -1,4 +1,4 @@
-package st.gaw.db;
+package org.gawst.asyncdb;
 
 /**
  * interface for a logger class to replace the static calls to {@link android.util.Log}

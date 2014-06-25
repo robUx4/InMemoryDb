@@ -1,4 +1,4 @@
-package st.gaw.db;
+package org.gawst.asyncdb;
 
 /**
  * Interface for operations run in the internal thread of the {@link AsynchronousDbHelper} via
