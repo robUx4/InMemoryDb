@@ -19,5 +19,5 @@
 #   public *;
 #}
 
--keepnames class st.gaw.db.** { *; }
--keepnames interface st.gaw.db.** { *; }
+-keepnames class org.gawst.asyncdb.** { *; }
+-keepnames interface org.gawst.asyncdb.** { *; }
