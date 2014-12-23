@@ -36,6 +36,10 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 		mArray.addListener(this);
 	}
 
+    protected InMemoryDbArrayList<E> getDataSource() {
+        return mArray;
+    }
+
 	@Override
 	public int getCount() {
 		return mData.size();
