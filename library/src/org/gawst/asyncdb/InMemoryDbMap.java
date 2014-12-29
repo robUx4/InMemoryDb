@@ -7,32 +7,19 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 
 public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<MapEntry<K,V>> {
 
 	/**
+	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param version Version number of the database (starting at 1); if the database is older,
-	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
-	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
 	 */
-	protected InMemoryDbMap(Context context, String name, int version, Logger logger) {
-		this(context, name, version, logger, null);
-	}
-
-	/**
-	 * @param context Used to open or create the database
-	 * @param name Database filename on disk
-	 * @param version Version number of the database (starting at 1); if the database is older,
-	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
-	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
-	 */
-	protected InMemoryDbMap(Context context, String name, int version, Logger logger, Object initCookie) {
-		super(context, name, version, logger, initCookie);
+	protected InMemoryDbMap(SQLiteOpenHelper db, Context context, String name, Logger logger, Object initCookie) {
+		super(db, context, name, logger, initCookie);
 	}
 
 	/**

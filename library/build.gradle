@@ -19,8 +19,8 @@ android {
     buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
 
     defaultConfig {
-        versionCode 8
-        versionName '2.1.0'
+        versionCode 30000
+        versionName '3.0.0'
         minSdkVersion Math.max(5, Integer.parseInt(project.ANDROID_BUILD_MIN_SDK_VERSION))
         targetSdkVersion Integer.parseInt(project.ANDROID_BUILD_TARGET_SDK_VERSION)
     }

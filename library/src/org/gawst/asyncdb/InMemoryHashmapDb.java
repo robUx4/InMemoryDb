@@ -5,6 +5,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteOpenHelper;
 
 public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMap<K,V>> {
 
@@ -47,28 +48,24 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	private final boolean constructorPassed;
 
 	/**
+	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param version Version number of the database (starting at 1); if the database is older,
-	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
-	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryHashmapDb(Context context, String name, int version, Logger logger) {
-		this(context, name, version, logger, null);
+	protected InMemoryHashmapDb(SQLiteOpenHelper db, Context context, String name, Logger logger) {
+		this(db, context, name, logger, null);
 	}
 
 	/**
+	 * @param db
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param version Version number of the database (starting at 1); if the database is older,
-	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
-	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
 	 */
-	protected InMemoryHashmapDb(Context context, String name, int version, Logger logger, Object initCookie) {
-		super(context, name, version, logger, initCookie);
+	protected InMemoryHashmapDb(SQLiteOpenHelper db, Context context, String name, Logger logger, Object initCookie) {
+		super(db, context, name, logger, initCookie);
 		this.constructorPassed = true;
 	}
 

@@ -13,7 +13,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Handler;
@@ -29,7 +28,7 @@ import android.util.Pair;
  *
  * @param <E> the type of items stored in memory
  */
-public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
+public abstract class AsynchronousDbHelper<E> {
 
 	protected final static String TAG = "MemoryDb";
 	protected final static String STARTUP_TAG = "Startup";
@@ -51,34 +50,18 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
+	private final SQLiteOpenHelper mDb;
 
 	/**
+	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param version Version number of the database (starting at 1); if the database is older,
-	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
-	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
 	 */
 	@SuppressLint("HandlerLeak")
-	protected AsynchronousDbHelper(Context context, final String name, int version, Logger logger, Object initCookie) {
-		this(context, name, null, version, logger, initCookie);
-	}
-
-	/**
-	 * @param context Used to open or create the database
-	 * @param name Database filename on disk
-	 * @param factory to use for creating cursor objects, or null for the default
-	 * @param version Version number of the database (starting at 1); if the database is older,
-	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
-	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
-	 */
-	@SuppressLint("HandlerLeak")
-	protected AsynchronousDbHelper(final Context context, final String name, CursorFactory factory, int version, Logger logger, Object initCookie) {
-		super(context, name, factory, version);
+	protected AsynchronousDbHelper(SQLiteOpenHelper db, final Context context, final String name, Logger logger, Object initCookie) {
+		this.mDb = db;
 
 		preloadInit(initCookie, logger);
 
@@ -95,7 +78,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					if (shouldReloadAllData()) {
 						startLoadingInMemory();
 						try {
-							db = getWritableDatabase();
+							db = mDb.getWritableDatabase();
 							try {
 								Cursor c = db.query(getMainTableName(), null, null, null, null, null, null);
 								if (c!=null)
@@ -126,7 +109,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 				case MSG_CLEAR_DATABASE:
 					try {
-						db = getWritableDatabase();
+						db = mDb.getWritableDatabase();
 						db.delete(getMainTableName(), "1", null);
 					} catch (Throwable e) {
 						LogManager.logger.w(TAG,"Failed to empty table "+getMainTableName()+" in "+name, e);
@@ -141,7 +124,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					E itemToAdd = (E) msg.obj;
 					addValues = null;
 					try {
-						db = getWritableDatabase();
+						db = mDb.getWritableDatabase();
 						addValues = getValuesFromData(itemToAdd, db);
 						if (addValues!=null) {
 							directStoreItem(db, addValues);
@@ -157,7 +140,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					for (E item : itemsToAdd) {
 						addValues = null;
 						try {
-							db = getWritableDatabase();
+							db = mDb.getWritableDatabase();
 							addValues = getValuesFromData(item, db);
 							if (addValues!=null) {
 								directStoreItem(db, addValues);
@@ -172,7 +155,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					@SuppressWarnings("unchecked")
 					E itemToDelete = (E) msg.obj;
 					try {
-						db = getWritableDatabase();
+						db = mDb.getWritableDatabase();
 						if (DEBUG_DB) LogManager.logger.d(TAG, name+" remove "+itemToDelete);
 						if (db.delete(getMainTableName(), getItemSelectClause(itemToDelete), getItemSelectArgs(itemToDelete))==0)
 							notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+name));
@@ -186,7 +169,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					E itemToUpdate = (E) msg.obj;
 					ContentValues updateValues = null;
 					try {
-						db = getWritableDatabase();
+						db = mDb.getWritableDatabase();
 						updateValues = getValuesFromData(itemToUpdate, db);
 						if (!directUpdate(db, itemToUpdate, updateValues)) {
 							notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update "+updateValues+" in "+name));
@@ -200,7 +183,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					@SuppressWarnings("unchecked")
 					Pair<E,E> itemsToReplace = (Pair<E,E>) msg.obj;
 					try {
-						db = getWritableDatabase();
+						db = mDb.getWritableDatabase();
 						ContentValues newValues = getValuesFromData(itemsToReplace.first, db);
 						directUpdate(db, itemsToReplace.second, newValues);
 					} catch (Throwable e) {
@@ -213,7 +196,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					Pair<E,E> itemsToSwap = (Pair<E,E>) msg.obj;
 					ContentValues newValuesA = null;
 					try {
-						db = getWritableDatabase();
+						db = mDb.getWritableDatabase();
 						newValuesA = getValuesFromData(itemsToSwap.second, db);
 						if (newValuesA!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, name+" update "+itemsToSwap.second+" with "+newValuesA);
@@ -224,7 +207,7 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 					}
 					ContentValues newValuesB = null;
 					try {
-						db = getWritableDatabase();
+						db = mDb.getWritableDatabase();
 						newValuesB = getValuesFromData(itemsToSwap.first, db);
 						if (newValuesB!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, name+" update "+itemsToSwap.first+" with "+newValuesB);
@@ -314,10 +297,13 @@ public abstract class AsynchronousDbHelper<E> extends SQLiteOpenHelper {
 
 	protected void clearDataInMemory() {}
 
-	@Override
 	@Deprecated
 	public SQLiteDatabase getReadableDatabase() {
-		return super.getReadableDatabase();
+		return mDb.getReadableDatabase();
+	}
+
+	public SQLiteDatabase getWritableDatabase() {
+		return mDb.getWritableDatabase();
 	}
 
 	/**

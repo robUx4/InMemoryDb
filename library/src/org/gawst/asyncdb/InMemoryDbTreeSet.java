@@ -7,6 +7,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteOpenHelper;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link TreeSet}
@@ -41,30 +42,26 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	private Condition dataLoaded;
 
 	/**
+	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context to use to open or create the database
 	 * @param name of the database file, or null for an in-memory database
-	 * @param version number of the database (starting at 1); if the database is older,
-	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
-	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param comparator comparator to sort the elements 
+	 * @param logger the {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param comparator comparator to sort the elements
 	 */
-	protected InMemoryDbTreeSet(Context context, String name, int version, Logger logger, Comparator<E> comparator) {
-		this(context, name, version, logger, comparator, null);
+	protected InMemoryDbTreeSet(SQLiteOpenHelper db, Context context, String name, Logger logger, Comparator<E> comparator) {
+		this(db, context, name, logger, comparator, null);
 	}
 
 	/**
+	 * @param db
 	 * @param context to use to open or create the database
 	 * @param name of the database file, or null for an in-memory database
-	 * @param version number of the database (starting at 1); if the database is older,
-	 *     {@link #onUpgrade} will be used to upgrade the database; if the database is
-	 *     newer, {@link #onDowngrade} will be used to downgrade the database
-	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param comparator comparator to sort the elements 
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger the {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param comparator comparator to sort the elements
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
 	 */
-	protected InMemoryDbTreeSet(Context context, String name, int version, Logger logger, Comparator<E> comparator, Object initCookie) {
-		super(context, name, version, logger, initCookie);
+	protected InMemoryDbTreeSet(SQLiteOpenHelper db, Context context, String name, Logger logger, Comparator<E> comparator, Object initCookie) {
+		super(db, context, name, logger, initCookie);
 		this.comparator = comparator;
 	}
 
