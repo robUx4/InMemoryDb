@@ -192,7 +192,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
-			else
+			else if (listener != this)
 				listener.onAddItemFailed(db, item, values, cause);
 		}
 	}
@@ -205,7 +205,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
-			else
+			else if (listener != this)
 				listener.onRemoveItemFailed(db, item, cause);
 		}
 	}
@@ -215,7 +215,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
-			else
+			else if (listener != this)
 				listener.onUpdateItemFailed(db, item, cause);
 		}
 	}
@@ -230,7 +230,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
-			else
+			else if (listener != this)
 				listener.onReplaceItemFailed(db, original, replacement, cause);
 		}
 	}
@@ -241,7 +241,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
 			if (listener==null)
 				mListener = null;
-			else
+			else if (listener != this)
 				listener.onCorruption(db);
 		}
 	}
