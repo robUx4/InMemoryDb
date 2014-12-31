@@ -1,17 +1,33 @@
 package org.gawst.asyncdb;
 
 import android.content.ContentValues;
-import android.database.Cursor;
 
 /**
  * Created by robUx4 on 12/31/2014.
  */
 public interface DataSource<E> {
 
+	public interface BatchReadingCallback<E> {
+		/**
+		 * Add the element in the memory storage
+		 * @param item The object to add
+		 */
+		void addItemInMemory(E item);
+
+		/**
+		 * called when we have the cursor to read the data from
+		 * <p>
+		 * useful to prepare the amount of data needed or get the index of the column we need
+		 * @param itemCount
+		 */
+		void startLoadingAllItems(int itemCount);
+	}
+
 	/**
 	 * @return All the elements in the source with all the fields
+	 * @param readingCallback
 	 */
-	Cursor queryAll();
+	void queryAll(BatchReadingCallback<E> readingCallback);
 
 	/**
 	 * Clear all the data in the source

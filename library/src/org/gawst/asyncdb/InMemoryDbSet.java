@@ -58,8 +58,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 	}
 
 	@Override
-	protected final void addCursorInMemory(Cursor c) {
-		E item = getDataFromCursor(c);
+	public final void addItemInMemory(E item) {
 		getSet().add(item);
 	}
 

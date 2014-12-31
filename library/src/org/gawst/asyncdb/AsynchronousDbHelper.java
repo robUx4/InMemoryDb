@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -24,7 +23,7 @@ import android.util.Pair;
  *
  * @param <E> the type of items stored in memory
  */
-public abstract class AsynchronousDbHelper<E> {
+public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReadingCallback<E> {
 
 	protected final static String TAG = "MemoryDb";
 	protected final static String STARTUP_TAG = "Startup";
@@ -74,19 +73,7 @@ public abstract class AsynchronousDbHelper<E> {
 						startLoadingInMemory();
 						try {
 							try {
-								Cursor c = dataSource.queryAll();
-								if (c!=null)
-									try {
-										if (c.moveToFirst()) {
-											startLoadingFromCursor(c);
-											do {
-												addCursorInMemory(c);
-											} while (c.moveToNext());
-										}
-
-									} finally {
-										c.close();
-									}
+								dataSource.queryAll(AsynchronousDbHelper.this);
 							} catch (Exception e) {
 								LogManager.logger.w(STARTUP_TAG, "Can't query table "+ dataSource +" in "+name, e);
 							}
@@ -390,18 +377,11 @@ public abstract class AsynchronousDbHelper<E> {
 	}
 
 	/**
-	 * use the data in the {@link android.database.Cursor} to store them in the memory storage
-	 * @param c the Cursor to use
-	 * @see #getValuesFromData(Object)
-	 */
-	protected abstract void addCursorInMemory(Cursor c);
-
-	/**
 	 * transform the element in memory into {@link android.content.ContentValues} that can be saved in the database
 	 * <p> you can return null and fill the database yourself if you need to
 	 * @param data the data to transform
 	 * @return a ContentValues element with all data that can be used to restore the data later from the database
-	 * @see #addCursorInMemory(android.database.Cursor)
+	 * @see #addItemInMemory(Object)
 	 */
 	protected abstract ContentValues getValuesFromData(E data) throws RuntimeException;
 
@@ -502,13 +482,7 @@ public abstract class AsynchronousDbHelper<E> {
 		mDataLoaded.set(false);
 	}
 
-	/**
-	 * called when we have the cursor to read the data from
-	 * <p>
-	 * useful to prepare the amount of data needed or get the index of the column we need
-	 * @param c the {@link android.database.Cursor} that will be used to read the data
-	 */
-	protected void startLoadingFromCursor(Cursor c) {}
+	public void startLoadingAllItems(int itemCount) {}
 
 	/**
 	 * called after all items have been read from the disk

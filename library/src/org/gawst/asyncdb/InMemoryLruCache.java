@@ -82,8 +82,7 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 	}
 
 	@Override
-	protected void addCursorInMemory(Cursor c) {
-		final MapEntry<K, V> entry = getEntryFromCursor(c);
+	public void addItemInMemory(MapEntry<K, V> entry) {
 		if (entry!=null)
 			putEntry(entry);
 	}

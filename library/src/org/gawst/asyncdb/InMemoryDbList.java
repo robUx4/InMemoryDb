@@ -37,14 +37,6 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 */
 	abstract protected L getList();
 
-	/**
-	 * transform the {@link Cursor} into an element that can be used in memory
-	 * @param c the Cursor to transform
-	 * @return a formated element used in memory
-	 * @see AsynchronousDbHelper#getValuesFromData(Object)
-	 */
-	protected abstract E getDataFromCursor(Cursor c);
-
 	protected void onDataCleared() {}
 
 	@Override
@@ -56,8 +48,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	}
 
 	@Override
-	protected final void addCursorInMemory(Cursor c) {
-		E item = getDataFromCursor(c);
+	public final void addItemInMemory(E item) {
 		getList().add(item);
 	}
 

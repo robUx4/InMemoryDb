@@ -6,7 +6,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
-import android.database.Cursor;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link ArrayList}
@@ -89,8 +88,9 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	}
 
 	@Override
-	protected void startLoadingFromCursor(Cursor c) {
-		getList().ensureCapacity(c.getCount());
+	public void startLoadingAllItems(int itemCount) {
+		super.startLoadingAllItems(itemCount);
+		getList().ensureCapacity(itemCount);
 	}
 
 	public boolean add(E item) {

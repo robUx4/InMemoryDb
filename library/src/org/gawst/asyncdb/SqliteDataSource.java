@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public abstract class SqliteDataSource<E> implements DataSource<E> {
+public abstract class SqliteDataSource<E> extends CursorDataSource<E> {
 
 	private final Context context;
 	private final SQLiteOpenHelper db;
@@ -25,24 +25,8 @@ public abstract class SqliteDataSource<E> implements DataSource<E> {
 		this.databaseName = databaseName;
 	}
 
-	/**
-	 * The where clause that should be used to update/delete the item.
-	 * <p> see {@link #getItemSelectArgs(Object)}
-	 * @param itemToSelect the item about to be selected in the database
-	 * @return a {@link java.lang.String} for the whereClause in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
-	 */
-	protected abstract String getItemSelectClause(E itemToSelect);
-
-	/**
-	 * The where arguments that should be used to update/delete the item.
-	 * <p> see {@link #getItemSelectClause(Object)}
-	 * @param itemToSelect the item about to be selected in the database
-	 * @return a {@link java.lang.String} array for the whereArgs in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
-	 */
-	protected abstract String[] getItemSelectArgs(E itemToSelect);
-
 	@Override
-	public Cursor queryAll() {
+	protected Cursor readAll() {
 		return db.getReadableDatabase().query(tableName, null, null, null, null, null, null);
 	}
 

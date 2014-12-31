@@ -3,7 +3,6 @@ package org.gawst.asyncdb;
 import java.util.Collection;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 
 /**
@@ -25,7 +24,7 @@ public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
 	}
 
 	@Override
-	protected final void addCursorInMemory(Cursor c) {
+	public final void addItemInMemory(E item) {
 		// do nothing
 	}
 

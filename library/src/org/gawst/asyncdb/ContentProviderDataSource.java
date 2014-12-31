@@ -8,7 +8,7 @@ import android.net.Uri;
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public abstract class ContentProviderDataSource<E> implements DataSource<E> {
+public abstract class ContentProviderDataSource<E> extends CursorDataSource<E> {
 	private final Uri contentProviderUri;
 	private final Context context;
 
@@ -17,11 +17,8 @@ public abstract class ContentProviderDataSource<E> implements DataSource<E> {
 		this.contentProviderUri = contentProviderUri;
 	}
 
-	protected abstract String getItemSelectClause(E itemToSelect);
-	protected abstract String[] getItemSelectArgs(E itemToSelect);
-
 	@Override
-	public Cursor queryAll() {
+	protected Cursor readAll() {
 		return context.getContentResolver().query(contentProviderUri, null, null, null, null);
 	}
 

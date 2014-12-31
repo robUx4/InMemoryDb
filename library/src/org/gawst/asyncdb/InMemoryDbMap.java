@@ -30,10 +30,8 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 	protected void onDataCleared() {}
 
 	@Override
-	protected void addCursorInMemory(Cursor c) {
-		final MapEntry<K, V> entry = getEntryFromCursor(c);
-		if (entry!=null)
-			putEntry(entry);
+	public void addItemInMemory(MapEntry<K, V> entry) {
+		putEntry(entry);
 	}
 
 	protected abstract MapEntry<K, V> getEntryFromCursor(Cursor c);
