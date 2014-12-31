@@ -5,7 +5,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 
 public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMap<K,V>> {
 
@@ -53,7 +52,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	 * @param name Database filename on disk
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryHashmapDb(SQLiteOpenHelper db, Context context, String name, Logger logger) {
+	protected InMemoryHashmapDb(DataSource<MapEntry<K, V>> db, Context context, String name, Logger logger) {
 		this(db, context, name, logger, null);
 	}
 
@@ -61,10 +60,10 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	 * @param db
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
-	protected InMemoryHashmapDb(SQLiteOpenHelper db, Context context, String name, Logger logger, Object initCookie) {
+	protected InMemoryHashmapDb(DataSource<MapEntry<K, V>> db, Context context, String name, Logger logger, Object initCookie) {
 		super(db, context, name, logger, initCookie);
 		this.constructorPassed = true;
 	}

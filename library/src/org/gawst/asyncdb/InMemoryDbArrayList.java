@@ -7,7 +7,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteOpenHelper;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link ArrayList}
@@ -43,10 +42,10 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
 	 */
-	protected InMemoryDbArrayList(SQLiteOpenHelper db, Context context, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbArrayList(DataSource<E> db, Context context, String name, Logger logger, Object initCookie) {
 		super(db, context, name, logger, initCookie);
 	}
 	

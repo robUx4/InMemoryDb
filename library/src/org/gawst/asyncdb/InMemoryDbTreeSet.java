@@ -7,7 +7,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link TreeSet}
@@ -48,7 +47,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	 * @param logger the {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param comparator comparator to sort the elements
 	 */
-	protected InMemoryDbTreeSet(SQLiteOpenHelper db, Context context, String name, Logger logger, Comparator<E> comparator) {
+	protected InMemoryDbTreeSet(DataSource<E> db, Context context, String name, Logger logger, Comparator<E> comparator) {
 		this(db, context, name, logger, comparator, null);
 	}
 
@@ -56,11 +55,11 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	 * @param db
 	 * @param context to use to open or create the database
 	 * @param name of the database file, or null for an in-memory database
-	 * @param logger the {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param comparator comparator to sort the elements
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
-	protected InMemoryDbTreeSet(SQLiteOpenHelper db, Context context, String name, Logger logger, Comparator<E> comparator, Object initCookie) {
+	protected InMemoryDbTreeSet(DataSource<E> db, Context context, String name, Logger logger, Comparator<E> comparator, Object initCookie) {
 		super(db, context, name, logger, initCookie);
 		this.comparator = comparator;
 	}

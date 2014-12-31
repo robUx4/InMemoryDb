@@ -7,7 +7,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
 public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntry<K,V>> {
 
@@ -57,9 +56,9 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
 	 * @param maxSize for caches that do not override {@link #sizeOf}, this is the maximum number of entries in the cache. For all other caches, this is the maximum sum of the sizes of the entries in this cache
-	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryLruCache(SQLiteOpenHelper db, Context context, String name, final int maxSize, Logger logger) {
+	protected InMemoryLruCache(DataSource<MapEntry<K, V>> db, Context context, String name, final int maxSize, Logger logger) {
 		super(db, context, name, logger, maxSize);
 		this.constructorPassed = true;
 	}

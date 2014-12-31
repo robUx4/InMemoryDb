@@ -1,6 +1,5 @@
 package org.gawst.asyncdb;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -11,10 +10,7 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -50,18 +46,18 @@ public abstract class AsynchronousDbHelper<E> {
 
 	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
-	private final SQLiteOpenHelper mDb;
+	private final DataSource<E> dataSource;
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
 	@SuppressLint("HandlerLeak")
-	protected AsynchronousDbHelper(SQLiteOpenHelper db, final Context context, final String name, Logger logger, Object initCookie) {
-		this.mDb = db;
+	protected AsynchronousDbHelper(DataSource<E> db, final Context context, final String name, Logger logger, Object initCookie) {
+		this.dataSource = db;
 
 		preloadInit(initCookie, logger);
 
@@ -70,7 +66,6 @@ public abstract class AsynchronousDbHelper<E> {
 
 		saveStoreHandler = new Handler(handlerThread.getLooper()) {
 			public void handleMessage(Message msg) {
-				SQLiteDatabase db;
 				ContentValues addValues;
 
 				switch (msg.what) {
@@ -78,9 +73,8 @@ public abstract class AsynchronousDbHelper<E> {
 					if (shouldReloadAllData()) {
 						startLoadingInMemory();
 						try {
-							db = mDb.getWritableDatabase();
 							try {
-								Cursor c = db.query(getMainTableName(), null, null, null, null, null, null);
+								Cursor c = dataSource.queryAll();
 								if (c!=null)
 									try {
 										if (c.moveToFirst()) {
@@ -93,12 +87,12 @@ public abstract class AsynchronousDbHelper<E> {
 									} finally {
 										c.close();
 									}
-							} catch (SQLException e) {
-								LogManager.logger.w(STARTUP_TAG, "Can't query table "+getMainTableName()+" in "+name, e);
+							} catch (Exception e) {
+								LogManager.logger.w(STARTUP_TAG, "Can't query table "+ dataSource +" in "+name, e);
 							}
-						} catch (SQLException e) {
+						} catch (Exception e) {
 							if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
-								notifyDatabaseCorrupted(context, name, e);
+								notifyDatabaseCorrupted(dataSource, name, e);
 							else
 								LogManager.logger.w(STARTUP_TAG, "Can't open database "+name, e);
 						} finally {
@@ -109,14 +103,12 @@ public abstract class AsynchronousDbHelper<E> {
 
 				case MSG_CLEAR_DATABASE:
 					try {
-						db = mDb.getWritableDatabase();
-						db.delete(getMainTableName(), "1", null);
+						dataSource.clearAllData();
 					} catch (Throwable e) {
-						LogManager.logger.w(TAG,"Failed to empty table "+getMainTableName()+" in "+name, e);
+						LogManager.logger.w(TAG,"Failed to empty table "+ dataSource +" in "+name, e);
 					} finally {
 						sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
 					}
-					SQLiteDatabase.releaseMemory();
 					break;
 
 				case MSG_STORE_ITEM:
@@ -124,12 +116,11 @@ public abstract class AsynchronousDbHelper<E> {
 					E itemToAdd = (E) msg.obj;
 					addValues = null;
 					try {
-						db = mDb.getWritableDatabase();
-						addValues = getValuesFromData(itemToAdd, db);
+						addValues = getValuesFromData(itemToAdd);
 						if (addValues!=null) {
-							directStoreItem(db, addValues);
+							directStoreItem(addValues);
 						}
-					} catch (Throwable e) {
+					} catch (Exception e) {
 						notifyAddItemFailed(itemToAdd, addValues, e);
 					}
 					break;
@@ -140,10 +131,9 @@ public abstract class AsynchronousDbHelper<E> {
 					for (E item : itemsToAdd) {
 						addValues = null;
 						try {
-							db = mDb.getWritableDatabase();
-							addValues = getValuesFromData(item, db);
+							addValues = getValuesFromData(item);
 							if (addValues!=null) {
-								directStoreItem(db, addValues);
+								directStoreItem(addValues);
 							}
 						} catch (Throwable e) {
 							notifyAddItemFailed(item, addValues, e);
@@ -155,9 +145,8 @@ public abstract class AsynchronousDbHelper<E> {
 					@SuppressWarnings("unchecked")
 					E itemToDelete = (E) msg.obj;
 					try {
-						db = mDb.getWritableDatabase();
 						if (DEBUG_DB) LogManager.logger.d(TAG, name+" remove "+itemToDelete);
-						if (db.delete(getMainTableName(), getItemSelectClause(itemToDelete), getItemSelectArgs(itemToDelete))==0)
+						if (dataSource.delete(itemToDelete))
 							notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+name));
 					} catch (Throwable e) {
 						notifyRemoveItemFailed(itemToDelete, e);
@@ -169,9 +158,8 @@ public abstract class AsynchronousDbHelper<E> {
 					E itemToUpdate = (E) msg.obj;
 					ContentValues updateValues = null;
 					try {
-						db = mDb.getWritableDatabase();
-						updateValues = getValuesFromData(itemToUpdate, db);
-						if (!directUpdate(db, itemToUpdate, updateValues)) {
+						updateValues = getValuesFromData(itemToUpdate);
+						if (!directUpdate(dataSource, itemToUpdate, updateValues)) {
 							notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update "+updateValues+" in "+name));
 						}
 					} catch (Throwable e) {
@@ -183,9 +171,8 @@ public abstract class AsynchronousDbHelper<E> {
 					@SuppressWarnings("unchecked")
 					Pair<E,E> itemsToReplace = (Pair<E,E>) msg.obj;
 					try {
-						db = mDb.getWritableDatabase();
-						ContentValues newValues = getValuesFromData(itemsToReplace.first, db);
-						directUpdate(db, itemsToReplace.second, newValues);
+						ContentValues newValues = getValuesFromData(itemsToReplace.first);
+						directUpdate(dataSource, itemsToReplace.second, newValues);
 					} catch (Throwable e) {
 						notifyReplaceItemFailed(itemsToReplace.first, itemsToReplace.second, e);
 					}
@@ -196,22 +183,20 @@ public abstract class AsynchronousDbHelper<E> {
 					Pair<E,E> itemsToSwap = (Pair<E,E>) msg.obj;
 					ContentValues newValuesA = null;
 					try {
-						db = mDb.getWritableDatabase();
-						newValuesA = getValuesFromData(itemsToSwap.second, db);
+						newValuesA = getValuesFromData(itemsToSwap.second);
 						if (newValuesA!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, name+" update "+itemsToSwap.second+" with "+newValuesA);
-							directUpdate(db, itemsToSwap.first, newValuesA);
+							directUpdate(dataSource, itemsToSwap.first, newValuesA);
 						}
 					} catch (Throwable e) {
 						notifyUpdateItemFailed(itemsToSwap.first, newValuesA, e);
 					}
 					ContentValues newValuesB = null;
 					try {
-						db = mDb.getWritableDatabase();
-						newValuesB = getValuesFromData(itemsToSwap.first, db);
+						newValuesB = getValuesFromData(itemsToSwap.first);
 						if (newValuesB!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, name+" update "+itemsToSwap.first+" with "+newValuesB);
-							directUpdate(db, itemsToSwap.second, newValuesB);
+							directUpdate(dataSource, itemsToSwap.second, newValuesB);
 						}
 					} catch (Throwable e) {
 						notifyUpdateItemFailed(itemsToSwap.second, newValuesB, e);
@@ -240,14 +225,13 @@ public abstract class AsynchronousDbHelper<E> {
 
 	/**
 	 * Method to call to insert data directly in the database
-	 * @param db Database where data will be written
 	 * @param addValues Values that will be written in the database
 	 * @throws RuntimeException if the insertion failed
 	 */
-	protected void directStoreItem(SQLiteDatabase db, ContentValues addValues) throws SQLException {
-		long id = db.insertOrThrow(getMainTableName(), null, addValues);
-		if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+id);
-		if (id==-1) throw new RuntimeException("failed to add values "+addValues+" in "+db.getPath());
+	protected void directStoreItem(ContentValues addValues) throws RuntimeException {
+		Object inserted = dataSource.insert(addValues);
+		if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+inserted);
+		if (inserted==null) throw new RuntimeException("failed to add values "+addValues+" in "+ dataSource);
 	}
 
 	/**
@@ -257,10 +241,10 @@ public abstract class AsynchronousDbHelper<E> {
 	 * @param updateValues Values that will be updated in the database
 	 * @return {@code true} if the data were updated successfully
 	 */
-	protected boolean directUpdate(SQLiteDatabase db, E itemToUpdate, ContentValues updateValues) {
+	protected boolean directUpdate(DataSource<E> db, E itemToUpdate, ContentValues updateValues) {
 		if (updateValues!=null) {
 			if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
-			return db.update(getMainTableName(), updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate)/*, SQLiteDatabase.CONFLICT_NONE*/)!=0;
+			return db.update(itemToUpdate, updateValues/*, SQLiteDatabase.CONFLICT_NONE*/);
 		}
 		return false;
 	}
@@ -268,7 +252,7 @@ public abstract class AsynchronousDbHelper<E> {
 	/**
 	 * Method called at the end of constructor, just before the data start loading
 	 * @param cookie Data that may be needed to initialize all internal storage
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	protected void preloadInit(Object cookie, Logger logger) {
 		if (logger!=null)
@@ -277,7 +261,7 @@ public abstract class AsynchronousDbHelper<E> {
 
 	/**
 	 * tell the InMemory database that we are about to modify its data
-	 * <p> see also {@link #popModifyingTransaction()} 
+	 * <p> see also {@link #popModifyingTransaction()}
 	 */
 	protected void pushModifyingTransaction() {
 		modifyingTransactionLevel.incrementAndGet();
@@ -286,8 +270,8 @@ public abstract class AsynchronousDbHelper<E> {
 	/**
 	 * tell the InMemory database we have finish modifying the data at this level.
 	 * Once the pop matches all the push {@link #notifyDatabaseChanged()} is called
-	 * <p> this is useful to avoid multiple calls to {@link #notifyDatabaseChanged()} during a batch of changes 
-	 * <p> see also {@link #pushModifyingTransaction()} 
+	 * <p> this is useful to avoid multiple calls to {@link #notifyDatabaseChanged()} during a batch of changes
+	 * <p> see also {@link #pushModifyingTransaction()}
 	 */
 	protected void popModifyingTransaction() {
 		if (modifyingTransactionLevel.decrementAndGet()==0) {
@@ -296,15 +280,6 @@ public abstract class AsynchronousDbHelper<E> {
 	}
 
 	protected void clearDataInMemory() {}
-
-	@Deprecated
-	public SQLiteDatabase getReadableDatabase() {
-		return mDb.getReadableDatabase();
-	}
-
-	public SQLiteDatabase getWritableDatabase() {
-		return mDb.getWritableDatabase();
-	}
 
 	/**
 	 * set the listener that will receive error events
@@ -351,7 +326,7 @@ public abstract class AsynchronousDbHelper<E> {
 	private void notifyAddItemFailed(E item, ContentValues values, Throwable cause) {
 		LogManager.logger.i(TAG, this+" failed to add item "+item+(DEBUG_DB ? (" values"+values) : ""), cause);
 		if (mErrorHandler!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get();
 			if (listener==null)
 				mErrorHandler = null;
 			else
@@ -364,7 +339,7 @@ public abstract class AsynchronousDbHelper<E> {
 	private void notifyReplaceItemFailed(E srcItem, E replacement, Throwable cause) {
 		LogManager.logger.i(TAG, this+" failed to replace item "+srcItem+" with "+replacement, cause);
 		if (mErrorHandler!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get();
 			if (listener==null)
 				mErrorHandler = null;
 			else
@@ -377,7 +352,7 @@ public abstract class AsynchronousDbHelper<E> {
 	private void notifyUpdateItemFailed(E item, ContentValues values, Throwable cause) {
 		LogManager.logger.i(TAG, this+" failed to update item "+item+(DEBUG_DB ? (" values"+values) : ""), cause);
 		if (mErrorHandler!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get();
 			if (listener==null)
 				mErrorHandler = null;
 			else
@@ -390,7 +365,7 @@ public abstract class AsynchronousDbHelper<E> {
 	private void notifyRemoveItemFailed(E item, Throwable cause) {
 		LogManager.logger.i(TAG, this+" failed to remove item "+item, cause);
 		if (mErrorHandler!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get();
 			if (listener==null)
 				mErrorHandler = null;
 			else
@@ -400,63 +375,55 @@ public abstract class AsynchronousDbHelper<E> {
 		popModifyingTransaction();
 	}
 
-	private void notifyDatabaseCorrupted(Context context, String name, Throwable cause) {
-		LogManager.logger.e(STARTUP_TAG, "table "+getMainTableName()+" is corrupted in "+name);
+	private void notifyDatabaseCorrupted(DataSource<E> dataSource, String name, Throwable cause) {
+		LogManager.logger.e(STARTUP_TAG, "table "+ this.dataSource +" is corrupted in "+name);
 		if (mErrorHandler!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get();
 			if (listener==null)
 				mErrorHandler = null;
 			else
 				listener.onCorruption(this);
 		}
 		pushModifyingTransaction();
-		File corruptedDbFile = context.getDatabasePath(name);
-		corruptedDbFile.delete();
+		dataSource.eraseSource();
 		popModifyingTransaction();
 	}
 
 	/**
-	 * the name of the main table corresponding to the inMemory elements
-	 * @return the name of the main table
-	 */
-	protected abstract String getMainTableName();
-
-	/**
-	 * use the data in the {@link Cursor} to store them in the memory storage
+	 * use the data in the {@link android.database.Cursor} to store them in the memory storage
 	 * @param c the Cursor to use
-	 * @see #getValuesFromData(Object, SQLiteDatabase)
+	 * @see #getValuesFromData(Object)
 	 */
 	protected abstract void addCursorInMemory(Cursor c);
 
 	/**
-	 * transform the element in memory into {@link ContentValues} that can be saved in the database
+	 * transform the element in memory into {@link android.content.ContentValues} that can be saved in the database
 	 * <p> you can return null and fill the database yourself if you need to
 	 * @param data the data to transform
-	 * @param dbToFill the database that will receive new items
 	 * @return a ContentValues element with all data that can be used to restore the data later from the database
-	 * @see #addCursorInMemory(Cursor)
+	 * @see #addCursorInMemory(android.database.Cursor)
 	 */
-	protected abstract ContentValues getValuesFromData(E data, SQLiteDatabase dbToFill) throws RuntimeException;
+	protected abstract ContentValues getValuesFromData(E data) throws RuntimeException;
 
 	/**
 	 * the where clause that should be used to update/delete the item
 	 * <p> see {@link #getItemSelectArgs(Object)}
 	 * @param itemToSelect the item about to be selected in the database
-	 * @return a string for the whereClause in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
+	 * @return a string for the whereClause in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
 	 */
 	protected abstract String getItemSelectClause(E itemToSelect);
 	/**
 	 * the where arguments that should be used to update/delete the item
 	 * <p> see {@link #getItemSelectClause(Object)}
 	 * @param itemToSelect the item about to be selected in the database
-	 * @return a string array for the whereArgs in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
+	 * @return a string array for the whereArgs in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
 	 */
 	protected abstract String[] getItemSelectArgs(E itemToSelect);
 
 
 	/**
 	 * Request to store the item in the database asynchronously
-	 * <p>Will call the {@link AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on failure
+	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on failure
 	 * @param item to add
 	 */
 	protected final void scheduleAddOperation(E item) {
@@ -467,7 +434,7 @@ public abstract class AsynchronousDbHelper<E> {
 
 	/**
 	 * Request to store the items in the database asynchronously
-	 * <p>Will call {@link AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on each item failing
+	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on each item failing
 	 * @param items to add
 	 */
 	protected final void scheduleAddOperation(Collection<? extends E> items) {
@@ -478,9 +445,9 @@ public abstract class AsynchronousDbHelper<E> {
 
 	/**
 	 * Request to update the item in the database asynchronously
-	 * <p>{@link AsynchronousDbHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
-	 * <p>Will call {@link AsynchronousDbErrorHandler#onUpdateItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onUpdateItemFailed()} on failure
-	 * @see #getValuesFromData(Object, SQLiteDatabase)
+	 * <p>{@link org.gawst.asyncdb.AsynchronousContentProviderHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
+	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onUpdateItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, Throwable) AsynchronousDbErrorHandler.onUpdateItemFailed()} on failure
+	 * @see #getValuesFromData(Object)
 	 * @param item to update
 	 */
 	protected final void scheduleUpdateOperation(E item) {
@@ -491,8 +458,8 @@ public abstract class AsynchronousDbHelper<E> {
 
 	/**
 	 * Request to replace an item in the databse with another asynchronously
-	 * <p>{@link AsynchronousDbHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
-	 * <p>Will call {@link AsynchronousDbErrorHandler#onReplaceItemFailed(AsynchronousDbHelper, Object, Object, Throwable) AsynchronousDbErrorHandler.onReplaceItemFailed()} on failure
+	 * <p>{@link org.gawst.asyncdb.AsynchronousContentProviderHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
+	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onReplaceItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, Object, Throwable) AsynchronousDbErrorHandler.onReplaceItemFailed()} on failure
 	 * @param original Item to replace
 	 * @param replacement Item to replace with
 	 */
@@ -510,7 +477,7 @@ public abstract class AsynchronousDbHelper<E> {
 
 	/**
 	 * Request to delete the item from the database
-	 * <p>Will call the {@link AsynchronousDbErrorHandler#onRemoveItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onRemoveItemFailed()} on failure
+	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onRemoveItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, Throwable) AsynchronousDbErrorHandler.onRemoveItemFailed()} on failure
 	 * @param item to remove
 	 */
 	protected final void scheduleRemoveOperation(E item) {
@@ -539,7 +506,7 @@ public abstract class AsynchronousDbHelper<E> {
 	 * called when we have the cursor to read the data from
 	 * <p>
 	 * useful to prepare the amount of data needed or get the index of the column we need
-	 * @param c the {@link Cursor} that will be used to read the data
+	 * @param c the {@link android.database.Cursor} that will be used to read the data
 	 */
 	protected void startLoadingFromCursor(Cursor c) {}
 

@@ -18,9 +18,9 @@ public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	public AsynchronousDatabase(SQLiteOpenHelper db, Context context, String name, Logger logger) {
+	public AsynchronousDatabase(DataSource<E> db, Context context, String name, Logger logger) {
 		super(db, context, name, logger, null);
 	}
 

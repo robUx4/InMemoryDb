@@ -7,7 +7,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
 public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<MapEntry<K,V>> {
 
@@ -15,10 +14,10 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
-	protected InMemoryDbMap(SQLiteOpenHelper db, Context context, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbMap(DataSource<MapEntry<K,V>> db, Context context, String name, Logger logger, Object initCookie) {
 		super(db, context, name, logger, initCookie);
 	}
 

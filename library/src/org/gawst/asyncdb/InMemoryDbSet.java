@@ -9,8 +9,6 @@ import java.util.Set;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link List}
@@ -27,10 +25,10 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, org.gawst.asyncdb.Logger)}
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
-	protected InMemoryDbSet(SQLiteOpenHelper db, Context context, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbSet(DataSource<E> db, Context context, String name, Logger logger, Object initCookie) {
 		super(db, context, name, logger, initCookie);
 		super.setDbErrorHandler(this);
 	}
@@ -45,24 +43,11 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 	 * transform the {@link Cursor} into an element that can be used in memory
 	 * @param c the Cursor to transform
 	 * @return a formated element used in memory
-	 * @see #getValuesFromData(Object, SQLiteDatabase)
+	 * @see AsynchronousDbHelper#getValuesFromData(Object)
 	 */
 	protected abstract E getDataFromCursor(Cursor c);
 
-	/**
-	 * transform the element in memory into {@link ContentValues} that can be saved in the database
-	 * @param data the data to transform
-	 * @return a ContentValues element with all data that can be used to restore the data later from the database
-	 * @see #addCursorInMemory(Cursor)
-	 */
-	protected abstract ContentValues getValuesFromData(E data);
-
 	protected void onDataCleared() {}
-
-	@Override
-	protected final ContentValues getValuesFromData(E data, SQLiteDatabase dbToFill) throws RuntimeException {
-		return getValuesFromData(data); // we don't need to know the database in Lists
-	}
 
 	@Override
 	public void setDbErrorHandler(AsynchronousDbErrorHandler<E> listener) {
