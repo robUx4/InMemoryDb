@@ -7,18 +7,20 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.NonNull;
 
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public abstract class SqliteDataSource<E> extends CursorDataSource<E> {
+public class SqliteDataSource<E> extends CursorDataSource<E> {
 
 	private final Context context;
 	private final SQLiteOpenHelper db;
 	private final String tableName;
 	private final String databaseName;
 
-	public SqliteDataSource(Context context, SQLiteOpenHelper db, String tableName, String databaseName) {
+	public SqliteDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull String tableName, @NonNull String databaseName, @NonNull CursorSourceHandler<E> cursorSourceHandler) {
+		super(cursorSourceHandler);
 		this.context = context;
 		this.db = db;
 		this.tableName = tableName;
@@ -47,12 +49,16 @@ public abstract class SqliteDataSource<E> extends CursorDataSource<E> {
 
 	@Override
 	public boolean update(E itemToUpdate, ContentValues updateValues) {
-		return db.getWritableDatabase().update(tableName, updateValues, getItemSelectClause(itemToUpdate), getItemSelectArgs(itemToUpdate))!=0;
+		return db.getWritableDatabase().update(tableName, updateValues,
+				cursorSourceHandler.getItemSelectClause(itemToUpdate),
+				cursorSourceHandler.getItemSelectArgs(itemToUpdate))!=0;
 	}
 
 	@Override
 	public boolean delete(E itemToDelete) {
-		return db.getWritableDatabase().delete(tableName, getItemSelectClause(itemToDelete), getItemSelectArgs(itemToDelete))!=0;
+		return db.getWritableDatabase().delete(tableName,
+				cursorSourceHandler.getItemSelectClause(itemToDelete),
+				cursorSourceHandler.getItemSelectArgs(itemToDelete))!=0;
 	}
 
 	@Override

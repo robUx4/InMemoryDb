@@ -14,6 +14,27 @@ buildscript {
     }
 }
 
+dependencies {
+    def artifactSupportAnnotations = 'com.android.support:support-annotations:21.+'
+    def useLocalAnnotations = false
+    def localAnnotations = ':support-annotations'
+
+    allprojects {
+        rootProject.allprojects.project.each {
+            if (it.path == localAnnotations) {
+                useLocalAnnotations = true
+            }
+        }
+    }
+
+    if (useLocalAnnotations) {
+        println 'Using local support-annotations library in ' + project.path
+        compile project(localAnnotations)
+    } else {
+        compile artifactSupportAnnotations
+    }
+}
+
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
     buildToolsVersion project.ANDROID_BUILD_TOOLS_VERSION
