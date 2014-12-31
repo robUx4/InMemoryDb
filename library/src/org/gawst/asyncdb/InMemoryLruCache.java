@@ -58,7 +58,7 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 	 * @param maxSize for caches that do not override {@link #sizeOf}, this is the maximum number of entries in the cache. For all other caches, this is the maximum sum of the sizes of the entries in this cache
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryLruCache(DataSource<MapEntry<K, V>> db, Context context, String name, final int maxSize, Logger logger) {
+	protected InMemoryLruCache(MapDataSource<K, V> db, Context context, String name, final int maxSize, Logger logger) {
 		super(db, context, name, logger, maxSize);
 		this.constructorPassed = true;
 	}

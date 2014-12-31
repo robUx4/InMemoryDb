@@ -52,7 +52,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	 * @param name Database filename on disk
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryHashmapDb(DataSource<MapEntry<K, V>> db, Context context, String name, Logger logger) {
+	protected InMemoryHashmapDb(MapDataSource<K, V> db, Context context, String name, Logger logger) {
 		this(db, context, name, logger, null);
 	}
 
@@ -63,7 +63,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
-	protected InMemoryHashmapDb(DataSource<MapEntry<K, V>> db, Context context, String name, Logger logger, Object initCookie) {
+	protected InMemoryHashmapDb(MapDataSource<K, V> db, Context context, String name, Logger logger, Object initCookie) {
 		super(db, context, name, logger, initCookie);
 		this.constructorPassed = true;
 	}

@@ -5,7 +5,6 @@ import java.util.Set;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<MapEntry<K,V>> {
@@ -17,7 +16,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
 	 */
-	protected InMemoryDbMap(DataSource<MapEntry<K,V>> db, Context context, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbMap(MapDataSource<K,V> db, Context context, String name, Logger logger, Object initCookie) {
 		super(db, context, name, logger, initCookie);
 	}
 
@@ -30,11 +29,16 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 	protected void onDataCleared() {}
 
 	@Override
-	public void addItemInMemory(MapEntry<K, V> entry) {
-		putEntry(entry);
+	public final void addItemInMemory(MapEntry<K, V> entry) {
+		putEntry(entry.getKey(), entry.getValue());
 	}
 
-	protected abstract MapEntry<K, V> getEntryFromCursor(Cursor c);
+	protected abstract ContentValues getValuesFromData(K key, V value) throws RuntimeException;
+
+	@Override
+	protected final ContentValues getValuesFromData(MapEntry<K, V> data) throws RuntimeException {
+		return getValuesFromData(data.getKey(), data.getValue());
+	}
 
 	/**
 	 * the where clause that should be used to update/delete the item
@@ -51,19 +55,19 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 	 */
 	protected abstract String[] getKeySelectArgs(K itemKey);
 
-	protected void putEntry(MapEntry<K, V> entry) {
+	protected void putEntry(K key, V value) {
 		final H map = getMap();
-		map.put(entry.first, entry.second);
+		map.put(key, value);
 	}
 
 	@Override
 	protected final String getItemSelectClause(MapEntry<K, V> itemToSelect) {
-		return getKeySelectClause(itemToSelect.first);
+		return getKeySelectClause(itemToSelect.getKey());
 	}
 
 	@Override
 	protected final String[] getItemSelectArgs(MapEntry<K, V> itemToSelect) {
-		return getKeySelectArgs(itemToSelect.first);
+		return getKeySelectArgs(itemToSelect.getKey());
 	}
 
 	@Override
