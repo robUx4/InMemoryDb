@@ -21,6 +21,8 @@ public interface DataSource<E> {
 		 * @param itemCount
 		 */
 		void startLoadingAllItems(int itemCount);
+
+		void removeInvalidEntry(InvalidEntry invalidEntry);
 	}
 
 	/**
@@ -48,6 +50,8 @@ public interface DataSource<E> {
 	 * @return {@code true} if the element was removed
 	 */
 	boolean delete(E itemToDelete);
+
+	boolean deleteInvalidEntry(InvalidEntry invalidEntry);
 
 	/**
 	 * Update an element already in the database

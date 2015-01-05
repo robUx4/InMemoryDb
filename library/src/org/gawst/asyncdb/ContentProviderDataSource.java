@@ -49,6 +49,12 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E> {
 	}
 
 	@Override
+	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
+		// TODO
+		return false;
+	}
+
+	@Override
 	public void eraseSource() {
 		// TODO
 	}

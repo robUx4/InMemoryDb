@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -45,20 +44,22 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 
 	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
-	private final DataSource<E> dataSource;
+	protected final DataSource<E> dataSource;
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
 	 */
 	@SuppressLint("HandlerLeak")
-	protected AsynchronousDbHelper(DataSource<E> db, final Context context, final String name, Logger logger, Object initCookie) {
+	protected AsynchronousDbHelper(DataSource<E> db, final String name, Logger logger, Object initCookie) {
 		this.dataSource = db;
 
-		preloadInit(initCookie, logger);
+		if (logger!=null)
+			LogManager.setLogger(logger);
+
+		preloadInit(initCookie);
 
 		HandlerThread handlerThread = new HandlerThread(name, android.os.Process.THREAD_PRIORITY_BACKGROUND);
 		handlerThread.start();
@@ -239,11 +240,9 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 	/**
 	 * Method called at the end of constructor, just before the data start loading
 	 * @param cookie Data that may be needed to initialize all internal storage
-	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 *
 	 */
-	protected void preloadInit(Object cookie, Logger logger) {
-		if (logger!=null)
-			LogManager.setLogger(logger);
+	protected void preloadInit(Object cookie) {
 	}
 
 	/**
@@ -385,21 +384,6 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 	 */
 	protected abstract ContentValues getValuesFromData(E data) throws RuntimeException;
 
-	/**
-	 * the where clause that should be used to update/delete the item
-	 * <p> see {@link #getItemSelectArgs(Object)}
-	 * @param itemToSelect the item about to be selected in the database
-	 * @return a string for the whereClause in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
-	 */
-	protected abstract String getItemSelectClause(E itemToSelect);
-	/**
-	 * the where arguments that should be used to update/delete the item
-	 * <p> see {@link #getItemSelectClause(Object)}
-	 * @param itemToSelect the item about to be selected in the database
-	 * @return a string array for the whereArgs in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
-	 */
-	protected abstract String[] getItemSelectArgs(E itemToSelect);
-
 
 	/**
 	 * Request to store the item in the database asynchronously
@@ -425,7 +409,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 
 	/**
 	 * Request to update the item in the database asynchronously
-	 * <p>{@link org.gawst.asyncdb.AsynchronousContentProviderHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
+	 * <p>{@link org.gawst.asyncdb.AsynchronousContentProviderHelper#getItemSelectArgs(Object) getKeySelectArgs()} is used to find the matching item in the database
 	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onUpdateItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, Throwable) AsynchronousDbErrorHandler.onUpdateItemFailed()} on failure
 	 * @see #getValuesFromData(Object)
 	 * @param item to update
@@ -438,7 +422,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 
 	/**
 	 * Request to replace an item in the databse with another asynchronously
-	 * <p>{@link org.gawst.asyncdb.AsynchronousContentProviderHelper#getItemSelectArgs(Object) getItemSelectArgs()} is used to find the matching item in the database
+	 * <p>{@link org.gawst.asyncdb.AsynchronousContentProviderHelper#getItemSelectArgs(Object) getKeySelectArgs()} is used to find the matching item in the database
 	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onReplaceItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, Object, Throwable) AsynchronousDbErrorHandler.onReplaceItemFailed()} on failure
 	 * @param original Item to replace
 	 * @param replacement Item to replace with
@@ -490,6 +474,17 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 	protected void finishLoadingInMemory() {
 		mDataLoaded.set(true);
 		popModifyingTransaction();
+	}
+
+	@Override
+	public void removeInvalidEntry(final InvalidEntry invalidEntry) {
+		scheduleCustomOperation(new AsynchronousDbOperation<E>() {
+			@Override
+			public void runInMemoryDbOperation(AsynchronousDbHelper<E> db) {
+				// remove the element from the DB forever
+				dataSource.deleteInvalidEntry(invalidEntry);
+			}
+		});
 	}
 
 	/**

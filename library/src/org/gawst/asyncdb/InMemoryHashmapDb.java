@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import android.content.Context;
-
 public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMap<K,V>> {
 
 	/**
@@ -48,31 +46,29 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryHashmapDb(MapDataSource<K, V> db, Context context, String name, Logger logger) {
-		this(db, context, name, logger, null);
+	protected InMemoryHashmapDb(MapDataSource<K, V> db, String name, Logger logger) {
+		this(db, name, logger, null);
 	}
 
 	/**
 	 * @param db
-	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryHashmapDb(MapDataSource<K, V> db, Context context, String name, Logger logger, Object initCookie) {
-		super(db, context, name, logger, initCookie);
+	protected InMemoryHashmapDb(MapDataSource<K, V> db, String name, Logger logger, Object initCookie) {
+		super(db, name, logger, initCookie);
 		this.constructorPassed = true;
 	}
 
 	@Override
-	protected void preloadInit(Object cookie, Logger logger) {
+	protected void preloadInit(Object cookie) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		super.preloadInit(cookie, logger);
+		super.preloadInit(cookie);
 		mData = new HashMap<K,V>();
 	}
 

@@ -15,7 +15,7 @@ import android.support.annotation.NonNull;
 public class SqliteDataSource<E> extends CursorDataSource<E> {
 
 	private final Context context;
-	private final SQLiteOpenHelper db;
+	public final SQLiteOpenHelper db;
 	private final String tableName;
 	private final String databaseName;
 
@@ -59,6 +59,13 @@ public class SqliteDataSource<E> extends CursorDataSource<E> {
 		return db.getWritableDatabase().delete(tableName,
 				cursorSourceHandler.getItemSelectClause(itemToDelete),
 				cursorSourceHandler.getItemSelectArgs(itemToDelete))!=0;
+	}
+
+	@Override
+	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
+		return db.getWritableDatabase().delete(tableName,
+				cursorSourceHandler.getItemSelectClause(null),
+				invalidEntry.getSelectArgs())!=0;
 	}
 
 	@Override

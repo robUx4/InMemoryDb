@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 
 /**
@@ -23,13 +22,12 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbSet(DataSource<E> db, Context context, String name, Logger logger, Object initCookie) {
-		super(db, context, name, logger, initCookie);
+	protected InMemoryDbSet(DataSource<E> db, String name, Logger logger, Object initCookie) {
+		super(db, name, logger, initCookie);
 		super.setDbErrorHandler(this);
 	}
 

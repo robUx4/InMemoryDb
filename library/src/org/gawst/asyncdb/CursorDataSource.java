@@ -29,10 +29,10 @@ public abstract class CursorDataSource<E> implements DataSource<E> {
 
 		/**
 		 * Use the data in the {@link android.database.Cursor} to create a valid item
-		 *
 		 * @param cursor the Cursor to use
 		 */
-		E cursorToItem(Cursor cursor);
+		@NonNull
+		E cursorToItem(Cursor cursor) throws InvalidDbEntry;
 	}
 
 	protected final CursorSourceHandler<E> cursorSourceHandler;
@@ -43,16 +43,19 @@ public abstract class CursorDataSource<E> implements DataSource<E> {
 
 	protected abstract Cursor readAll();
 
-	public final void queryAll(DataSource.BatchReadingCallback<E> readingCallback) {
+	public final void queryAll(BatchReadingCallback<E> readingCallback) {
 		Cursor c = readAll();
 		if (c!=null)
 			try {
 				if (c.moveToFirst()) {
 					readingCallback.startLoadingAllItems(c.getCount());
 					do {
-						E item = cursorSourceHandler.cursorToItem(c);
-						if (item != null)
+						try {
+							E item = cursorSourceHandler.cursorToItem(c);
 							readingCallback.addItemInMemory(item);
+						} catch (InvalidDbEntry e) {
+							readingCallback.removeInvalidEntry(e.getInvalidEntry());
+						}
 					} while (c.moveToNext());
 				}
 			} finally {

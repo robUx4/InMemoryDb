@@ -4,20 +4,17 @@ import java.util.Map;
 import java.util.Set;
 
 import android.content.ContentValues;
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 
 public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<MapEntry<K,V>> {
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbMap(MapDataSource<K,V> db, Context context, String name, Logger logger, Object initCookie) {
-		super(db, context, name, logger, initCookie);
+	protected InMemoryDbMap(MapDataSource<K, V> db, String name, Logger logger, Object initCookie) {
+		super(db, name, logger, initCookie);
 	}
 
 	/**
@@ -40,34 +37,9 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 		return getValuesFromData(data.getKey(), data.getValue());
 	}
 
-	/**
-	 * the where clause that should be used to update/delete the item
-	 * <p> see {@link #getKeySelectArgs(Object)}
-	 * @param itemKey the key of the item about to be selected in the database
-	 * @return a string for the whereClause in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
-	 */
-	protected abstract String getKeySelectClause(K itemKey);
-	/**
-	 * the where arguments that should be used to update/delete the item
-	 * <p> see {@link #getKeySelectClause(Object)}
-	 * @param itemKey the key of the  item about to be selected in the database
-	 * @return a string array for the whereArgs in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
-	 */
-	protected abstract String[] getKeySelectArgs(K itemKey);
-
 	protected void putEntry(K key, V value) {
 		final H map = getMap();
 		map.put(key, value);
-	}
-
-	@Override
-	protected final String getItemSelectClause(MapEntry<K, V> itemToSelect) {
-		return getKeySelectClause(itemToSelect.getKey());
-	}
-
-	@Override
-	protected final String[] getItemSelectArgs(MapEntry<K, V> itemToSelect) {
-		return getKeySelectArgs(itemToSelect.getKey());
 	}
 
 	@Override

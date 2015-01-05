@@ -4,9 +4,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 
 public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntry<K,V>> {
 
@@ -34,40 +31,22 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 
 	protected final boolean DEBUG_LOCK = false;
 
-	protected abstract MapEntry<K, V> getEntryFromCursor(Cursor c);
-
-	/**
-	 * the where clause that should be used to update/delete the item
-	 * <p> see {@link #getKeySelectArgs(Object)}
-	 * @param itemKey the key of the item about to be selected in the database
-	 * @return a string for the whereClause in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
-	 */
-	protected abstract String getKeySelectClause(K itemKey);
-	/**
-	 * the where arguments that should be used to update/delete the item
-	 * <p> see {@link #getKeySelectClause(Object)}
-	 * @param itemKey the key of the  item about to be selected in the database
-	 * @return a string array for the whereArgs in {@link SQLiteDatabase#update(String, ContentValues, String, String[])} or {@link SQLiteDatabase#delete(String, String, String[])}
-	 */
-	protected abstract String[] getKeySelectArgs(K itemKey);
-
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
 	 * @param maxSize for caches that do not override {@link #sizeOf}, this is the maximum number of entries in the cache. For all other caches, this is the maximum sum of the sizes of the entries in this cache
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryLruCache(MapDataSource<K, V> db, Context context, String name, final int maxSize, Logger logger) {
-		super(db, context, name, logger, maxSize);
+	protected InMemoryLruCache(MapDataSource<K, V> db, String name, final int maxSize, Logger logger) {
+		super(db, name, logger, maxSize);
 		this.constructorPassed = true;
 	}
 	
 	@Override
-	protected void preloadInit(Object cookie, Logger logger) {
+	protected void preloadInit(Object cookie) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		super.preloadInit(cookie, logger);
+		super.preloadInit(cookie);
 		mData = new LruCache<K, V>((Integer) cookie) {
 			@Override
 			protected int sizeOf(K key, V value) {
@@ -111,14 +90,11 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 		map.put(entry.first, entry.second);
 	}
 
-	@Override
-	protected final String getItemSelectClause(MapEntry<K, V> itemToSelect) {
-		return getKeySelectClause(itemToSelect.first);
-	}
+	protected abstract ContentValues getValuesFromData(K key, V value) throws RuntimeException;
 
 	@Override
-	protected final String[] getItemSelectArgs(MapEntry<K, V> itemToSelect) {
-		return getKeySelectArgs(itemToSelect.first);
+	protected final ContentValues getValuesFromData(MapEntry<K, V> data) throws RuntimeException {
+		return getValuesFromData(data.getKey(), data.getValue());
 	}
 
 	/**

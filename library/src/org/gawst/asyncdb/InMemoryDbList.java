@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.List;
 
 import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link List}
@@ -21,13 +19,12 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param context Used to open or create the database
 	 * @param name Database filename on disk
-	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbList(DataSource<E> db, Context context, String name, Logger logger, Object initCookie) {
-		super(db, context, name, logger, initCookie);
+	protected InMemoryDbList(DataSource<E> db, String name, Logger logger, Object initCookie) {
+		super(db, name, logger, initCookie);
 		super.setDbErrorHandler(this);
 	}
 

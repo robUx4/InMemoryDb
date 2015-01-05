@@ -6,8 +6,6 @@ import java.util.TreeSet;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import android.content.Context;
-
 /**
  * a basic helper class to keep the content of a flat database in an {@link TreeSet}
  * <p>
@@ -42,33 +40,31 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param context to use to open or create the database
 	 * @param name of the database file, or null for an in-memory database
-	 * @param logger the {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param comparator comparator to sort the elements
 	 */
-	protected InMemoryDbTreeSet(DataSource<E> db, Context context, String name, Logger logger, Comparator<E> comparator) {
-		this(db, context, name, logger, comparator, null);
+	protected InMemoryDbTreeSet(DataSource<E> db, String name, Logger logger, Comparator<E> comparator) {
+		this(db, name, logger, comparator, null);
 	}
 
 	/**
 	 * @param db
-	 * @param context to use to open or create the database
 	 * @param name of the database file, or null for an in-memory database
-	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
+	 * @param logger the {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param comparator comparator to sort the elements
-	 * @param initCookie Cookie to pass to {@link #preloadInit(Object, Logger)}
+	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbTreeSet(DataSource<E> db, Context context, String name, Logger logger, Comparator<E> comparator, Object initCookie) {
-		super(db, context, name, logger, initCookie);
+	protected InMemoryDbTreeSet(DataSource<E> db, String name, Logger logger, Comparator<E> comparator, Object initCookie) {
+		super(db, name, logger, initCookie);
 		this.comparator = comparator;
 	}
 
 	@Override
-	protected void preloadInit(Object cookie, Logger logger) {
+	protected void preloadInit(Object cookie) {
 		mDataLock = new ReentrantLock();
 		dataLoaded = mDataLock.newCondition();
-		super.preloadInit(cookie, logger);
+		super.preloadInit(cookie);
 		mData = new TreeSet<E>(comparator);
 	}
 
