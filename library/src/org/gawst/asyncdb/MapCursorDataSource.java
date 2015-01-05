@@ -82,7 +82,6 @@ public class MapCursorDataSource<K, V> implements MapDataSource<K, V> {
 	public Object insert(ContentValues element) throws RuntimeException {
 		return null;
 	}
-\
 
 	@Override
 	public void eraseSource() {
