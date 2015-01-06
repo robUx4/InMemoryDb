@@ -38,6 +38,7 @@ public abstract class CursorDataSource<E> implements DataSource<E> {
 	protected final CursorSourceHandler<E> cursorSourceHandler;
 
 	public CursorDataSource(@NonNull CursorSourceHandler<E> cursorSourceHandler) {
+		if (cursorSourceHandler==null) throw new NullPointerException("null CursorSourceHandler in "+this);
 		this.cursorSourceHandler = cursorSourceHandler;
 	}
 

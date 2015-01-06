@@ -47,7 +47,8 @@ public class MapCursorDataSource<K, V> implements MapDataSource<K, V> {
 
 	private final MapCursorSourceHandler<K, V> source;
 
-	public MapCursorDataSource(MapCursorSourceHandler<K, V> source) {
+	public MapCursorDataSource(@NonNull MapCursorSourceHandler<K, V> source) {
+		if (source==null) throw new NullPointerException("null MapCursorSourceHandler in "+this);
 		this.source = source;
 	}
 
