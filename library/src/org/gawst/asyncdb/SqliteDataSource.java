@@ -14,7 +14,7 @@ import android.support.annotation.NonNull;
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public class SqliteDataSource<E> extends CursorDataSource<E> {
+public class SqliteDataSource<E> extends CursorDataSource<E, Long> {
 
 	private final Context context;
 	private final SQLiteOpenHelper db;
@@ -29,12 +29,7 @@ public class SqliteDataSource<E> extends CursorDataSource<E> {
 		this.databaseName = databaseName;
 	}
 
-	@Override
-	protected Cursor readAll() {
-		return select(null, null, null, null, null, null, null);
-	}
-
-	public Cursor select(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+	public Cursor query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
 		UIHandler.assertNotUIThread();
 		return db.getReadableDatabase().query(tableName, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
 	}
@@ -48,7 +43,7 @@ public class SqliteDataSource<E> extends CursorDataSource<E> {
 	}
 
 	@Override
-	public Object insert(ContentValues element) throws RuntimeException {
+	public Long insert(ContentValues element) throws RuntimeException {
 		long id = db.getWritableDatabase().insertOrThrow(tableName, null, element);
 		if (id == -1)
 			return null;
@@ -56,27 +51,14 @@ public class SqliteDataSource<E> extends CursorDataSource<E> {
 	}
 
 	@Override
-	public boolean update(E itemToUpdate, ContentValues updateValues) {
-		return db.getWritableDatabase().update(tableName, updateValues,
-				cursorSourceHandler.getItemSelectClause(itemToUpdate),
-				cursorSourceHandler.getItemSelectArgs(itemToUpdate))!=0;
+	public int update(String selection, String[] selectionArgs, ContentValues updateValues) {
+		return db.getWritableDatabase().update(tableName, updateValues, selection, selectionArgs);
 	}
 
-	public int deleteSelection(String selectClause, String[] selectArgs) {
+	@Override
+	public int delete(String selection, String[] selectionArgs) {
 		UIHandler.assertNotUIThread();
-		return db.getWritableDatabase().delete(tableName, selectClause, selectArgs);
-	}
-
-	@Override
-	public boolean delete(E itemToDelete) {
-		return deleteSelection(cursorSourceHandler.getItemSelectClause(itemToDelete), cursorSourceHandler.getItemSelectArgs(itemToDelete))!=0;
-	}
-
-	@Override
-	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
-		return db.getWritableDatabase().delete(tableName,
-				cursorSourceHandler.getItemSelectClause(null),
-				invalidEntry.getSelectArgs())!=0;
+		return db.getWritableDatabase().delete(tableName, selection, selectionArgs);
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import android.support.annotation.NonNull;
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public class SqliteMapDataSource<K, V> implements MapDataSource<K, V> {
+public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, DatabaseSource<Long> {
 	private final SqliteDataSource<MapEntry<K, V>> source;
 
 	public SqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final MapCursorSourceHandler<K, V> cursorSourceHandler) {
@@ -44,7 +44,7 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V> {
 	}
 
 	@Override
-	public Object insert(ContentValues element) throws RuntimeException {
+	public Long insert(ContentValues element) throws RuntimeException {
 		return source.insert(element);
 	}
 
@@ -53,12 +53,19 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V> {
 		return source.deleteInvalidEntry(invalidEntry);
 	}
 
-	public Cursor select(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
-		return source.select(columns, selection, selectionArgs, groupBy, having, orderBy, null);
+	@Override
+	public Cursor query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+		return source.query(columns, selection, selectionArgs, groupBy, having, orderBy, limit);
 	}
 
-	public int deleteSelection(String selectClause, String[] selectArgs) {
-		return source.deleteSelection(selectClause, selectArgs);
+	@Override
+	public int update(String selection, String[] selectionArgs, ContentValues updateValues) {
+		return source.update(selection, selectionArgs, updateValues);
+	}
+
+	@Override
+	public int delete(String selection, String[] selectionArgs) {
+		return source.delete(selection, selectionArgs);
 	}
 
 	@Override

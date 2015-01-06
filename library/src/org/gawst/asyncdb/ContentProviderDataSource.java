@@ -9,7 +9,7 @@ import android.support.annotation.NonNull;
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public class ContentProviderDataSource<E> extends CursorDataSource<E> {
+public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri> {
 	private final Uri contentProviderUri;
 	private final Context context;
 
@@ -20,8 +20,8 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E> {
 	}
 
 	@Override
-	protected Cursor readAll() {
-		return context.getContentResolver().query(contentProviderUri, null, null, null, null);
+	public Cursor query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+		return context.getContentResolver().query(contentProviderUri, columns, selection, selectionArgs, orderBy);
 	}
 
 	@Override
@@ -30,28 +30,18 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E> {
 	}
 
 	@Override
-	public Object insert(ContentValues element) throws RuntimeException {
+	public Uri insert(ContentValues element) throws RuntimeException {
 		return context.getContentResolver().insert(contentProviderUri, element);
 	}
 
 	@Override
-	public boolean update(E itemToUpdate, ContentValues updateValues) {
-		return context.getContentResolver().update(contentProviderUri, updateValues,
-				cursorSourceHandler.getItemSelectClause(itemToUpdate),
-				cursorSourceHandler.getItemSelectArgs(itemToUpdate))!=0;
+	public int update(String where, String[] selectionArgs, ContentValues updateValues) {
+		return context.getContentResolver().update(contentProviderUri, updateValues, where, selectionArgs);
 	}
 
 	@Override
-	public boolean delete(E itemToDelete) {
-		return context.getContentResolver().delete(contentProviderUri,
-				cursorSourceHandler.getItemSelectClause(itemToDelete),
-				cursorSourceHandler.getItemSelectArgs(itemToDelete))!=0;
-	}
-
-	@Override
-	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
-		// TODO
-		return false;
+	public int delete(String selection, String[] selectionArgs) {
+		return context.getContentResolver().delete(contentProviderUri, selection, selectionArgs);
 	}
 
 	@Override
