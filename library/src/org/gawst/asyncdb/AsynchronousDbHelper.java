@@ -147,7 +147,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 					ContentValues updateValues = null;
 					try {
 						updateValues = getValuesFromData(itemToUpdate);
-						if (!directUpdate(dataSource, itemToUpdate, updateValues)) {
+						if (!directUpdate(itemToUpdate, updateValues)) {
 							notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update "+updateValues+" in "+name));
 						}
 					} catch (Throwable e) {
@@ -160,7 +160,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 					Pair<E,E> itemsToReplace = (Pair<E,E>) msg.obj;
 					try {
 						ContentValues newValues = getValuesFromData(itemsToReplace.first);
-						directUpdate(dataSource, itemsToReplace.second, newValues);
+						directUpdate(itemsToReplace.second, newValues);
 					} catch (Throwable e) {
 						notifyReplaceItemFailed(itemsToReplace.first, itemsToReplace.second, e);
 					}
@@ -174,7 +174,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 						newValuesA = getValuesFromData(itemsToSwap.second);
 						if (newValuesA!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, name+" update "+itemsToSwap.second+" with "+newValuesA);
-							directUpdate(dataSource, itemsToSwap.first, newValuesA);
+							directUpdate(itemsToSwap.first, newValuesA);
 						}
 					} catch (Throwable e) {
 						notifyUpdateItemFailed(itemsToSwap.first, newValuesA, e);
@@ -184,7 +184,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 						newValuesB = getValuesFromData(itemsToSwap.first);
 						if (newValuesB!=null) {
 							if (DEBUG_DB) LogManager.logger.d(TAG, name+" update "+itemsToSwap.first+" with "+newValuesB);
-							directUpdate(dataSource, itemsToSwap.second, newValuesB);
+							directUpdate(itemsToSwap.second, newValuesB);
 						}
 					} catch (Throwable e) {
 						notifyUpdateItemFailed(itemsToSwap.second, newValuesB, e);
@@ -224,15 +224,14 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 
 	/**
 	 * Method to call to update the data directly in the database
-	 * @param db Database where data will be updated
 	 * @param itemToUpdate Item in the database that needs to be updated
 	 * @param updateValues Values that will be updated in the database
 	 * @return {@code true} if the data were updated successfully
 	 */
-	protected boolean directUpdate(DataSource<E> db, E itemToUpdate, ContentValues updateValues) {
+	protected boolean directUpdate(E itemToUpdate, ContentValues updateValues) {
 		if (updateValues!=null) {
 			if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" update "+updateValues+" for "+itemToUpdate);
-			return db.update(itemToUpdate, updateValues/*, SQLiteDatabase.CONFLICT_NONE*/);
+			return dataSource.update(itemToUpdate, updateValues/*, SQLiteDatabase.CONFLICT_NONE*/);
 		}
 		return false;
 	}
