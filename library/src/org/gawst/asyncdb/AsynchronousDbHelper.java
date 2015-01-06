@@ -47,6 +47,15 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private final DataSource<E, INSERT_ID> dataSource;
 
 	/**
+	 * A class similar to {@link android.content.AsyncQueryHandler} to do simple calls asynchronously with a callback when it's doe
+	 */
+	public class AsyncHandler extends AsyncQueryHandler<E, INSERT_ID> {
+		public AsyncHandler() {
+			super(AsynchronousDbHelper.this, AsynchronousDbHelper.this.dataSource);
+		}
+	}
+
+	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
 	 * @param name Database filename on disk
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
