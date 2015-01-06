@@ -44,7 +44,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 
 	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
-	protected final DataSource<E> dataSource;
+	private final DataSource<E> dataSource;
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
