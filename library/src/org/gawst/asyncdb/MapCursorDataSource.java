@@ -1,13 +1,12 @@
 package org.gawst.asyncdb;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public class MapCursorDataSource<K, V> implements MapDataSource<K, V> {
+public abstract class MapCursorDataSource<K, V> implements MapDataSource<K, V> {
 
 	public interface MapCursorSourceHandler<K, V> {
 		/**
@@ -45,55 +44,10 @@ public class MapCursorDataSource<K, V> implements MapDataSource<K, V> {
 		V cursorToValue(Cursor cursor);
 	}
 
-	private final MapCursorSourceHandler<K, V> source;
+	private final MapCursorSourceHandler<K, V> cursorSourceHandler;
 
-	public MapCursorDataSource(@NonNull MapCursorSourceHandler<K, V> source) {
-		if (source==null) throw new NullPointerException("null MapCursorSourceHandler in "+this);
-		this.source = source;
-	}
-
-	@Override
-	public final boolean delete(MapEntry<K, V> itemToDelete) {
-		return deleteByKey(itemToDelete.getKey());
-	}
-
-	@Override
-	public boolean update(MapEntry<K, V> itemToUpdate, ContentValues updateValues) {
-		return updateByKey(itemToUpdate.getKey(), updateValues);
-	}
-
-	@Override
-	public boolean updateByKey(K key, ContentValues updateValues) {
-		throw new AssertionError("not implemented");
-	}
-
-	@Override
-	public boolean deleteByKey(K key) {
-		throw new AssertionError("not implemented");
-	}
-
-	@Override
-	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
-		throw new AssertionError("not implemented");
-	}
-
-	@Override
-	public void queryAll(BatchReadingCallback<MapEntry<K, V>> readingCallback) {
-		throw new AssertionError("not implemented");
-	}
-
-	@Override
-	public int clearAllData() {
-		throw new AssertionError("not implemented");
-	}
-
-	@Override
-	public Object insert(ContentValues element) throws RuntimeException {
-		throw new AssertionError("not implemented");
-	}
-
-	@Override
-	public void eraseSource() {
-		throw new AssertionError("not implemented");
+	public MapCursorDataSource(@NonNull MapCursorSourceHandler<K, V> cursorSourceHandler) {
+		if (cursorSourceHandler ==null) throw new NullPointerException("null MapCursorSourceHandler in "+this);
+		this.cursorSourceHandler = cursorSourceHandler;
 	}
 }

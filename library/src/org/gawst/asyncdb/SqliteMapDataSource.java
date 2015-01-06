@@ -1,5 +1,6 @@
 package org.gawst.asyncdb;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -30,5 +31,40 @@ public class SqliteMapDataSource<K, V> extends MapCursorDataSource<K, V> {
 				return new MapEntry<K, V>(key, cursorSourceHandler.cursorToValue(cursor));
 			}
 		});
+	}
+
+	@Override
+	public boolean update(MapEntry<K, V> itemToUpdate, ContentValues updateValues) {
+		return source.update(itemToUpdate, updateValues);
+	}
+
+	@Override
+	public boolean delete(MapEntry<K, V> itemToDelete) {
+		return source.delete(itemToDelete);
+	}
+
+	@Override
+	public Object insert(ContentValues element) throws RuntimeException {
+		return source.insert(element);
+	}
+
+	@Override
+	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
+		return source.deleteInvalidEntry(invalidEntry);
+	}
+
+	@Override
+	public final void queryAll(BatchReadingCallback<MapEntry<K, V>> readingCallback) {
+		source.queryAll(readingCallback);
+	}
+
+	@Override
+	public int clearAllData() {
+		return source.clearAllData();
+	}
+
+	@Override
+	public void eraseSource() {
+		source.eraseSource();
 	}
 }
