@@ -9,11 +9,11 @@ import android.support.annotation.NonNull;
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public class SqliteMapDataSource<K, V> extends MapCursorDataSource<K, V> {
+public class SqliteMapDataSource<K, V> implements MapDataSource<K, V> {
 	private final SqliteDataSource<MapEntry<K, V>> source;
 
 	public SqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final MapCursorSourceHandler<K, V> cursorSourceHandler) {
-		super(cursorSourceHandler);
+		if (cursorSourceHandler ==null) throw new NullPointerException("null MapCursorSourceHandler in "+this);
 		this.source = new SqliteDataSource<MapEntry<K, V>>(context, db, tableName, databaseName, new CursorDataSource.CursorSourceHandler<MapEntry<K, V>>() {
 			@Override
 			public String getItemSelectClause(MapEntry<K, V> itemToSelect) {
