@@ -2,6 +2,8 @@ package org.gawst.asyncdb;
 
 import java.io.File;
 
+import org.gawst.asyncdb.adapter.UIHandler;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -29,15 +31,17 @@ public class SqliteDataSource<E> extends CursorDataSource<E> {
 
 	@Override
 	protected Cursor readAll() {
-		return rawQuery(null, null, null, null, null, null, null);
+		return select(null, null, null, null, null, null, null);
 	}
 
-	public Cursor rawQuery(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+	public Cursor select(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+		UIHandler.assertNotUIThread();
 		return db.getReadableDatabase().query(tableName, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
 	}
 
 	@Override
 	public int clearAllData() {
+		UIHandler.assertNotUIThread();
 		int result = db.getWritableDatabase().delete(tableName, "1", null);
 		SQLiteDatabase.releaseMemory();
 		return result;
@@ -58,13 +62,14 @@ public class SqliteDataSource<E> extends CursorDataSource<E> {
 				cursorSourceHandler.getItemSelectArgs(itemToUpdate))!=0;
 	}
 
-	public boolean rawDelete(String selectClause, String[] selectArgs) {
-		return db.getWritableDatabase().delete(tableName, selectClause, selectArgs)!=0;
+	public int deleteSelection(String selectClause, String[] selectArgs) {
+		UIHandler.assertNotUIThread();
+		return db.getWritableDatabase().delete(tableName, selectClause, selectArgs);
 	}
 
 	@Override
 	public boolean delete(E itemToDelete) {
-		return rawDelete(cursorSourceHandler.getItemSelectClause(itemToDelete), cursorSourceHandler.getItemSelectArgs(itemToDelete));
+		return deleteSelection(cursorSourceHandler.getItemSelectClause(itemToDelete), cursorSourceHandler.getItemSelectArgs(itemToDelete))!=0;
 	}
 
 	@Override

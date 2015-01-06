@@ -53,8 +53,12 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V> {
 		return source.deleteInvalidEntry(invalidEntry);
 	}
 
-	public Cursor rawQuery(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
-		return source.rawQuery(columns, selection, selectionArgs, groupBy, having, orderBy, null);
+	public Cursor select(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
+		return source.select(columns, selection, selectionArgs, groupBy, having, orderBy, null);
+	}
+
+	public int deleteSelection(String selectClause, String[] selectArgs) {
+		return source.deleteSelection(selectClause, selectArgs);
 	}
 
 	@Override
