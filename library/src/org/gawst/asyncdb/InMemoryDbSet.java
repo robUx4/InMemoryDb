@@ -16,7 +16,7 @@ import android.database.Cursor;
  * @param <E> the type of items stored in memory by the {@link InMemoryDbSet}
  * @param <S> the type of in memory storage that will be used
  */
-public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbHelper<E> implements AsynchronousDbErrorHandler<E>/*, Set<E>*/ {
+public abstract class InMemoryDbSet<E, S extends Set<E>, INSERT_ID> extends AsynchronousDbHelper<E, INSERT_ID> implements AsynchronousDbErrorHandler<E>/*, Set<E>*/ {
 
 	private WeakReference<AsynchronousDbErrorHandler<E>> mListener;
 
@@ -26,7 +26,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbSet(DataSource<E> db, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbSet(DataSource<E, INSERT_ID> db, String name, Logger logger, Object initCookie) {
 		super(db, name, logger, initCookie);
 		super.setDbErrorHandler(this);
 	}
@@ -129,12 +129,12 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 		onDataCleared();
 	}
 
-	public void onAddItemFailed(AsynchronousDbHelper<E> db, E item, ContentValues values, Throwable cause) {
+	public void onAddItemFailed(AsynchronousDbHelper<E, ?> db, E item, ContentValues values, Throwable cause) {
 		// revert the failed change in memory
 		remove(item);
 
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else
@@ -142,12 +142,12 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 		}
 	}
 
-	public void onRemoveItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
+	public void onRemoveItemFailed(AsynchronousDbHelper<E, ?> db, E item, Throwable cause) {
 		// revert the failed change in memory
 		add(item);
 
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else
@@ -155,9 +155,9 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 		}
 	}
 
-	public void onUpdateItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
+	public void onUpdateItemFailed(AsynchronousDbHelper<E, ?> db, E item, Throwable cause) {
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else
@@ -165,14 +165,14 @@ public abstract class InMemoryDbSet<E, S extends Set<E>> extends AsynchronousDbH
 		}
 	}
 
-	public void onReplaceItemFailed(AsynchronousDbHelper<E> db, E original, E replacement, Throwable cause) {
+	public void onReplaceItemFailed(AsynchronousDbHelper<E, ?> db, E original, E replacement, Throwable cause) {
 		// do nothing
 	}
 	
 	@Override
-	public void onCorruption(AsynchronousDbHelper<E> db) {
+	public void onCorruption(AsynchronousDbHelper<E, ?> db) {
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else

@@ -19,7 +19,7 @@ public interface AsynchronousDbErrorHandler<E> {
 	 * @param values the values that failed to be added
 	 * @param cause an exception explaining why it failed
 	 */
-	void onAddItemFailed(AsynchronousDbHelper<E> db, E item, ContentValues values, Throwable cause);
+	void onAddItemFailed(AsynchronousDbHelper<E, ?> db, E item, ContentValues values, Throwable cause);
 	
 	/**
 	 * Called when the database failed to update an item
@@ -27,7 +27,7 @@ public interface AsynchronousDbErrorHandler<E> {
 	 * @param item the data that failed to store
 	 * @param cause an exception explaining why it failed
 	 */
-	void onUpdateItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause);
+	void onUpdateItemFailed(AsynchronousDbHelper<E, ?> db, E item, Throwable cause);
 	
 	/**
 	 * Called when the database failed to delete an item
@@ -35,7 +35,7 @@ public interface AsynchronousDbErrorHandler<E> {
 	 * @param item the data that failed to store
 	 * @param cause an exception explaining why it failed
 	 */
-	void onRemoveItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause);
+	void onRemoveItemFailed(AsynchronousDbHelper<E, ?> db, E item, Throwable cause);
 	
 	/**
 	 * Called when the database failed to replace an item
@@ -44,13 +44,13 @@ public interface AsynchronousDbErrorHandler<E> {
 	 * @param replacement the data that should be in the item
 	 * @param cause an exception explaining why it failed
 	 */
-	void onReplaceItemFailed(AsynchronousDbHelper<E> db, E original, E replacement, Throwable cause);
+	void onReplaceItemFailed(AsynchronousDbHelper<E, ?> db, E original, E replacement, Throwable cause);
 	
 	/**
 	 * Called when the database has been found to be corrupted
 	 * @see DatabaseErrorHandler#onCorruption(android.database.sqlite.SQLiteDatabase)
 	 * @param db that is corrupted
 	 */
-	void onCorruption(AsynchronousDbHelper<E> db);
+	void onCorruption(AsynchronousDbHelper<E, ?> db);
 	
 }

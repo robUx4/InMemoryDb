@@ -11,5 +11,5 @@ public interface InMemoryDbListener<E> {
 	 * <p>it may be called from any thread, including the internal one
 	 * @param db the database which content has changed
 	 */
-	void onMemoryDbChanged(AsynchronousDbHelper<E> db);
+	void onMemoryDbChanged(AsynchronousDbHelper<E, ?> db);
 }

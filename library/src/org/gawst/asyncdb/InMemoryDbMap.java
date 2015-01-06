@@ -5,7 +5,7 @@ import java.util.Set;
 
 import android.content.ContentValues;
 
-public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends AsynchronousDbHelper<MapEntry<K,V>> {
+public abstract class InMemoryDbMap<K, V, H extends Map<K, V>, INSERT_ID> extends AsynchronousDbHelper<MapEntry<K,V>, INSERT_ID> {
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
@@ -13,7 +13,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>> extends Asynchron
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbMap(MapDataSource<K, V> db, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbMap(MapDataSource<K, V, INSERT_ID> db, String name, Logger logger, Object initCookie) {
 		super(db, name, logger, initCookie);
 	}
 

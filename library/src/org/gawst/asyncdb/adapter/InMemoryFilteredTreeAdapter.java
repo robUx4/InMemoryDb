@@ -20,17 +20,17 @@ import android.widget.TextView;
 public class InMemoryFilteredTreeAdapter<E> extends BaseAdapter implements InMemoryDbListener<E> {
 
 	public interface DbFilter<E> {
-		List<E> getFilteredData(InMemoryDbSet<E,?> source);
+		List<E> getFilteredData(InMemoryDbSet<E,?, ?> source);
 	}
 
-	private final InMemoryDbSet<E, ?> mArray;
+	private final InMemoryDbSet<E, ?, ?> mArray;
 	private final LayoutInflater mInflater;
 	private final int layoutId;
 	private final DbFilter<E> filter;
 	private UIHandler uiHandler;
 	private List<E> mData;
 
-	public InMemoryFilteredTreeAdapter(Context context, InMemoryDbSet<E, ?> array, int layoutResourceId, DbFilter<E> filter) {
+	public InMemoryFilteredTreeAdapter(Context context, InMemoryDbSet<E, ?, ?> array, int layoutResourceId, DbFilter<E> filter) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
@@ -39,7 +39,7 @@ public class InMemoryFilteredTreeAdapter<E> extends BaseAdapter implements InMem
 		mArray.addListener(this);
 	}
 	
-	protected InMemoryDbSet<E, ?> getDataSource() {
+	protected InMemoryDbSet<E, ?, ?> getDataSource() {
 		return mArray;
 	}
 
@@ -77,7 +77,7 @@ public class InMemoryFilteredTreeAdapter<E> extends BaseAdapter implements InMem
 	}
 
 	@Override
-	public void onMemoryDbChanged(AsynchronousDbHelper<E> db) {
+	public void onMemoryDbChanged(AsynchronousDbHelper<E, ?> db) {
 		final List<E> newData = filter.getFilteredData(mArray);
 		Runnable runner = new Runnable() {
 			@Override

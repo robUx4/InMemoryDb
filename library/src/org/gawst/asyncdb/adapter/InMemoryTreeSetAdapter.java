@@ -12,12 +12,12 @@ import android.widget.TextView;
 
 public class InMemoryTreeSetAdapter<E> extends BaseAdapter implements InMemoryDbListener<E> {
 
-	private final InMemoryDbTreeSet<E> mArray;
+	private final InMemoryDbTreeSet<E, ?> mArray;
 	private final LayoutInflater mInflater;
 	private final int layoutId;
 	private UIHandler uiHandler;
 	
-	public InMemoryTreeSetAdapter(Context context, InMemoryDbTreeSet<E> array, int layoutResourceId) {
+	public InMemoryTreeSetAdapter(Context context, InMemoryDbTreeSet<E, ?> array, int layoutResourceId) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
@@ -56,7 +56,7 @@ public class InMemoryTreeSetAdapter<E> extends BaseAdapter implements InMemoryDb
 	}
 
 	@Override
-	public void onMemoryDbChanged(AsynchronousDbHelper<E> db) {
+	public void onMemoryDbChanged(AsynchronousDbHelper<E, ?> db) {
 		Runnable runner = new Runnable() {
 			@Override
 			public void run() {

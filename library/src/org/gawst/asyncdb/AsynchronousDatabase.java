@@ -2,7 +2,6 @@ package org.gawst.asyncdb;
 
 import java.util.Collection;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
 
 /**
@@ -10,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  * 
  * @param <E> Type of Objects that are stored in the main table
  */
-public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
+public abstract class AsynchronousDatabase<E, INSERT_ID> extends AsynchronousDbHelper<E, INSERT_ID> {
 
 	/**
 	 * Constructor for the SQLite database with a worker thread
@@ -18,7 +17,7 @@ public abstract class AsynchronousDatabase<E> extends AsynchronousDbHelper<E> {
 	 * @param name Database filename on disk
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	public AsynchronousDatabase(DataSource<E> db, String name, Logger logger) {
+	public AsynchronousDatabase(DataSource<E, INSERT_ID> db, String name, Logger logger) {
 		super(db, name, logger, null);
 	}
 

@@ -17,17 +17,17 @@ import android.widget.TextView;
 public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMemoryDbListener<E> {
 
 	public interface DbFilter<E> {
-		List<E> getFilteredData(InMemoryDbList<E,?> source);
+		List<E> getFilteredData(InMemoryDbList<E,?, ?> source);
 	}
 
-	private final InMemoryDbArrayList<E> mArray;
+	private final InMemoryDbArrayList<E, ?> mArray;
 	private final LayoutInflater mInflater;
 	private final int layoutId;
 	private final DbFilter<E> filter;
 	private UIHandler uiHandler;
 	private List<E> mData;
 
-	public InMemoryFilteredListAdapter(Context context, InMemoryDbArrayList<E> array, int layoutResourceId, DbFilter<E> filter) {
+	public InMemoryFilteredListAdapter(Context context, InMemoryDbArrayList<E, ?> array, int layoutResourceId, DbFilter<E> filter) {
 		this.mArray = array;
 		this.mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.layoutId = layoutResourceId;
@@ -36,7 +36,7 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 		mArray.addListener(this);
 	}
 
-    protected InMemoryDbArrayList<E> getDataSource() {
+    protected InMemoryDbArrayList<E, ?> getDataSource() {
         return mArray;
     }
 
@@ -74,7 +74,7 @@ public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMem
 	}
 
 	@Override
-	public void onMemoryDbChanged(AsynchronousDbHelper<E> db) {
+	public void onMemoryDbChanged(AsynchronousDbHelper<E, ?> db) {
 		final List<E> newData = filter.getFilteredData(mArray);
 		Runnable runner = new Runnable() {
 			@Override

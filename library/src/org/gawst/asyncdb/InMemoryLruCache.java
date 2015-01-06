@@ -5,7 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.ContentValues;
 
-public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntry<K,V>> {
+public abstract class InMemoryLruCache<K,V, INSERT_ID> extends AsynchronousDbHelper<MapEntry<K,V>, INSERT_ID> {
 
 	/**
 	 * the cache where the data are stored, locked when writing on it
@@ -37,7 +37,7 @@ public abstract class InMemoryLruCache<K,V> extends AsynchronousDbHelper<MapEntr
 	 * @param maxSize for caches that do not override {@link #sizeOf}, this is the maximum number of entries in the cache. For all other caches, this is the maximum sum of the sizes of the entries in this cache
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryLruCache(MapDataSource<K, V> db, String name, final int maxSize, Logger logger) {
+	protected InMemoryLruCache(MapDataSource<K, V, INSERT_ID> db, String name, final int maxSize, Logger logger) {
 		super(db, name, logger, maxSize);
 		this.constructorPassed = true;
 	}

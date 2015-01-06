@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @param <E> the type of items stored in memory by the {@link InMemoryDbTreeSet}
  */
-public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> {
+public abstract class InMemoryDbTreeSet<E, INSERT_ID> extends InMemoryDbSet<E, TreeSet<E>, INSERT_ID> {
 
 	/**
 	 * The array where the data are stored, locked when writing on it
@@ -44,7 +44,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	 * @param logger the {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param comparator comparator to sort the elements
 	 */
-	protected InMemoryDbTreeSet(DataSource<E> db, String name, Logger logger, Comparator<E> comparator) {
+	protected InMemoryDbTreeSet(DataSource<E, INSERT_ID> db, String name, Logger logger, Comparator<E> comparator) {
 		this(db, name, logger, comparator, null);
 	}
 
@@ -55,7 +55,7 @@ public abstract class InMemoryDbTreeSet<E> extends InMemoryDbSet<E, TreeSet<E>> 
 	 * @param comparator comparator to sort the elements
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbTreeSet(DataSource<E> db, String name, Logger logger, Comparator<E> comparator, Object initCookie) {
+	protected InMemoryDbTreeSet(DataSource<E, INSERT_ID> db, String name, Logger logger, Comparator<E> comparator, Object initCookie) {
 		super(db, name, logger, initCookie);
 		this.comparator = comparator;
 	}

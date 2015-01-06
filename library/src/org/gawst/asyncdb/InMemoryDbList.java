@@ -13,7 +13,7 @@ import android.content.ContentValues;
  * @param <E> the type of items stored in memory by the {@link InMemoryDbList}
  * @param <L> the type of in memory storage that will be used
  */
-public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousDbHelper<E> implements AsynchronousDbErrorHandler<E>/*, List<E>*/ {
+public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends AsynchronousDbHelper<E, INSERT_ID> implements AsynchronousDbErrorHandler<E>/*, List<E>*/ {
 
 	private WeakReference<AsynchronousDbErrorHandler<E>> mListener;
 
@@ -23,7 +23,7 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbList(DataSource<E> db, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbList(DataSource<E, INSERT_ID> db, String name, Logger logger, Object initCookie) {
 		super(db, name, logger, initCookie);
 		super.setDbErrorHandler(this);
 	}
@@ -157,12 +157,12 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 		return true;
 	}
 
-	public void onAddItemFailed(AsynchronousDbHelper<E> db, E item, ContentValues values, Throwable cause) {
+	public void onAddItemFailed(AsynchronousDbHelper<E, ?> db, E item, ContentValues values, Throwable cause) {
 		// revert the failed change in memory
 		remove(item);
 
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else if (listener != this)
@@ -170,12 +170,12 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 		}
 	}
 
-	public void onRemoveItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
+	public void onRemoveItemFailed(AsynchronousDbHelper<E, ?> db, E item, Throwable cause) {
 		// revert the failed change in memory
 		add(item);
 
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else if (listener != this)
@@ -183,9 +183,9 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 		}
 	}
 
-	public void onUpdateItemFailed(AsynchronousDbHelper<E> db, E item, Throwable cause) {
+	public void onUpdateItemFailed(AsynchronousDbHelper<E, ?> db, E item, Throwable cause) {
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else if (listener != this)
@@ -193,14 +193,14 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 		}
 	}
 
-	public void onReplaceItemFailed(AsynchronousDbHelper<E> db, E original, E replacement, Throwable cause) {
+	public void onReplaceItemFailed(AsynchronousDbHelper<E, ?> db, E original, E replacement, Throwable cause) {
 		// revert the failed change in memory
 		int prevIndex = getList().indexOf(replacement); // TODO: we may store the position somewhere
 		if (prevIndex>=0)
 			getList().set(prevIndex, original);
 
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else if (listener != this)
@@ -209,9 +209,9 @@ public abstract class InMemoryDbList<E, L extends List<E>> extends AsynchronousD
 	}
 
 	@Override
-	public void onCorruption(AsynchronousDbHelper<E> db) {
+	public void onCorruption(AsynchronousDbHelper<E, ?> db) {
 		if (mListener!=null) {
-			final AsynchronousDbErrorHandler<E> listener = mListener.get(); 
+			final AsynchronousDbErrorHandler<E> listener = mListener.get();
 			if (listener==null)
 				mListener = null;
 			else if (listener != this)

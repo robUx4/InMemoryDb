@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMap<K,V>> {
+public abstract class InMemoryHashmapDb<K, V, INSERT_ID> extends InMemoryDbMap<K, V, HashMap<K,V>, INSERT_ID> {
 
 	/**
 	 * the array where the data are stored, locked when writing on it
@@ -49,7 +49,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	 * @param name Database filename on disk
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryHashmapDb(MapDataSource<K, V> db, String name, Logger logger) {
+	protected InMemoryHashmapDb(MapDataSource<K, V, INSERT_ID> db, String name, Logger logger) {
 		this(db, name, logger, null);
 	}
 
@@ -59,7 +59,7 @@ public abstract class InMemoryHashmapDb<K, V> extends InMemoryDbMap<K, V, HashMa
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryHashmapDb(MapDataSource<K, V> db, String name, Logger logger, Object initCookie) {
+	protected InMemoryHashmapDb(MapDataSource<K, V, INSERT_ID> db, String name, Logger logger, Object initCookie) {
 		super(db, name, logger, initCookie);
 		this.constructorPassed = true;
 	}

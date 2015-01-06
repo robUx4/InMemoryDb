@@ -5,7 +5,7 @@ import android.content.ContentValues;
 /**
  * Created by robUx4 on 12/31/2014.
  */
-public interface DataSource<E> {
+public interface DataSource<E, INSERT_ID> {
 
 	public interface BatchReadingCallback<E> {
 		/**
@@ -42,7 +42,7 @@ public interface DataSource<E> {
 	 * @param element The element to add
 	 * @return An object representing the added item or {@code null} if it wasn't added
 	 */
-	Object insert(ContentValues element) throws RuntimeException;
+	INSERT_ID insert(ContentValues element) throws RuntimeException;
 
 	/**
 	 * Delete the item from the source of data

@@ -8,7 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * @param <E> the type of items stored in memory by the {@link InMemoryDbCopyOnWriteArrayList}
  */
-public abstract class InMemoryDbCopyOnWriteArrayList<E> extends InMemoryDbList<E, CopyOnWriteArrayList<E>> {
+public abstract class InMemoryDbCopyOnWriteArrayList<E, INSERT_ID> extends InMemoryDbList<E, CopyOnWriteArrayList<E>, INSERT_ID> {
 
 	/**
 	 * the array where the data are stored, locked when writing on it
@@ -21,7 +21,7 @@ public abstract class InMemoryDbCopyOnWriteArrayList<E> extends InMemoryDbList<E
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbCopyOnWriteArrayList(DataSource<E> db, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbCopyOnWriteArrayList(DataSource<E, INSERT_ID> db, String name, Logger logger, Object initCookie) {
 		super(db, name, logger, initCookie);
 	}
 	

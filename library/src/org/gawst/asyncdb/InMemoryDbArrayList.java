@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @param <E> the type of items stored in memory by the {@link InMemoryDbArrayList}
  */
-public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList<E>> {
+public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E, ArrayList<E>, INSERT_ID> {
 
 	/**
 	 * the array where the data are stored, locked when writing on it
@@ -40,7 +40,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	 * @param name Database filename on disk
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
-	protected InMemoryDbArrayList(DataSource<E> db, String name, Logger logger) {
+	protected InMemoryDbArrayList(DataSource<E, INSERT_ID> db, String name, Logger logger) {
 		super(db, name, logger, null);
 	}
 
@@ -50,7 +50,7 @@ public abstract class InMemoryDbArrayList<E> extends InMemoryDbList<E, ArrayList
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */
-	protected InMemoryDbArrayList(DataSource<E> db, String name, Logger logger, Object initCookie) {
+	protected InMemoryDbArrayList(DataSource<E, INSERT_ID> db, String name, Logger logger, Object initCookie) {
 		super(db, name, logger, initCookie);
 	}
 	

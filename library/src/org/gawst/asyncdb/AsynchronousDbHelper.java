@@ -22,7 +22,7 @@ import android.util.Pair;
  *
  * @param <E> the type of items stored in memory
  */
-public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReadingCallback<E> {
+public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.BatchReadingCallback<E> {
 
 	protected final static String TAG = "MemoryDb";
 	protected final static String STARTUP_TAG = "Startup";
@@ -44,7 +44,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 
 	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
-	private final DataSource<E> dataSource;
+	private final DataSource<E, INSERT_ID> dataSource;
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
@@ -53,7 +53,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
 	 */
 	@SuppressLint("HandlerLeak")
-	protected AsynchronousDbHelper(DataSource<E> db, final String name, Logger logger, Object initCookie) {
+	protected AsynchronousDbHelper(DataSource<E, INSERT_ID> db, final String name, Logger logger, Object initCookie) {
 		this.dataSource = db;
 
 		if (logger!=null)
@@ -194,7 +194,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 				case MSG_CUSTOM_OPERATION:
 					try {
 						@SuppressWarnings("unchecked")
-						AsynchronousDbOperation<E> operation = (AsynchronousDbOperation<E>) msg.obj;
+						AsynchronousDbOperation<E, INSERT_ID> operation = (AsynchronousDbOperation<E, INSERT_ID>) msg.obj;
 						operation.runInMemoryDbOperation(AsynchronousDbHelper.this);
 					} catch (Exception e) {
 						LogManager.logger.w(TAG, name+" failed to run operation "+msg.obj, e);
@@ -360,7 +360,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 		popModifyingTransaction();
 	}
 
-	private void notifyDatabaseCorrupted(DataSource<E> dataSource, String name, Throwable cause) {
+	private void notifyDatabaseCorrupted(DataSource<E, INSERT_ID> dataSource, String name, Throwable cause) {
 		LogManager.logger.e(STARTUP_TAG, "table "+ this.dataSource +" is corrupted in "+name);
 		if (mErrorHandler!=null) {
 			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get();
@@ -453,7 +453,7 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 	 * run the operation in the internal thread
 	 * @param operation
 	 */
-	protected final void scheduleCustomOperation(AsynchronousDbOperation<E> operation) {
+	protected final void scheduleCustomOperation(AsynchronousDbOperation<E, INSERT_ID> operation) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_CUSTOM_OPERATION, operation));
 	}
 
@@ -477,9 +477,9 @@ public abstract class AsynchronousDbHelper<E> implements DataSource.BatchReading
 
 	@Override
 	public void removeInvalidEntry(final InvalidEntry invalidEntry) {
-		scheduleCustomOperation(new AsynchronousDbOperation<E>() {
+		scheduleCustomOperation(new AsynchronousDbOperation<E, INSERT_ID>() {
 			@Override
-			public void runInMemoryDbOperation(AsynchronousDbHelper<E> db) {
+			public void runInMemoryDbOperation(AsynchronousDbHelper<E, INSERT_ID> db) {
 				// remove the element from the DB forever
 				dataSource.deleteInvalidEntry(invalidEntry);
 			}
