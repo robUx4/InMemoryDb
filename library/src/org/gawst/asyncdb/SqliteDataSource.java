@@ -15,7 +15,7 @@ import android.support.annotation.NonNull;
 public class SqliteDataSource<E> extends CursorDataSource<E> {
 
 	private final Context context;
-	public final SQLiteOpenHelper db;
+	private final SQLiteOpenHelper db;
 	private final String tableName;
 	private final String databaseName;
 
@@ -29,7 +29,11 @@ public class SqliteDataSource<E> extends CursorDataSource<E> {
 
 	@Override
 	protected Cursor readAll() {
-		return db.getReadableDatabase().query(tableName, null, null, null, null, null, null);
+		return rawQuery(null, null, null, null, null, null, null);
+	}
+
+	public Cursor rawQuery(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+		return db.getReadableDatabase().query(tableName, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
 	}
 
 	@Override
@@ -54,11 +58,13 @@ public class SqliteDataSource<E> extends CursorDataSource<E> {
 				cursorSourceHandler.getItemSelectArgs(itemToUpdate))!=0;
 	}
 
+	public boolean rawDelete(String selectClause, String[] selectArgs) {
+		return db.getWritableDatabase().delete(tableName, selectClause, selectArgs)!=0;
+	}
+
 	@Override
 	public boolean delete(E itemToDelete) {
-		return db.getWritableDatabase().delete(tableName,
-				cursorSourceHandler.getItemSelectClause(itemToDelete),
-				cursorSourceHandler.getItemSelectArgs(itemToDelete))!=0;
+		return rawDelete(cursorSourceHandler.getItemSelectClause(itemToDelete), cursorSourceHandler.getItemSelectArgs(itemToDelete));
 	}
 
 	@Override

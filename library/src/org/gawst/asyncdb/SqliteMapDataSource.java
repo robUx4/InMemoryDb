@@ -10,7 +10,7 @@ import android.support.annotation.NonNull;
  * Created by robUx4 on 12/31/2014.
  */
 public class SqliteMapDataSource<K, V> extends MapCursorDataSource<K, V> {
-	public final SqliteDataSource<MapEntry<K, V>> source;
+	private final SqliteDataSource<MapEntry<K, V>> source;
 
 	public SqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final MapCursorSourceHandler<K, V> cursorSourceHandler) {
 		super(cursorSourceHandler);
@@ -51,6 +51,10 @@ public class SqliteMapDataSource<K, V> extends MapCursorDataSource<K, V> {
 	@Override
 	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
 		return source.deleteInvalidEntry(invalidEntry);
+	}
+
+	public Cursor rawQuery(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy) {
+		return source.rawQuery(columns, selection, selectionArgs, groupBy, having, orderBy, null);
 	}
 
 	@Override
