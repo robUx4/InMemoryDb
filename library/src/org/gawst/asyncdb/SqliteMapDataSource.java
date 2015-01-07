@@ -18,7 +18,7 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, Dat
 		this.source = new SqliteDataSource<MapEntry<K, V>>(context, db, tableName, databaseName, new CursorDataSource.CursorSourceHandler<MapEntry<K, V>>() {
 			@Override
 			public String getItemSelectClause(@Nullable MapEntry<K, V> itemToSelect) {
-				return cursorSourceHandler.getKeySelectClause(itemToSelect.getKey());
+				return cursorSourceHandler.getKeySelectClause(null == itemToSelect ? null : itemToSelect.getKey());
 			}
 
 			@Override
