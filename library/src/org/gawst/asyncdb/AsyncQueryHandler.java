@@ -169,6 +169,29 @@ class AsyncQueryHandler<E, INSERT_ID> {
 	}
 
 	/**
+	 * This method begins an asynchronous processing of the {@code Runnable}. When the operation is
+	 * done {@link #onRunnableCompleted} is called.
+	 *  @param token A token passed into {@link #onRunnableCompleted} to identify the operation.
+	 * @param cookie An object that gets passed into {@link #onRunnableCompleted}
+	 * @param job The {@code Runnable} to run.
+	 */
+	public final void startRunnable(final int token, final Object cookie, final Runnable job) {
+		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation<E, INSERT_ID>() {
+			@Override
+			public void runInMemoryDbOperation(AsynchronousDbHelper<E, INSERT_ID> db) {
+				job.run();
+
+				mHandler.post(new Runnable() {
+					@Override
+					public void run() {
+						onRunnableCompleted(token, cookie);
+					}
+				});
+			}
+		});
+	}
+
+	/**
 	 * Called when an asynchronous query is completed.
 	 *
 	 * @param token the token to identify the query, passed in from
@@ -216,6 +239,18 @@ class AsyncQueryHandler<E, INSERT_ID> {
 	 * @param result the result returned from the delete operation
 	 */
 	protected void onDeleteComplete(int token, Object cookie, int result) {
+		// Empty
+	}
+
+	/**
+	 * Called when an asynchronous {@code Runnable} is completed.
+	 *
+	 * @param token the token to identify the query, passed in from
+	 *        {@link #startRunnable}.
+	 * @param cookie the cookie object that's passed in from
+	 *        {@link #startRunnable}.
+	 */
+	protected void onRunnableCompleted(int token, Object cookie) {
 		// Empty
 	}
 }

@@ -8,10 +8,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Pair;
 
 /**
@@ -52,6 +56,10 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	public class AsyncHandler extends AsyncQueryHandler<E, INSERT_ID> {
 		public AsyncHandler() {
 			super(AsynchronousDbHelper.this, AsynchronousDbHelper.this.dataSource);
+		}
+
+		public void scheduleAddOperation(E element) {
+			startInsert(-1, null, null, getValuesFromData(element));
 		}
 	}
 
@@ -529,5 +537,162 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		sb.append(Integer.toHexString(System.identityHashCode(this)));
 		sb.append('}');
 		return sb.toString();
+	}
+
+	/**
+	 * A {@link org.gawst.asyncdb.AsynchronousDbHelper.AsyncHandler} that makes sure we don't go over a maximum number of items in the database
+	 */
+	public abstract class AsyncHandlerPurge<LAST_ELEMENT> extends AsyncHandler {
+		private final int maxItems;
+		private final int checkInsertFrequency;
+		private Integer nextCheck = 0;
+
+		public AsyncHandlerPurge(int maxItems) {
+			this(maxItems, 1);
+		}
+
+		public AsyncHandlerPurge(int maxItems, int checkInsertFrequency) {
+			if (!(dataSource instanceof DatabaseSource)) throw new IllegalStateException("AsyncHandlerPurge only supported with DatabaseSource");
+			if (maxItems <= 0) throw new IllegalArgumentException("the max item in AsyncHandlerPurge must be positive");
+			if (checkInsertFrequency <= 0) throw new IllegalArgumentException("the insert purge frequency in AsyncHandlerPurge must be positive");
+
+			this.maxItems = maxItems;
+			this.checkInsertFrequency = checkInsertFrequency;
+			nextCheck = checkInsertFrequency;
+		}
+
+		@NonNull
+		protected abstract String[] getFilterFields();
+
+		@NonNull
+		protected abstract String getFilterOrder();
+
+		protected abstract LAST_ELEMENT getLastFilteredElement(Cursor cursor);
+
+		@NonNull
+		protected abstract String getDeleteClause(@NonNull LAST_ELEMENT lastElement, Object cookie);
+
+		@NonNull
+		protected abstract String[] getDeleteArgs(@NonNull LAST_ELEMENT lastElement, Object cookie);
+
+		/**
+		 * @param cookie
+		 * @return A Select clause to filter the elements handled by the purge, based on the Cookie, or {code null}
+		 */
+		@Nullable
+		protected String getPurgeFilterClause(Object cookie) {
+			return null;
+		}
+
+		/**
+		 * @param cookie
+		 * @return The arguments corresponding to the {@link #getPurgeFilterClause(Object)}, or {code null}
+		 */
+		@Nullable
+		protected String[] getPurgeFilterArgs(Object cookie) {
+			return null;
+		}
+
+		@Override
+		protected void onInsertComplete(int token, final Object cookie, INSERT_ID uri) {
+			if (nextCheck != null && --nextCheck < 0) {
+				nextCheck = null; // pending purge
+				startRunnable(-2, null, new Runnable() {
+					@Override
+					public void run() {
+						int deleted = 0;
+						try {
+							LAST_ELEMENT lastElement = null;
+							Cursor c = ((DatabaseSource) dataSource).query(getFilterFields(), getPurgeFilterClause(cookie), getPurgeFilterArgs(cookie), null, null, getFilterOrder(), Integer.toString(maxItems) + ", 1");
+							try {
+								if (c.moveToNext())
+									lastElement = getLastFilteredElement(c);
+							} finally {
+								c.close();
+							}
+
+							if (lastElement != null) {
+								try {
+									deleted = ((DatabaseSource) dataSource).delete(getDeleteClause(lastElement, cookie), getDeleteArgs(lastElement, cookie));
+								} catch (IllegalStateException e) {
+									// in some case (2.x) the DB is closed unexpectedly
+								} catch (Exception e) {
+									// in some case (4.1) we get "cannot rollback - no transaction is active"
+								}
+							}
+						} catch (Exception e) {
+							// can crash on Samsung GT-P1000 2.3.3
+						}
+
+						if (deleted > 0) {
+							LogManager.getLogger().d(TAG, "purged " + deleted + " elements in " + AsynchronousDbHelper.this);
+						}
+					}
+				});
+			}
+		}
+
+		@Override
+		protected void onRunnableCompleted(int token, Object cookie) {
+			if (token == -2) {
+				nextCheck = checkInsertFrequency;
+			}
+		}
+	}
+
+	/**
+	 * Simplified version of {@link org.gawst.asyncdb.AsynchronousDbHelper.AsyncHandlerPurge} using one field to sort items
+	 *
+	 * @param <LAST_ELEMENT>
+	 */
+	public abstract class AsyncHandlerMax<LAST_ELEMENT> extends AsyncHandlerPurge<LAST_ELEMENT> {
+		protected final String fieldName;
+
+		public AsyncHandlerMax(int maxItems, String fieldName) {
+			this(maxItems, 1, fieldName);
+		}
+
+		public AsyncHandlerMax(int maxItems, int checkInsertFrequency, String fieldName) {
+			super(maxItems, checkInsertFrequency);
+			this.fieldName = fieldName;
+		}
+
+		@NonNull
+		@Override
+		protected final String[] getFilterFields() {
+			return new String[]{fieldName};
+		}
+
+		@NonNull
+		@Override
+		protected String getFilterOrder() {
+			return fieldName + " desc";
+		}
+
+		@NonNull
+		@Override
+		protected String getDeleteClause(LAST_ELEMENT lastElement, Object cookie) {
+			String purgeFilterClause = getPurgeFilterClause(cookie);
+			if (TextUtils.isEmpty(purgeFilterClause)) {
+				return fieldName + " < ?";
+			} else {
+				return fieldName + " < ? AND (" + purgeFilterClause + ')';
+			}
+		}
+
+		@NonNull
+		@Override
+		protected String[] getDeleteArgs(LAST_ELEMENT lastElement, Object cookie) {
+			String[] args = getPurgeFilterArgs(cookie);
+			if (args == null) {
+				return new String[]{String.valueOf(lastElement)};
+			} else {
+				String[] result = new String[args.length + 1];
+				result[0] = String.valueOf(lastElement);
+				for (int i = 0; i < args.length; ++i)
+					result[i + 1] = args[i];
+				return result;
+			}
+		}
 	}
 }
