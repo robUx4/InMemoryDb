@@ -3,6 +3,7 @@ package org.gawst.asyncdb;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
  * Created by robUx4 on 12/31/2014.
@@ -17,7 +18,7 @@ public abstract class CursorDataSource<E, INSERT_ID> implements DataSource<E, IN
 		 * @param itemToSelect the item about to be selected in the database
 		 * @return a {@link String} for the whereClause in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
 		 */
-		String getItemSelectClause(E itemToSelect);
+		String getItemSelectClause(@Nullable E itemToSelect);
 
 		/**
 		 * The where arguments that should be used to update/delete the item.
@@ -26,14 +27,16 @@ public abstract class CursorDataSource<E, INSERT_ID> implements DataSource<E, IN
 		 * @param itemToSelect the item about to be selected in the database
 		 * @return a {@link String} array for the whereArgs in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
 		 */
-		String[] getItemSelectArgs(E itemToSelect);
+		String[] getItemSelectArgs(@NonNull E itemToSelect);
 
 		/**
 		 * Use the data in the {@link android.database.Cursor} to create a valid item
 		 * @param cursor the Cursor to use
+		 * @return The element corresponding to the current Cursor position
+		 * @throws org.gawst.asyncdb.InvalidDbEntry if the Cursor data cannot be used
 		 */
 		@NonNull
-		E cursorToItem(Cursor cursor) throws InvalidDbEntry;
+		E cursorToItem(@NonNull Cursor cursor) throws InvalidDbEntry;
 	}
 
 	private final CursorSourceHandler<E> cursorSourceHandler;

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
  * Created by robUx4 on 12/31/2014.
@@ -16,12 +17,12 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, Dat
 		if (cursorSourceHandler ==null) throw new NullPointerException("null MapCursorSourceHandler in "+this);
 		this.source = new SqliteDataSource<MapEntry<K, V>>(context, db, tableName, databaseName, new CursorDataSource.CursorSourceHandler<MapEntry<K, V>>() {
 			@Override
-			public String getItemSelectClause(MapEntry<K, V> itemToSelect) {
+			public String getItemSelectClause(@Nullable MapEntry<K, V> itemToSelect) {
 				return cursorSourceHandler.getKeySelectClause(itemToSelect.getKey());
 			}
 
 			@Override
-			public String[] getItemSelectArgs(MapEntry<K, V> itemToSelect) {
+			public String[] getItemSelectArgs(@NonNull MapEntry<K, V> itemToSelect) {
 				return cursorSourceHandler.getKeySelectArgs(itemToSelect.getKey());
 			}
 
