@@ -13,7 +13,7 @@ import android.support.annotation.Nullable;
 * Created by Dell990MT on 07/01/2015.
 */
 public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler {
-	private final DatabaseSource dataSource;
+	private final DatabaseSource<?> dataSource;
 	private final int maxItems;
 	private final int checkInsertFrequency;
 	private Integer nextCheck;
@@ -22,7 +22,7 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 		this(maxItems, 1, databaseSource);
 	}
 
-	public DatabaseSourcePurger(int maxItems, int checkInsertFrequency, DatabaseSource databaseSource) {
+	public DatabaseSourcePurger(int maxItems, int checkInsertFrequency, DatabaseSource<?> databaseSource) {
 		this.dataSource = databaseSource;
 		if (maxItems <= 0) throw new IllegalArgumentException("the max item in AsyncHandlerPurge must be positive");
 		if (checkInsertFrequency <= 0) throw new IllegalArgumentException("the insert purge frequency in AsyncHandlerPurge must be positive");

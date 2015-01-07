@@ -11,11 +11,11 @@ import android.text.TextUtils;
 public abstract class DatabaseSourcePurgerMax<LAST_ELEMENT> extends DatabaseSourcePurger<LAST_ELEMENT> {
 	protected final String fieldName;
 
-	public DatabaseSourcePurgerMax(int maxItems, String fieldName, DatabaseSource databaseSource) {
+	public DatabaseSourcePurgerMax(int maxItems, String fieldName, DatabaseSource<?> databaseSource) {
 		this(maxItems, 1, fieldName, databaseSource);
 	}
 
-	public DatabaseSourcePurgerMax(int maxItems, int checkInsertFrequency, String fieldName, DatabaseSource databaseSource) {
+	public DatabaseSourcePurgerMax(int maxItems, int checkInsertFrequency, String fieldName, DatabaseSource<?> databaseSource) {
 		super(maxItems, checkInsertFrequency, databaseSource);
 		this.fieldName = fieldName;
 	}
