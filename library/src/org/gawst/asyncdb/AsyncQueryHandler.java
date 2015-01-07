@@ -7,20 +7,17 @@ import android.os.Handler;
 import android.os.Looper;
 
 /**
- * Created by Dell990MT on 06/01/2015.
+ * Created by robUx4 on 06/01/2015.
  */
-class AsyncQueryHandler<E, INSERT_ID> {
+public class AsyncQueryHandler<INSERT_ID> {
 
-	private final AsynchronousDbHelper<E, INSERT_ID> asynchronousDbHelper;
+	private final AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper;
 	private final Handler mHandler = new Handler(Looper.getMainLooper());
 	private final DatabaseSource<INSERT_ID> dataSource;
 
-	public AsyncQueryHandler(AsynchronousDbHelper<E, INSERT_ID> asynchronousDbHelper, DataSource<E, INSERT_ID> dataSource) {
-		if (!(dataSource instanceof DatabaseSource)) {
-			throw new IllegalArgumentException("Invalid dataSource for AsyncQueryHandler "+dataSource);
-		}
+	public AsyncQueryHandler(AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper, DatabaseSource<INSERT_ID> dataSource) {
 		this.asynchronousDbHelper = asynchronousDbHelper;
-		this.dataSource = (DatabaseSource<INSERT_ID>) dataSource;
+		this.dataSource = dataSource;
 	}
 
 	/**
@@ -48,9 +45,9 @@ class AsyncQueryHandler<E, INSERT_ID> {
 	public void startQuery(final int token, final Object cookie, Uri uri,
 	                       final String[] projection, final String selection, final String[] selectionArgs,
 	                       final String orderBy) {
-		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation<E, INSERT_ID>() {
+		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
-			public void runInMemoryDbOperation(AsynchronousDbHelper<E, INSERT_ID> db) {
+			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
 				Cursor cursor1;
 				try {
 					cursor1 = dataSource.query(projection, selection, selectionArgs, null, null, orderBy, null);
@@ -81,14 +78,17 @@ class AsyncQueryHandler<E, INSERT_ID> {
 	 */
 	public final void startInsert(final int token, final Object cookie, Uri uri,
 	                              final ContentValues initialValues) {
-		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation<E, INSERT_ID>() {
+		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
-			public void runInMemoryDbOperation(AsynchronousDbHelper<E, INSERT_ID> db) {
-				INSERT_ID cursor1;
+			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
+				INSERT_ID cursor1 = null;
 				try {
 					cursor1 = dataSource.insert(initialValues);
 				} catch (Exception e) {
 					cursor1 = null;
+				} finally {
+					if (cursor1 != null)
+						asynchronousDbHelper.getPurgeHandler().onElementsAdded(db);
 				}
 
 				final INSERT_ID cursor = cursor1;
@@ -114,9 +114,9 @@ class AsyncQueryHandler<E, INSERT_ID> {
 	 */
 	public final void startUpdate(final int token, final Object cookie, INSERT_ID uri,
 	                              final ContentValues values, final String selection, final String[] selectionArgs) {
-		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation<E, INSERT_ID>() {
+		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
-			public void runInMemoryDbOperation(AsynchronousDbHelper<E, INSERT_ID> db) {
+			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
 				int cursor1;
 				try {
 					cursor1 = dataSource.update(selection, selectionArgs, values);
@@ -147,9 +147,9 @@ class AsyncQueryHandler<E, INSERT_ID> {
 	 */
 	public final void startDelete(final int token, final Object cookie, INSERT_ID uri,
 	                              final String selection, final String[] selectionArgs) {
-		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation<E, INSERT_ID>() {
+		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
-			public void runInMemoryDbOperation(AsynchronousDbHelper<E, INSERT_ID> db) {
+			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
 				int cursor1;
 				try {
 					cursor1 = dataSource.delete(selection, selectionArgs);
@@ -176,9 +176,9 @@ class AsyncQueryHandler<E, INSERT_ID> {
 	 * @param job The {@code Runnable} to run.
 	 */
 	public final void startRunnable(final int token, final Object cookie, final Runnable job) {
-		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation<E, INSERT_ID>() {
+		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
-			public void runInMemoryDbOperation(AsynchronousDbHelper<E, INSERT_ID> db) {
+			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
 				job.run();
 
 				mHandler.post(new Runnable() {
