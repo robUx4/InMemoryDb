@@ -125,7 +125,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 					} catch (Exception e) {
 						notifyAddItemFailed(itemToAdd.first, addValues, e);
 					} finally {
-						if (itemAdded) {
+						if (itemAdded && itemToAdd.second != null) {
 							itemToAdd.second.onElementsAdded(AsynchronousDbHelper.this);
 						}
 					}
@@ -147,7 +147,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 							notifyAddItemFailed(item, addValues, e);
 						}
 					}
-					if (itemsAdded) {
+					if (itemsAdded && itemsToAdd.second != null) {
 						itemsToAdd.second.onElementsAdded(AsynchronousDbHelper.this);
 					}
 					break;
