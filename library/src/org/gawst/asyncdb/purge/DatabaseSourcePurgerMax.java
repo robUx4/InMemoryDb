@@ -1,4 +1,6 @@
-package org.gawst.asyncdb;
+package org.gawst.asyncdb.purge;
+
+import org.gawst.asyncdb.DatabaseSource;
 
 import android.support.annotation.NonNull;
 import android.text.TextUtils;

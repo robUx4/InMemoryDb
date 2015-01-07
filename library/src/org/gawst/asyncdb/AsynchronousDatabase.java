@@ -33,10 +33,10 @@ public abstract class AsynchronousDatabase<E, INSERT_ID> extends AsynchronousDbH
 
 	/**
 	 * Add a new element in the database (asynchronous)
-	 * <p>Helper call for {@link AsynchronousDbHelper#scheduleAddOperation(Object, PurgeHandler)}
+	 * <p>Helper call for {@link AsynchronousDbHelper#scheduleAddOperation(Object, org.gawst.asyncdb.purge.PurgeHandler)}
 	 * <p>If adding failed {@link AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} will be called
 	 * @param item to add
-	 * @see AsynchronousDbHelper#scheduleAddOperation(Object, PurgeHandler)
+	 * @see AsynchronousDbHelper#scheduleAddOperation(Object, org.gawst.asyncdb.purge.PurgeHandler)
 	 */
 	public void add(E item) {
 		scheduleAddOperation(item);
@@ -44,10 +44,10 @@ public abstract class AsynchronousDatabase<E, INSERT_ID> extends AsynchronousDbH
 
 	/**
 	 * Add new elements in the database (asynchronous)
-	 * <p>Helper call for {@link AsynchronousDbHelper#scheduleAddOperation(java.util.Collection, PurgeHandler)}
+	 * <p>Helper call for {@link AsynchronousDbHelper#scheduleAddOperation(java.util.Collection, org.gawst.asyncdb.purge.PurgeHandler)}
 	 * <p>{@link AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} will be called for each addition failure
 	 * @param items to add
-	 * @see AsynchronousDbHelper#scheduleAddOperation(java.util.Collection, PurgeHandler)
+	 * @see AsynchronousDbHelper#scheduleAddOperation(java.util.Collection, org.gawst.asyncdb.purge.PurgeHandler)
 	 */
 	public void addAll(Collection<E> items) {
 		scheduleAddOperation(items);

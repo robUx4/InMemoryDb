@@ -6,6 +6,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.gawst.asyncdb.purge.PurgeHandler;
+
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
@@ -24,7 +26,7 @@ import android.util.Pair;
  */
 public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.BatchReadingCallback<E> {
 
-	protected final static String TAG = "MemoryDb";
+	public final static String TAG = "MemoryDb";
 	protected final static String STARTUP_TAG = "Startup";
 	protected final static boolean DEBUG_DB = false;
 
@@ -502,7 +504,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 * run the operation in the internal thread
 	 * @param operation
 	 */
-	protected final void scheduleCustomOperation(AsynchronousDbOperation operation) {
+	public final void scheduleCustomOperation(AsynchronousDbOperation operation) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_CUSTOM_OPERATION, operation));
 	}
 
