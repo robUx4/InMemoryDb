@@ -7,7 +7,8 @@ import android.os.Handler;
 import android.os.Looper;
 
 /**
- * Created by robUx4 on 06/01/2015.
+ * Class similar to Android's {@link android.content.AsyncQueryHandler AsyncQueryHandler} to work with an
+ * {@link org.gawst.asyncdb.AsynchronousDbHelper} instead of a ContentProvider
  */
 public class AsyncQueryHandler<INSERT_ID> {
 
@@ -15,6 +16,11 @@ public class AsyncQueryHandler<INSERT_ID> {
 	private final Handler mHandler = new Handler(Looper.getMainLooper());
 	private final DatabaseSource<INSERT_ID> dataSource;
 
+	/**
+	 * Constructor.
+	 * @param asynchronousDbHelper The {@link org.gawst.asyncdb.AsynchronousDbHelper} database to work with.
+	 * @param dataSource The {@link org.gawst.asyncdb.DatabaseSource} source used by the {@code asynchronousDbHelper}.
+	 */
 	public AsyncQueryHandler(AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper, DatabaseSource<INSERT_ID> dataSource) {
 		this.asynchronousDbHelper = asynchronousDbHelper;
 		this.dataSource = dataSource;
@@ -81,21 +87,21 @@ public class AsyncQueryHandler<INSERT_ID> {
 		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
-				INSERT_ID cursor1 = null;
+				INSERT_ID inserted1 = null;
 				try {
-					cursor1 = dataSource.insert(initialValues);
+					inserted1 = dataSource.insert(initialValues);
 				} catch (Exception e) {
-					cursor1 = null;
+					inserted1 = null;
 				} finally {
-					if (cursor1 != null)
+					if (inserted1 != null)
 						asynchronousDbHelper.getPurgeHandler().onElementsAdded(db);
 				}
 
-				final INSERT_ID cursor = cursor1;
+				final INSERT_ID insertId = inserted1;
 				mHandler.post(new Runnable() {
 					@Override
 					public void run() {
-						onInsertComplete(token, cookie, cursor);
+						onInsertComplete(token, cookie, insertId);
 					}
 				});
 			}
@@ -119,7 +125,7 @@ public class AsyncQueryHandler<INSERT_ID> {
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
 				int cursor1;
 				try {
-					cursor1 = dataSource.update(selection, selectionArgs, values);
+					cursor1 = dataSource.update(values, selection, selectionArgs);
 				} catch (Exception e) {
 					cursor1 = 0;
 				}
@@ -210,9 +216,9 @@ public class AsyncQueryHandler<INSERT_ID> {
 	 *        {@link #startInsert}.
 	 * @param cookie the cookie object that's passed in from
 	 *        {@link #startInsert}.
-	 * @param uri the uri returned from the insert operation.
+	 * @param insertId the uri returned from the insert operation.
 	 */
-	protected void onInsertComplete(int token, Object cookie, INSERT_ID uri) {
+	protected void onInsertComplete(int token, Object cookie, INSERT_ID insertId) {
 		// Empty
 	}
 

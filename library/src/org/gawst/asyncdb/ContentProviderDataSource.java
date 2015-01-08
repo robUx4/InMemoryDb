@@ -7,14 +7,21 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 
 /**
- * Created by robUx4 on 12/31/2014.
+ * A {@link org.gawst.asyncdb.DataSource} reading/writing data using a {@link android.content.ContentProvider ContentProvider}
+ * @param <E> Type of the elements read from the {@code Cursor}
  */
 public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri> {
 	private final Uri contentProviderUri;
 	private final Context context;
 
-	public ContentProviderDataSource(@NonNull Context context, @NonNull Uri contentProviderUri, @NonNull CursorSourceHandler<E> cursorSourceHandler) {
-		super(cursorSourceHandler);
+	/**
+	 * Contructor.
+	 * @param context Context used to get the {@link android.content.ContentResolver ContentResolver} used to access the {@link android.content.ContentProvider ContentProvider}
+	 * @param contentProviderUri {@link android.net.Uri Uri} to access the data from the {@link android.content.ContentProvider ContentProvider}
+	 * @param databaseElementHandler Handler to transform {@link E} elements to queries and {@code Cursor} to {@link E} elements.
+	 */
+	public ContentProviderDataSource(@NonNull Context context, @NonNull Uri contentProviderUri, @NonNull DatabaseElementHandler<E> databaseElementHandler) {
+		super(databaseElementHandler);
 		this.context = context.getApplicationContext();
 		this.contentProviderUri = contentProviderUri;
 	}
@@ -30,12 +37,12 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri> {
 	}
 
 	@Override
-	public Uri insert(ContentValues element) throws RuntimeException {
-		return context.getContentResolver().insert(contentProviderUri, element);
+	public Uri insert(ContentValues values) throws RuntimeException {
+		return context.getContentResolver().insert(contentProviderUri, values);
 	}
 
 	@Override
-	public int update(String where, String[] selectionArgs, ContentValues updateValues) {
+	public int update(ContentValues updateValues, String where, String[] selectionArgs) {
 		return context.getContentResolver().update(contentProviderUri, updateValues, where, selectionArgs);
 	}
 

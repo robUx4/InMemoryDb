@@ -4,15 +4,19 @@ import java.io.File;
 
 import org.gawst.asyncdb.adapter.UIHandler;
 
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.support.annotation.NonNull;
 
 /**
- * Created by robUx4 on 12/31/2014.
+ * A {@link org.gawst.asyncdb.DataSource} backed by a {@link android.database.sqlite.SQLiteOpenHelper} storage.
+ *
+ * @author Created by robUx4 on 12/31/2014.
  */
 public class SqliteDataSource<E> extends CursorDataSource<E, Long> {
 
@@ -21,8 +25,30 @@ public class SqliteDataSource<E> extends CursorDataSource<E, Long> {
 	private final String tableName;
 	private final String databaseName;
 
-	public SqliteDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull String tableName, @NonNull String databaseName, @NonNull CursorSourceHandler<E> cursorSourceHandler) {
-		super(cursorSourceHandler);
+	/**
+	 * Constructor. (API v14 minimum)
+	 *
+	 * @param context                Context used to erase the database file in case it's corrupted.
+	 * @param db                     The SQL database used to read/write data.
+	 * @param tableName              Name of the SQL table that contains the elements to read.
+	 * @param databaseElementHandler Handler to transform {@code Cursor} into {@link E} elements or {@link E} elements to selections.
+	 */
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+	public SqliteDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull String tableName, @NonNull DatabaseElementHandler<E> databaseElementHandler) {
+		this(context, db, tableName, db.getDatabaseName(), databaseElementHandler);
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 * @param context                Context used to erase the database file in case it's corrupted.
+	 * @param db                     The SQL database used to read/write data.
+	 * @param tableName              Name of the SQL table that contains the elements to read.
+	 * @param databaseName           Name of the database file on disk, in case it's corrupted and needs to be erased.
+	 * @param databaseElementHandler Handler to transform {@code Cursor} into {@link E} elements or {@link E} elements to selections.
+	 */
+	public SqliteDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull String tableName, @NonNull String databaseName, @NonNull DatabaseElementHandler<E> databaseElementHandler) {
+		super(databaseElementHandler);
 		this.context = context;
 		this.db = db;
 		this.tableName = tableName;
@@ -43,15 +69,15 @@ public class SqliteDataSource<E> extends CursorDataSource<E, Long> {
 	}
 
 	@Override
-	public Long insert(ContentValues element) throws RuntimeException {
-		long id = db.getWritableDatabase().insertOrThrow(tableName, null, element);
+	public Long insert(@NonNull ContentValues values) throws RuntimeException {
+		long id = db.getWritableDatabase().insertOrThrow(tableName, null, values);
 		if (id == -1)
 			return null;
 		return id;
 	}
 
 	@Override
-	public int update(String selection, String[] selectionArgs, ContentValues updateValues) {
+	public int update(@NonNull ContentValues updateValues, String selection, String[] selectionArgs) {
 		return db.getWritableDatabase().update(tableName, updateValues, selection, selectionArgs);
 	}
 

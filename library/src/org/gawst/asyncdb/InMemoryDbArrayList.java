@@ -97,9 +97,9 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 	}
 
 	@Override
-	public void startLoadingAllItems(int itemCount) {
-		super.startLoadingAllItems(itemCount);
-		getList().ensureCapacity(itemCount);
+	public void startLoadingAllItems(int elementCount) {
+		super.startLoadingAllItems(elementCount);
+		getList().ensureCapacity(elementCount);
 	}
 
 	public boolean add(E item) {

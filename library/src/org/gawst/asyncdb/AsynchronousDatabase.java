@@ -5,7 +5,7 @@ import java.util.Collection;
 import android.database.sqlite.SQLiteOpenHelper;
 
 /**
- * A {@link SQLiteOpenHelper} class with a worker thread for all disk work
+ * A {@link SQLiteOpenHelper} class with a worker thread for all disk work. Elements are not stored in memory.
  * 
  * @param <E> Type of Objects that are stored in the main table
  */

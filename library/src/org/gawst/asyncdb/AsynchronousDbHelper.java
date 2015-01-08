@@ -50,7 +50,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private PurgeHandler purgeHandler;
 
 	/**
-	 * A class similar to {@link android.content.AsyncQueryHandler} to do simple calls asynchronously with a callback when it's doe
+	 * A class similar to {@link android.content.AsyncQueryHandler} to do simple calls asynchronously with a callback when it's done
 	 */
 	public class AsyncHandler extends AsyncQueryHandler<INSERT_ID> {
 		public AsyncHandler() {
@@ -516,7 +516,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		mDataLoaded.set(false);
 	}
 
-	public void startLoadingAllItems(int itemCount) {}
+	public void startLoadingAllItems(int elementCount) {}
 
 	/**
 	 * called after all items have been read from the disk
@@ -560,7 +560,8 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	}
 
 	/** Wait until the data are loaded */
-	public void waitForDataLoaded() {}
+	public void waitForDataLoaded() {
+	}
 
 	@Override
 	public String toString() {

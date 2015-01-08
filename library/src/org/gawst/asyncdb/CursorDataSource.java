@@ -3,58 +3,41 @@ package org.gawst.asyncdb;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 /**
- * Created by robUx4 on 12/31/2014.
+ * Abstract helper {@link org.gawst.asyncdb.DataSource} class reading using a {@link android.database.Cursor}.
+ *
+ * @param <E> Type of element read/write from the {@link org.gawst.asyncdb.DataSource}.
+ * @param <INSERT_ID> Type of elements returned by {@link org.gawst.asyncdb.DataSource#insert(android.content.ContentValues)}
+ * @author Created by robUx4 on 12/31/2014.
+ * @see org.gawst.asyncdb.ContentProviderDataSource
+ * @see org.gawst.asyncdb.SqliteDataSource
+ * @see org.gawst.asyncdb.SqliteMapDataSource
  */
 public abstract class CursorDataSource<E, INSERT_ID> implements DataSource<E, INSERT_ID>, DatabaseSource<INSERT_ID> {
 
-	public interface CursorSourceHandler<E> {
-		/**
-		 * The where clause that should be used to update/delete the item.
-		 * <p> see {@link #getItemSelectArgs(Object)}
-		 *
-		 * @param itemToSelect the item about to be selected in the database
-		 * @return a {@link String} for the whereClause in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
-		 */
-		String getItemSelectClause(@Nullable E itemToSelect);
+	private final DatabaseElementHandler<E> databaseElementHandler;
 
-		/**
-		 * The where arguments that should be used to update/delete the item.
-		 * <p> see {@link #getItemSelectClause(Object)}
-		 *
-		 * @param itemToSelect the item about to be selected in the database
-		 * @return a {@link String} array for the whereArgs in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
-		 */
-		String[] getItemSelectArgs(@NonNull E itemToSelect);
-
-		/**
-		 * Use the data in the {@link android.database.Cursor} to create a valid item
-		 * @param cursor the Cursor to use
-		 * @return The element corresponding to the current Cursor position
-		 * @throws org.gawst.asyncdb.InvalidDbEntry if the Cursor data cannot be used
-		 */
-		@NonNull
-		E cursorToItem(@NonNull Cursor cursor) throws InvalidDbEntry;
+	/**
+	 * Constructor.
+	 * @param databaseElementHandler Handler to transform {@link E} elements to queries and {@code Cursor} to {@link E} elements.
+	 */
+	public CursorDataSource(@NonNull DatabaseElementHandler<E> databaseElementHandler) {
+		if (databaseElementHandler ==null) throw new NullPointerException("null CursorSourceHandler in "+this);
+		this.databaseElementHandler = databaseElementHandler;
 	}
 
-	private final CursorSourceHandler<E> cursorSourceHandler;
-
-	public CursorDataSource(@NonNull CursorSourceHandler<E> cursorSourceHandler) {
-		if (cursorSourceHandler==null) throw new NullPointerException("null CursorSourceHandler in "+this);
-		this.cursorSourceHandler = cursorSourceHandler;
-	}
-
+	@Override
 	public final boolean update(E itemToUpdate, ContentValues updateValues) {
-		return update(cursorSourceHandler.getItemSelectClause(itemToUpdate), cursorSourceHandler.getItemSelectArgs(itemToUpdate), updateValues)!=0;
+		return update(updateValues, databaseElementHandler.getItemSelectClause(itemToUpdate), databaseElementHandler.getItemSelectArgs(itemToUpdate))!=0;
 	}
 
 	@Override
 	public final boolean delete(E itemToDelete) {
-		return delete(cursorSourceHandler.getItemSelectClause(itemToDelete), cursorSourceHandler.getItemSelectArgs(itemToDelete))!=0;
+		return delete(databaseElementHandler.getItemSelectClause(itemToDelete), databaseElementHandler.getItemSelectArgs(itemToDelete))!=0;
 	}
 
+	@Override
 	public final void queryAll(BatchReadingCallback<E> readingCallback) {
 		Cursor c = query(null, null, null, null, null, null, null);
 		if (c!=null)
@@ -63,7 +46,7 @@ public abstract class CursorDataSource<E, INSERT_ID> implements DataSource<E, IN
 					readingCallback.startLoadingAllItems(c.getCount());
 					do {
 						try {
-							E item = cursorSourceHandler.cursorToItem(c);
+							E item = databaseElementHandler.cursorToItem(c);
 							readingCallback.addItemInMemory(item);
 						} catch (InvalidDbEntry e) {
 							readingCallback.removeInvalidEntry(e.getInvalidEntry());
@@ -77,6 +60,6 @@ public abstract class CursorDataSource<E, INSERT_ID> implements DataSource<E, IN
 
 	@Override
 	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
-		return delete(cursorSourceHandler.getItemSelectClause(null), invalidEntry.getSelectArgs())!=0;
+		return delete(databaseElementHandler.getItemSelectClause(null), invalidEntry.getSelectArgs())!=0;
 	}
 }
