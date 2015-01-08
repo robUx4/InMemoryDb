@@ -1,6 +1,8 @@
 package org.gawst.asyncdb;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.TreeSet;
 import java.util.concurrent.locks.Condition;
@@ -190,6 +192,16 @@ public abstract class InMemoryDbTreeSet<E, INSERT_ID> extends InMemoryDbSet<E, T
 		try {
 			getSet();
 		    super.waitForDataLoaded();
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
+	public java.util.List<E> getListCopy() {
+		mDataLock.lock();
+		try {
+			return Collections.unmodifiableList(new ArrayList<E>(getSet()));
 		} finally {
 			mDataLock.unlock();
 		}

@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.gawst.asyncdb.adapter.InMemoryFilteredAdapter;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 
@@ -16,7 +18,7 @@ import android.database.Cursor;
  * @param <E> the type of items stored in memory by the {@link InMemoryDbSet}
  * @param <S> the type of in memory storage that will be used
  */
-public abstract class InMemoryDbSet<E, S extends Set<E>, INSERT_ID> extends AsynchronousDbHelper<E, INSERT_ID> implements AsynchronousDbErrorHandler<E>/*, Set<E>*/ {
+public abstract class InMemoryDbSet<E, S extends Set<E>, INSERT_ID> extends AsynchronousDbHelper<E, INSERT_ID> implements AsynchronousDbErrorHandler<E>, InMemoryFilteredAdapter.InMemoryFilter.InMemoryFilterable<E>/*, Set<E>*/ {
 
 	private WeakReference<AsynchronousDbErrorHandler<E>> mListener;
 

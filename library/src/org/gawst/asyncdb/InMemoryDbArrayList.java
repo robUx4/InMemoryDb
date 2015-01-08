@@ -2,8 +2,11 @@ package org.gawst.asyncdb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.gawst.asyncdb.adapter.InMemoryFilteredAdapter;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link ArrayList}
@@ -13,7 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @param <E> the type of items stored in memory by the {@link InMemoryDbArrayList}
  */
-public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E, ArrayList<E>, INSERT_ID> {
+public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E, ArrayList<E>, INSERT_ID> implements InMemoryFilteredAdapter.InMemoryFilter.InMemoryFilterable<E> {
 
 	/**
 	 * the array where the data are stored, locked when writing on it
@@ -226,6 +229,16 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 		try {
 			getList();
 		    super.waitForDataLoaded();
+		} finally {
+			mDataLock.unlock();
+		}
+	}
+
+	@Override
+	public java.util.List<E> getListCopy() {
+		mDataLock.lock();
+		try {
+			return Collections.unmodifiableList(new ArrayList<E>(getList()));
 		} finally {
 			mDataLock.unlock();
 		}
