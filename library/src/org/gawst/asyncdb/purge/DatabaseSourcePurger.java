@@ -10,18 +10,33 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
-* @author Created by robUx4 on 07/01/2015.
-*/
+ * Abstract helper class to purge a database.
+ *
+ * @param <LAST_ELEMENT> Type of the last element to keep during the purge.
+ */
 public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler {
 	private final DatabaseSource<?> dataSource;
 	private final int maxItems;
 	private final int checkInsertFrequency;
 	private Integer nextCheck;
 
-	public DatabaseSourcePurger(int maxItems, DatabaseSource databaseSource) {
+	/**
+	 * Constructor for the purger. It will purge the database after each insertion.
+	 *
+	 * @param maxItems       Maximum number of items to keep in the database.
+	 * @param databaseSource Database source (Sqlite, ContentProvider)
+	 */
+	public DatabaseSourcePurger(int maxItems, DatabaseSource<?> databaseSource) {
 		this(maxItems, 1, databaseSource);
 	}
 
+	/**
+	 * Constructor for the purger.
+	 *
+	 * @param maxItems             Maximum number of items to keep in the database.
+	 * @param checkInsertFrequency The number of insertion before a purge is done. A purge is done after the first insertion.
+	 * @param databaseSource       Database source (Sqlite, ContentProvider)
+	 */
 	public DatabaseSourcePurger(int maxItems, int checkInsertFrequency, DatabaseSource<?> databaseSource) {
 		this.dataSource = databaseSource;
 		if (maxItems <= 0) throw new IllegalArgumentException("the max item in AsyncHandlerPurge must be positive");
@@ -32,22 +47,46 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 		nextCheck = checkInsertFrequency;
 	}
 
+	/**
+	 * @return The list of fields to read from the database when looking for the {@link LAST_ELEMENT}.
+	 */
 	@NonNull
 	protected abstract String[] getFilterFields();
 
+	/**
+	 * @return The order to apply to elements to find elements to delete. It must use fields returned by {@link #getFilterFields()}
+	 */
 	@NonNull
 	protected abstract String getFilterOrder();
 
+	/**
+	 * Transform the {@code Cursor} into the {@link LAST_ELEMENT} to keep during the purge.
+	 * @param cursor The Cursor positioned on the last element.
+	 * @return The {@link LAST_ELEMENT} to keep during the purge or {@code null} if there is no last element.
+	 * @see #getDeleteClause(Object)
+	 * @see #getDeleteArgs(Object)
+	 */
+	@Nullable
 	protected abstract LAST_ELEMENT getLastFilteredElement(Cursor cursor);
 
+	/**
+	 * Get the {@code delete()} SQL clause to remove elements 'older' than {@code lastElement}
+	 * @param lastElement The {@link LAST_ELEMENT} to keep in the database
+	 * @see #getDeleteArgs(Object)
+	 */
 	@NonNull
 	protected abstract String getDeleteClause(@NonNull LAST_ELEMENT lastElement);
 
+	/**
+	 * Get the {@code delete()} SQL clause arguments to remove elements 'older' than {@code lastElement}
+	 * @param lastElement The {@link LAST_ELEMENT} to keep in the database
+	 * @see #getDeleteClause(Object)
+	 */
 	@NonNull
 	protected abstract String[] getDeleteArgs(@NonNull LAST_ELEMENT lastElement);
 
 	/**
-	 * @return A Select clause to filter the elements handled by the purge or {@code null}
+	 * @return A Select clause to filter the elements handled by the purge or {@code null} for no filtering.
 	 */
 	@Nullable
 	protected String getPurgeFilterClause() {
@@ -55,7 +94,7 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 	}
 
 	/**
-	 * @return The arguments corresponding to the {@link #getPurgeFilterClause()} or {@code null}
+	 * @return The arguments corresponding to the {@link #getPurgeFilterClause()} or {@code null} for no filtering.
 	 */
 	@Nullable
 	protected String[] getPurgeFilterArgs() {
@@ -74,7 +113,7 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 						LAST_ELEMENT lastElement = null;
 						Cursor c = dataSource.query(getFilterFields(), getPurgeFilterClause(), getPurgeFilterArgs(), null, null, getFilterOrder(), Integer.toString(maxItems) + ", 1");
 						try {
-							if (c.moveToNext())
+							if (c.moveToFirst())
 								lastElement = getLastFilteredElement(c);
 						} finally {
 							c.close();
