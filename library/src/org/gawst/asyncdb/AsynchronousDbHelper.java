@@ -340,7 +340,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	}
 
 	private void notifyAddItemFailed(E item, ContentValues values, Throwable cause) {
-		LogManager.logger.i(TAG, this+" failed to add item "+item+(DEBUG_DB ? (" values"+values) : ""), cause);
+		LogManager.logger.d(TAG, this+" failed to add item "+item+(DEBUG_DB ? (" values"+values) : ""), cause);
 		if (mErrorHandler!=null) {
 			final AsynchronousDbErrorHandler<E> listener = mErrorHandler.get();
 			if (listener==null)
