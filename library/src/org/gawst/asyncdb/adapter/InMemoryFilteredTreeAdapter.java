@@ -5,6 +5,7 @@ import java.util.List;
 import org.gawst.asyncdb.AsynchronousDbHelper;
 import org.gawst.asyncdb.InMemoryDbListener;
 import org.gawst.asyncdb.InMemoryDbSet;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,9 +14,10 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 /**
- * adapter that presents only a subset of elements in a {@link InMemoryDbSet} using a {@link DbFilter}
- * 
- * @param <E>
+ * A {@link android.widget.ListAdapter ListAdapter} that shows only a subset of elements in a {@link InMemoryDbSet}
+ * using the {@link DbFilter}
+ *
+ * @param <E> Type of the elements stored in the {@link InMemoryDbSet}
  */
 public class InMemoryFilteredTreeAdapter<E> extends BaseAdapter implements InMemoryDbListener<E> {
 

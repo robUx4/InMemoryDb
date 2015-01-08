@@ -11,6 +11,11 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+/**
+ * Basic {@link android.widget.ListAdapter ListAdapter} using a {@link InMemoryDbArrayList} data source
+ *
+ * @param <E> Type of the elements stored in the {@link InMemoryDbArrayList}
+ */
 public class InMemoryArrayListAdapter<E> extends BaseAdapter implements InMemoryDbListener<E> {
 
 	private final InMemoryDbArrayList<E, ?> mArray;

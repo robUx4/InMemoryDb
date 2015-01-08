@@ -14,6 +14,12 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+/**
+ * A {@link android.widget.ListAdapter ListAdapter} that only shows a subset of elements in a {@link InMemoryDbArrayList}
+ * using the {@link DbFilter DbFilter}
+ *
+ * @param <E> Type of the elements stored in the {@link InMemoryDbArrayList}
+ */
 public class InMemoryFilteredListAdapter<E> extends BaseAdapter implements InMemoryDbListener<E> {
 
 	public interface DbFilter<E> {

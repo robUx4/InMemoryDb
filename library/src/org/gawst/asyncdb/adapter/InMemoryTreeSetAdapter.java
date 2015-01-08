@@ -10,6 +10,11 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+/**
+ * Basic {@link android.widget.ListAdapter ListAdapter} using a {@link InMemoryDbTreeSet} data source
+ *
+ * @param <E> Type of the elements stored in the {@link InMemoryDbTreeSet}
+ */
 public class InMemoryTreeSetAdapter<E> extends BaseAdapter implements InMemoryDbListener<E> {
 
 	private final InMemoryDbTreeSet<E, ?> mArray;

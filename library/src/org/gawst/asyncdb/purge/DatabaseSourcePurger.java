@@ -10,7 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
-* Created by Dell990MT on 07/01/2015.
+* @author Created by robUx4 on 07/01/2015.
 */
 public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler {
 	private final DatabaseSource<?> dataSource;
