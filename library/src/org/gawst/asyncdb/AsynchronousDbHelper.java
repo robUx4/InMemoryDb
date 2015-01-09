@@ -686,8 +686,8 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(48);
-		sb.append('{');
-		sb.append(getClass().getSimpleName());
+		sb.append("{AsyncDB:");
+		sb.append(name);
 		sb.append(' ');
 		sb.append(Integer.toHexString(System.identityHashCode(this)));
 		sb.append('}');
