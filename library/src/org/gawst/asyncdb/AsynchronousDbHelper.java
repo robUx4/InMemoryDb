@@ -15,6 +15,8 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Pair;
 
 /**
@@ -265,7 +267,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		}
 	}
 
-	private void storeItem(E item, PurgeHandler purgeHandler) {
+	private void storeItem(@NonNull E item, @Nullable PurgeHandler purgeHandler) {
 		ContentValues addValues = null;
 		boolean itemAdded = false;
 		try {
@@ -283,7 +285,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		}
 	}
 
-	private void storeItems(Collection<? extends E> items, PurgeHandler purgeHandler) {
+	private void storeItems(@NonNull Collection<? extends E> items, @Nullable PurgeHandler purgeHandler) {
 		ContentValues addValues;
 		boolean itemsAdded = false;
 		for (E item : items) {
@@ -303,7 +305,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		}
 	}
 
-	private void remoteItem(E itemToDelete) {
+	private void remoteItem(@NonNull E itemToDelete) {
 		try {
 			if (DEBUG_DB) LogManager.logger.d(TAG, name + " remove " + itemToDelete);
 			if (dataSource.delete(itemToDelete))
@@ -313,7 +315,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		}
 	}
 
-	private void updateItem(E itemToUpdate) {
+	private void updateItem(@NonNull E itemToUpdate) {
 		ContentValues updateValues = null;
 		try {
 			updateValues = getValuesFromData(itemToUpdate);
@@ -325,16 +327,16 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		}
 	}
 
-	private void replaceItem(E src, E replacement) {
+	private void replaceItem(@NonNull E src, @NonNull E replacement) {
 		try {
-			ContentValues newValues = getValuesFromData(src);
-			directUpdate(replacement, newValues);
+			ContentValues replacementValues = getValuesFromData(src);
+			directUpdate(replacement, replacementValues);
 		} catch (Throwable e) {
 			notifyReplaceItemFailed(src, replacement, e);
 		}
 	}
 
-	private void swapItems(E first, E second) {
+	private void swapItems(@NonNull E first, @NonNull E second) {
 		ContentValues newValuesA = null;
 		try {
 			newValuesA = getValuesFromData(second);
@@ -529,7 +531,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	}
 
 	/**
-	 * transform the element in memory into {@link android.content.ContentValues} that can be saved in the database
+	 * Transform the element in memory into {@link android.content.ContentValues} that can be saved in the database.
 	 * <p> you can return null and fill the database yourself if you need to
 	 * @param data the data to transform
 	 * @return a ContentValues element with all data that can be used to restore the data later from the database
@@ -539,7 +541,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * Request to store the item in the database asynchronously
-	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on failure
+	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable)} on failure
 	 * @param item to add
 	 */
 	protected final void scheduleAddOperation(E item) {
@@ -548,19 +550,21 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * Request to store the item in the database asynchronously
-	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on failure
+	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on failure
 	 * @param item to add
 	 * @param purgeHandler
 	 */
 	protected final void scheduleAddOperation(E item, PurgeHandler purgeHandler) {
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEM, new Pair<E, PurgeHandler>(item, purgeHandler)));
-		pushModifyingTransaction();
-		popModifyingTransaction();
+		if (null != item) {
+			saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEM, new Pair<E, PurgeHandler>(item, purgeHandler)));
+			pushModifyingTransaction();
+			popModifyingTransaction();
+		}
 	}
 
 	/**
 	 * Request to store the items in the database asynchronously
-	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on each item failing
+	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on each item failing
 	 * @param items to add
 	 */
 	protected final void scheduleAddOperation(Collection<? extends E> items) {
@@ -569,43 +573,47 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * Request to store the items in the database asynchronously
-	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on each item failing
+	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(AsynchronousDbHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on each item failing
 	 * @param items to add
 	 * @param purgeHandler
 	 */
 	protected final void scheduleAddOperation(Collection<? extends E> items, PurgeHandler purgeHandler) {
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEMS, new Pair<Collection<? extends E>, PurgeHandler>(items, purgeHandler)));
-		pushModifyingTransaction();
-		popModifyingTransaction();
+		if (null != items) {
+			saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEMS, new Pair<Collection<? extends E>, PurgeHandler>(items, purgeHandler)));
+			pushModifyingTransaction();
+			popModifyingTransaction();
+		}
 	}
 
 	/**
 	 * Request to update the item in the database asynchronously
-	 * <p>{@link org.gawst.asyncdb.AsynchronousContentProviderHelper#getItemSelectArgs(Object) getKeySelectArgs()} is used to find the matching item in the database
-	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onUpdateItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, Throwable) AsynchronousDbErrorHandler.onUpdateItemFailed()} on failure
+	 * <p>{@link org.gawst.asyncdb.DatabaseElementHandler#getItemSelectClause(Object)} is used to find the matching item in the database
+	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onUpdateItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onUpdateItemFailed()} on failure
 	 * @see #getValuesFromData(Object)
 	 * @param item to update
 	 */
-	protected final void scheduleUpdateOperation(E item) {
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_UPDATE_ITEM, item));
-		pushModifyingTransaction();
-		popModifyingTransaction();
+	protected final void scheduleUpdateOperation(@NonNull E item) {
+		if (null != item) {
+			saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_UPDATE_ITEM, item));
+			pushModifyingTransaction();
+			popModifyingTransaction();
+		}
 	}
 
 	/**
 	 * Request to replace an item in the databse with another asynchronously
-	 * <p>{@link org.gawst.asyncdb.AsynchronousContentProviderHelper#getItemSelectArgs(Object) getKeySelectArgs()} is used to find the matching item in the database
-	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onReplaceItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, Object, Throwable) AsynchronousDbErrorHandler.onReplaceItemFailed()} on failure
+	 * <p>{@link org.gawst.asyncdb.DatabaseElementHandler#getItemSelectClause(Object)} is used to find the matching item in the database
+	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onReplaceItemFailed(AsynchronousDbHelper, Object, Object, Throwable) AsynchronousDbErrorHandler.onReplaceItemFailed()} on failure
 	 * @param original Item to replace
 	 * @param replacement Item to replace with
 	 */
-	protected final void scheduleReplaceOperation(E original, E replacement) {
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEM, new Pair<E,E>(original, replacement)));
+	protected final void scheduleReplaceOperation(@NonNull E original, @NonNull E replacement) {
+		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEM, new Pair<E, E>(original, replacement)));
 		pushModifyingTransaction();
 		popModifyingTransaction();
 	}
 
-	protected final void scheduleSwapOperation(E itemA, E itemB) {
+	protected final void scheduleSwapOperation(@NonNull E itemA, @NonNull E itemB) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_SWAP_ITEMS, new Pair<E,E>(itemA, itemB)));
 		pushModifyingTransaction();
 		popModifyingTransaction();
@@ -613,20 +621,22 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * Request to delete the item from the database
-	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onRemoveItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, Throwable) AsynchronousDbErrorHandler.onRemoveItemFailed()} on failure
+	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onRemoveItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onRemoveItemFailed()} on failure
 	 * @param item to remove
 	 */
 	protected final void scheduleRemoveOperation(E item) {
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
-		pushModifyingTransaction();
-		popModifyingTransaction();
+		if (null != item) {
+			saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
+			pushModifyingTransaction();
+			popModifyingTransaction();
+		}
 	}
 
 	/**
 	 * run the operation in the internal thread
 	 * @param operation
 	 */
-	public final void scheduleCustomOperation(AsynchronousDbOperation operation) {
+	public final void scheduleCustomOperation(@NonNull AsynchronousDbOperation operation) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_CUSTOM_OPERATION, operation));
 	}
 
