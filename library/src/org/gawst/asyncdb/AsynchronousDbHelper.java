@@ -52,6 +52,11 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	private PurgeHandler purgeHandler;
 
+	private final static HandlerThread handlerThread = new HandlerThread("AsynchronousDbHelper", android.os.Process.THREAD_PRIORITY_BACKGROUND);
+	static {
+		handlerThread.start();
+	}
+
 	/**
 	 * A class similar to {@link android.content.AsyncQueryHandler} to do simple calls asynchronously with a callback when it's done
 	 */
@@ -165,9 +170,6 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 		preloadInit(initCookie);
 
-		HandlerThread handlerThread = new HandlerThread(name, android.os.Process.THREAD_PRIORITY_BACKGROUND);
-		handlerThread.start();
-		
 		saveStoreHandler.sendEmptyMessage(MSG_LOAD_IN_MEMORY);
 	}
 
