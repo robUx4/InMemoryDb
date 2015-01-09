@@ -40,7 +40,7 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param name Database filename on disk
+	 * @param name Database name for logs
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	protected InMemoryDbArrayList(DataSource<E, INSERT_ID> db, String name, Logger logger) {
@@ -49,7 +49,7 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param name Database filename on disk
+	 * @param name Database name for logs
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */

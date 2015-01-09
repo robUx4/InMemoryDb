@@ -33,7 +33,7 @@ public abstract class InMemoryLruCache<K,V, INSERT_ID> extends AsynchronousDbHel
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param name Database filename on disk
+	 * @param name Database name for logs
 	 * @param maxSize for caches that do not override {@link #sizeOf}, this is the maximum number of entries in the cache. For all other caches, this is the maximum sum of the sizes of the entries in this cache
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 */

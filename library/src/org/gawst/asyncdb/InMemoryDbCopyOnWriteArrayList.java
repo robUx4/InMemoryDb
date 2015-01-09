@@ -17,7 +17,7 @@ public abstract class InMemoryDbCopyOnWriteArrayList<E, INSERT_ID> extends InMem
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param name Database filename on disk
+	 * @param name Database name for logs
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */

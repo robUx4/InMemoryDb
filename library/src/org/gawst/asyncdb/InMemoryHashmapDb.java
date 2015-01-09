@@ -46,7 +46,7 @@ public abstract class InMemoryHashmapDb<K, V, INSERT_ID> extends InMemoryDbMap<K
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param name Database filename on disk
+	 * @param name Database name for logs
 	 * @param logger The {@link Logger} to use for all logs (can be null for the default Android logs)
 	 */
 	protected InMemoryHashmapDb(MapDataSource<K, V, INSERT_ID> db, String name, Logger logger) {
@@ -55,7 +55,7 @@ public abstract class InMemoryHashmapDb<K, V, INSERT_ID> extends InMemoryDbMap<K
 
 	/**
 	 * @param db
-	 * @param name Database filename on disk
+	 * @param name Database name for logs
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link AsynchronousDbHelper#preloadInit(Object)}
 	 */

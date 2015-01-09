@@ -150,7 +150,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * @param db The already created {@link android.database.sqlite.SQLiteOpenHelper} to use as storage
-	 * @param name Database filename on disk
+	 * @param name Database name for logs
 	 * @param logger The {@link org.gawst.asyncdb.Logger} to use for all logs (can be null for the default Android logs)
 	 * @param initCookie Cookie to pass to {@link #preloadInit(Object)}
 	 */
