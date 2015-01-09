@@ -13,7 +13,7 @@ import android.os.Looper;
 public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 
 	private final AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper;
-	private final Handler mHandler = new Handler(Looper.getMainLooper());
+	private static final Handler mHandler = new Handler(Looper.getMainLooper());
 	protected final DatabaseSource<INSERT_ID, DATABASE_ID> dataSource;
 
 	/**
