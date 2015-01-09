@@ -49,6 +49,8 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
 	private final DataSource<E, INSERT_ID> dataSource;
+	private final String name;
+
 	private PurgeHandler purgeHandler;
 
 	/**
@@ -157,6 +159,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	@SuppressLint("HandlerLeak")
 	protected AsynchronousDbHelper(DataSource<E, INSERT_ID> db, final String name, Logger logger, Object initCookie) {
 		this.dataSource = db;
+		this.name = name;
 
 		if (logger!=null)
 			LogManager.setLogger(logger);
