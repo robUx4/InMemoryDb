@@ -32,7 +32,6 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	protected final static String STARTUP_TAG = "Startup";
 	protected final static boolean DEBUG_DB = false;
 
-	private final Handler saveStoreHandler;
 	private static final int MSG_LOAD_IN_MEMORY    = 100;
 	private static final int MSG_STORE_ITEM        = 101;
 	private static final int MSG_STORE_ITEMS       = 102;
@@ -40,7 +39,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private static final int MSG_UPDATE_ITEM       = 104;
 	private static final int MSG_CLEAR_DATABASE    = 105;
 	private static final int MSG_SWAP_ITEMS        = 106;
-	private static final int MSG_REPLACE_ITEMS     = 107;
+	private static final int MSG_REPLACE_ITEM      = 107;
 	private static final int MSG_CUSTOM_OPERATION  = 108;
 
 	private WeakReference<AsynchronousDbErrorHandler<E>> mErrorHandler; // not protected for now
@@ -168,143 +167,55 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 		HandlerThread handlerThread = new HandlerThread(name, android.os.Process.THREAD_PRIORITY_BACKGROUND);
 		handlerThread.start();
+		
+		saveStoreHandler.sendEmptyMessage(MSG_LOAD_IN_MEMORY);
+	}
 
-		saveStoreHandler = new Handler(handlerThread.getLooper()) {
-			public void handleMessage(Message msg) {
-				ContentValues addValues;
-
-				switch (msg.what) {
+	private final Handler saveStoreHandler = new Handler(handlerThread.getLooper()) {
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
 				case MSG_LOAD_IN_MEMORY:
-					if (shouldReloadAllData()) {
-						startLoadingInMemory();
-						try {
-							try {
-								dataSource.queryAll(AsynchronousDbHelper.this);
-							} catch (Exception e) {
-								LogManager.logger.w(STARTUP_TAG, "Can't query table "+ dataSource +" in "+name, e);
-							}
-						} catch (Exception e) {
-							if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
-								notifyDatabaseCorrupted(dataSource, name, e);
-							else
-								LogManager.logger.w(STARTUP_TAG, "Can't open database "+name, e);
-						} finally {
-							finishLoadingInMemory();
-						}
-					}
+					loadInMemory();
 					break;
 
 				case MSG_CLEAR_DATABASE:
-					try {
-						dataSource.clearAllData();
-					} catch (Throwable e) {
-						LogManager.logger.w(TAG,"Failed to empty table "+ dataSource +" in "+name, e);
-					} finally {
-						sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
-					}
+					clearAllData();
 					break;
 
 				case MSG_STORE_ITEM:
 					@SuppressWarnings("unchecked")
 					Pair<E, PurgeHandler> itemToAdd = (Pair<E, PurgeHandler>) msg.obj;
-					addValues = null;
-					boolean itemAdded = false;
-					try {
-						addValues = getValuesFromData(itemToAdd.first);
-						if (addValues!=null) {
-							directStoreItem(addValues);
-							itemAdded = true;
-						}
-					} catch (Exception e) {
-						notifyAddItemFailed(itemToAdd.first, addValues, e);
-					} finally {
-						if (itemAdded && itemToAdd.second != null) {
-							itemToAdd.second.onElementsAdded(AsynchronousDbHelper.this);
-						}
-					}
+					storeItem(itemToAdd.first, itemToAdd.second);
 					break;
 
 				case MSG_STORE_ITEMS:
 					@SuppressWarnings("unchecked")
 					Pair<Collection<? extends E>, PurgeHandler> itemsToAdd = (Pair<Collection<? extends E>, PurgeHandler>) msg.obj;
-					boolean itemsAdded = false;
-					for (E item : itemsToAdd.first) {
-						addValues = null;
-						try {
-							addValues = getValuesFromData(item);
-							if (addValues!=null) {
-								directStoreItem(addValues);
-								itemsAdded = true;
-							}
-						} catch (Exception e) {
-							notifyAddItemFailed(item, addValues, e);
-						}
-					}
-					if (itemsAdded && itemsToAdd.second != null) {
-						itemsToAdd.second.onElementsAdded(AsynchronousDbHelper.this);
-					}
+					storeItems(itemsToAdd.first, itemsToAdd.second);
 					break;
 
 				case MSG_REMOVE_ITEM:
 					@SuppressWarnings("unchecked")
 					E itemToDelete = (E) msg.obj;
-					try {
-						if (DEBUG_DB) LogManager.logger.d(TAG, name+" remove "+itemToDelete);
-						if (dataSource.delete(itemToDelete))
-							notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item "+itemToDelete+" in "+name));
-					} catch (Throwable e) {
-						notifyRemoveItemFailed(itemToDelete, e);
-					}
+					remoteItem(itemToDelete);
 					break;
 
 				case MSG_UPDATE_ITEM:
 					@SuppressWarnings("unchecked")
 					E itemToUpdate = (E) msg.obj;
-					ContentValues updateValues = null;
-					try {
-						updateValues = getValuesFromData(itemToUpdate);
-						if (!directUpdate(itemToUpdate, updateValues)) {
-							notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update "+updateValues+" in "+name));
-						}
-					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemToUpdate, updateValues, e);
-					}
+					updateItem(itemToUpdate);
 					break;
 
-				case MSG_REPLACE_ITEMS:
+				case MSG_REPLACE_ITEM:
 					@SuppressWarnings("unchecked")
-					Pair<E,E> itemsToReplace = (Pair<E,E>) msg.obj;
-					try {
-						ContentValues newValues = getValuesFromData(itemsToReplace.first);
-						directUpdate(itemsToReplace.second, newValues);
-					} catch (Throwable e) {
-						notifyReplaceItemFailed(itemsToReplace.first, itemsToReplace.second, e);
-					}
+					Pair<E, E> itemsToReplace = (Pair<E, E>) msg.obj;
+					replaceItem(itemsToReplace.first, itemsToReplace.second);
 					break;
 
 				case MSG_SWAP_ITEMS:
 					@SuppressWarnings("unchecked")
-					Pair<E,E> itemsToSwap = (Pair<E,E>) msg.obj;
-					ContentValues newValuesA = null;
-					try {
-						newValuesA = getValuesFromData(itemsToSwap.second);
-						if (newValuesA!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, name+" update "+itemsToSwap.second+" with "+newValuesA);
-							directUpdate(itemsToSwap.first, newValuesA);
-						}
-					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemsToSwap.first, newValuesA, e);
-					}
-					ContentValues newValuesB = null;
-					try {
-						newValuesB = getValuesFromData(itemsToSwap.first);
-						if (newValuesB!=null) {
-							if (DEBUG_DB) LogManager.logger.d(TAG, name+" update "+itemsToSwap.first+" with "+newValuesB);
-							directUpdate(itemsToSwap.second, newValuesB);
-						}
-					} catch (Throwable e) {
-						notifyUpdateItemFailed(itemsToSwap.second, newValuesB, e);
-					}
+					Pair<E, E> itemsToSwap = (Pair<E, E>) msg.obj;
+					swapItems(itemsToSwap.first, itemsToSwap.second);
 					break;
 
 				case MSG_CUSTOM_OPERATION:
@@ -313,18 +224,135 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 						AsynchronousDbOperation operation = (AsynchronousDbOperation) msg.obj;
 						operation.runInMemoryDbOperation(AsynchronousDbHelper.this);
 					} catch (Exception e) {
-						LogManager.logger.w(TAG, name+" failed to run operation "+msg.obj, e);
+						LogManager.logger.w(TAG, name + " failed to run operation " + msg.obj, e);
 					}
 					break;
-
-
-				}
-
-				super.handleMessage(msg);
 			}
-		};
 
-		saveStoreHandler.sendEmptyMessage(MSG_LOAD_IN_MEMORY);
+			super.handleMessage(msg);
+		}
+	};
+
+	private void loadInMemory() {
+		if (shouldReloadAllData()) {
+			startLoadingInMemory();
+			try {
+				try {
+					dataSource.queryAll(AsynchronousDbHelper.this);
+				} catch (Exception e) {
+					LogManager.logger.w(STARTUP_TAG, "Can't query table " + dataSource + " in " + name, e);
+				}
+			} catch (Exception e) {
+				if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
+					notifyDatabaseCorrupted(dataSource, name, e);
+				else
+					LogManager.logger.w(STARTUP_TAG, "Can't open database " + name, e);
+			} finally {
+				finishLoadingInMemory();
+			}
+		}
+	}
+
+	private void clearAllData() {
+		try {
+			dataSource.clearAllData();
+		} catch (Throwable e) {
+			LogManager.logger.w(TAG, "Failed to empty table " + dataSource + " in " + name, e);
+		} finally {
+			saveStoreHandler.sendEmptyMessage(MSG_LOAD_IN_MEMORY); // reload the DB into memory
+		}
+	}
+
+	private void storeItem(E item, PurgeHandler purgeHandler) {
+		ContentValues addValues = null;
+		boolean itemAdded = false;
+		try {
+			addValues = getValuesFromData(item);
+			if (addValues != null) {
+				directStoreItem(addValues);
+				itemAdded = true;
+			}
+		} catch (Exception e) {
+			notifyAddItemFailed(item, addValues, e);
+		} finally {
+			if (itemAdded && purgeHandler != null) {
+				purgeHandler.onElementsAdded(AsynchronousDbHelper.this);
+			}
+		}
+	}
+
+	private void storeItems(Collection<? extends E> items, PurgeHandler purgeHandler) {
+		ContentValues addValues;
+		boolean itemsAdded = false;
+		for (E item : items) {
+			addValues = null;
+			try {
+				addValues = getValuesFromData(item);
+				if (addValues != null) {
+					directStoreItem(addValues);
+					itemsAdded = true;
+				}
+			} catch (Exception e) {
+				notifyAddItemFailed(item, addValues, e);
+			}
+		}
+		if (itemsAdded && purgeHandler != null) {
+			purgeHandler.onElementsAdded(AsynchronousDbHelper.this);
+		}
+	}
+
+	private void remoteItem(E itemToDelete) {
+		try {
+			if (DEBUG_DB) LogManager.logger.d(TAG, name + " remove " + itemToDelete);
+			if (dataSource.delete(itemToDelete))
+				notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item " + itemToDelete + " in " + name));
+		} catch (Throwable e) {
+			notifyRemoveItemFailed(itemToDelete, e);
+		}
+	}
+
+	private void updateItem(E itemToUpdate) {
+		ContentValues updateValues = null;
+		try {
+			updateValues = getValuesFromData(itemToUpdate);
+			if (!directUpdate(itemToUpdate, updateValues)) {
+				notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update " + updateValues + " in " + name));
+			}
+		} catch (Throwable e) {
+			notifyUpdateItemFailed(itemToUpdate, updateValues, e);
+		}
+	}
+
+	private void replaceItem(E src, E replacement) {
+		try {
+			ContentValues newValues = getValuesFromData(src);
+			directUpdate(replacement, newValues);
+		} catch (Throwable e) {
+			notifyReplaceItemFailed(src, replacement, e);
+		}
+	}
+
+	private void swapItems(E first, E second) {
+		ContentValues newValuesA = null;
+		try {
+			newValuesA = getValuesFromData(second);
+			if (newValuesA != null) {
+				if (DEBUG_DB) LogManager.logger.d(TAG, name + " update " + second + " with " + newValuesA);
+				directUpdate(first, newValuesA);
+			}
+		} catch (Throwable e) {
+			notifyUpdateItemFailed(first, newValuesA, e);
+		}
+		ContentValues newValuesB = null;
+		try {
+			newValuesB = getValuesFromData(first);
+			if (newValuesB != null) {
+				if (DEBUG_DB) LogManager.logger.d(TAG, name + " update " + first + " with " + newValuesB);
+				directUpdate(second, newValuesB);
+			}
+		} catch (Throwable e) {
+			notifyUpdateItemFailed(second, newValuesB, e);
+		}
 	}
 
 	/**
@@ -507,7 +535,6 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 */
 	protected abstract ContentValues getValuesFromData(E data) throws RuntimeException;
 
-
 	/**
 	 * Request to store the item in the database asynchronously
 	 * <p>Will call the {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onAddItemFailed(org.gawst.asyncdb.AsynchronousContentProviderHelper, Object, android.content.ContentValues, Throwable) AsynchronousDbErrorHandler.onAddItemFailed()} on failure
@@ -571,7 +598,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 * @param replacement Item to replace with
 	 */
 	protected final void scheduleReplaceOperation(E original, E replacement) {
-		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEMS, new Pair<E,E>(original, replacement)));
+		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEM, new Pair<E,E>(original, replacement)));
 		pushModifyingTransaction();
 		popModifyingTransaction();
 	}
