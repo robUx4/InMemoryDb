@@ -18,7 +18,7 @@ import android.support.annotation.NonNull;
  *
  * @author Created by robUx4 on 12/31/2014.
  */
-public class SqliteDataSource<E> extends CursorDataSource<E, Long> {
+public class SqliteDataSource<E> extends CursorDataSource<E, Long, Void> {
 
 	private final Context context;
 	private final SQLiteOpenHelper db;
@@ -53,6 +53,11 @@ public class SqliteDataSource<E> extends CursorDataSource<E, Long> {
 		this.db = db;
 		this.tableName = tableName;
 		this.databaseName = databaseName;
+	}
+
+	@Override
+	public Void getDatabaseId() {
+		return null;
 	}
 
 	public Cursor query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {

@@ -11,6 +11,7 @@ import org.gawst.asyncdb.purge.PurgeHandler;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -18,11 +19,12 @@ import android.util.Pair;
 
 /**
  * the main helper class that saves/restore item in memory using a DB storage
- * <p>
+ * <p/>
  * the storage handling is done in a separate thread
- * @author Steve Lhomme
  *
  * @param <E> the type of items stored in memory
+ * @author Steve Lhomme
+ * @see org.gawst.asyncdb.AsynchronousDbHelper.AsyncHandler
  */
 public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.BatchReadingCallback<E> {
 
@@ -52,9 +54,95 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	/**
 	 * A class similar to {@link android.content.AsyncQueryHandler} to do simple calls asynchronously with a callback when it's done
 	 */
-	public class AsyncHandler extends AsyncQueryHandler<INSERT_ID> {
+	public class AsyncHandler extends AsyncDatabaseHandler<INSERT_ID, Uri> {
 		public AsyncHandler() {
-			super(AsynchronousDbHelper.this, (DatabaseSource<INSERT_ID>) AsynchronousDbHelper.this.dataSource);
+			super(AsynchronousDbHelper.this, (DatabaseSource<INSERT_ID, Uri>) AsynchronousDbHelper.this.dataSource);
+		}
+
+		@Deprecated
+		@Override
+		public void startQuery(int token, Object cookie, Uri uri, String[] projection, String selection, String[] selectionArgs, String orderBy) {
+			super.startQuery(token, cookie, uri, projection, selection, selectionArgs, orderBy);
+		}
+
+		/**
+		 * This method begins an asynchronous query. When the query is done
+		 * {@link #onQueryComplete} is called.
+		 *
+		 * @param token         A token passed into {@link #onQueryComplete} to identify
+		 *                      the query.
+		 * @param cookie        An object that gets passed into {@link #onQueryComplete}
+		 * @param projection    A list of which columns to return. Passing null will
+		 *                      return all columns, which is discouraged to prevent reading data
+		 *                      from storage that isn't going to be used.
+		 * @param selection     A filter declaring which rows to return, formatted as an
+		 *                      SQL WHERE clause (excluding the WHERE itself). Passing null will
+		 *                      return all rows for the given URI.
+		 * @param selectionArgs You may include ?s in selection, which will be
+		 *                      replaced by the values from selectionArgs, in the order that they
+		 *                      appear in the selection. The values will be bound as Strings.
+		 * @param orderBy       How to order the rows, formatted as an SQL ORDER BY
+		 */
+		public void startQuery(int token, Object cookie, String[] projection, String selection, String[] selectionArgs, String orderBy) {
+			super.startQuery(token, cookie, dataSource.getDatabaseId(), projection, selection, selectionArgs, orderBy);
+		}
+
+		@Deprecated
+		@Override
+		public void startInsert(int token, Object cookie, Uri uri, ContentValues initialValues) {
+			super.startInsert(token, cookie, uri, initialValues);
+		}
+
+		/**
+		 * This method begins an asynchronous insert. When the insert operation is
+		 * done {@link #onInsertComplete} is called.
+		 *
+		 * @param token         A token passed into {@link #onInsertComplete} to identify
+		 *                      the insert operation.
+		 * @param cookie        An object that gets passed into {@link #onInsertComplete}
+		 * @param initialValues the ContentValues parameter passed to the insert operation.
+		 */
+
+		public void startInsert(int token, Object cookie, ContentValues initialValues) {
+			super.startInsert(token, cookie, dataSource.getDatabaseId(), initialValues);
+		}
+
+		@Deprecated
+		@Override
+		public void startUpdate(int token, Object cookie, Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+			super.startUpdate(token, cookie, uri, values, selection, selectionArgs);
+		}
+
+		/**
+		 * This method begins an asynchronous update. When the update operation is
+		 * done {@link #onUpdateComplete} is called.
+		 *
+		 * @param token      A token passed into {@link #onUpdateComplete} to identify
+		 *                   the update operation.
+		 * @param cookie     An object that gets passed into {@link #onUpdateComplete}
+		 * @param values     the ContentValues parameter passed to the update operation.
+		 */
+		public void startUpdate(int token, Object cookie, ContentValues values, String selection, String[] selectionArgs) {
+			super.startUpdate(token, cookie, dataSource.getDatabaseId(), values, selection, selectionArgs);
+		}
+
+		@Deprecated
+		@Override
+		public void startDelete(int token, Object cookie, Uri uri, String selection, String[] selectionArgs) {
+			super.startDelete(token, cookie, uri, selection, selectionArgs);
+		}
+
+		/**
+		 * This method begins an asynchronous delete. When the delete operation is
+		 * done {@link #onDeleteComplete} is called.
+		 *
+		 * @param token      A token passed into {@link #onDeleteComplete} to identify
+		 *                   the delete operation.
+		 * @param cookie     An object that gets passed into {@link #onDeleteComplete}
+		 * @param selection  the where clause.
+		 */
+		public void startDelete(int token, Object cookie, String selection, String[] selectionArgs) {
+			super.startDelete(token, cookie, dataSource.getDatabaseId(), selection, selectionArgs);
 		}
 	}
 
@@ -240,7 +328,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 * @throws RuntimeException if the insertion failed
 	 */
 	protected final void directStoreItem(ContentValues addValues) throws RuntimeException {
-		Object inserted = dataSource.insert(addValues);
+		INSERT_ID inserted = dataSource.insert(addValues);
 		if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+inserted);
 		if (inserted==null) throw new RuntimeException("failed to add values "+addValues+" in "+ dataSource);
 	}

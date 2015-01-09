@@ -8,10 +8,11 @@ import android.support.annotation.Nullable;
 /**
  * Interface for classes that read/write data in SQL queries
  *
- * @param <INSERT_ID> Type of element returned by {@link #insert(android.content.ContentValues) insert()}
+ * @param <INSERT_ID>   Type of element returned by {@link #insert(android.content.ContentValues) insert()}
+ * @param <DATABASE_ID> Type of the ID needed to use {@link AsyncDatabaseHandler}
  * @author Created by robUx4 on 06/01/2015.
  */
-public interface DatabaseSource<INSERT_ID> {
+public interface DatabaseSource<INSERT_ID, DATABASE_ID> {
 	/**
 	 * Query the {@link org.gawst.asyncdb.DatabaseSource} with an SQL-like syntax.
 	 *
@@ -73,4 +74,9 @@ public interface DatabaseSource<INSERT_ID> {
 	 * @return
 	 */
 	int delete(@Nullable String selection, @Nullable String[] selectionArgs);
+
+	/**
+	 * @return The database ID needed to use {@link AsyncDatabaseHandler}
+	 */
+	DATABASE_ID getDatabaseId();
 }

@@ -10,7 +10,7 @@ import android.support.annotation.NonNull;
  * A {@link org.gawst.asyncdb.DataSource} reading/writing data using a {@link android.content.ContentProvider ContentProvider}
  * @param <E> Type of the elements read from the {@code Cursor}
  */
-public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri> {
+public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> {
 	private final Uri contentProviderUri;
 	private final Context context;
 
@@ -24,6 +24,11 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri> {
 		super(databaseElementHandler);
 		this.context = context.getApplicationContext();
 		this.contentProviderUri = contentProviderUri;
+	}
+
+	@Override
+	public Uri getDatabaseId() {
+		return contentProviderUri;
 	}
 
 	@Override

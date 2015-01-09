@@ -7,14 +7,15 @@ import android.support.annotation.NonNull;
 /**
  * Abstract helper {@link org.gawst.asyncdb.DataSource} class reading using a {@link android.database.Cursor}.
  *
- * @param <E> Type of element read/write from the {@link org.gawst.asyncdb.DataSource}.
- * @param <INSERT_ID> Type of elements returned by {@link org.gawst.asyncdb.DataSource#insert(android.content.ContentValues)}
+ * @param <E>           Type of element read/write from the {@link org.gawst.asyncdb.DataSource}.
+ * @param <INSERT_ID>   Type of elements returned by {@link org.gawst.asyncdb.DataSource#insert(android.content.ContentValues)}
+ * @param <DATABASE_ID> Type of the ID needed to use {@link AsyncDatabaseHandler}
  * @author Created by robUx4 on 12/31/2014.
  * @see org.gawst.asyncdb.ContentProviderDataSource
  * @see org.gawst.asyncdb.SqliteDataSource
  * @see org.gawst.asyncdb.SqliteMapDataSource
  */
-public abstract class CursorDataSource<E, INSERT_ID> implements DataSource<E, INSERT_ID>, DatabaseSource<INSERT_ID> {
+public abstract class CursorDataSource<E, INSERT_ID, DATABASE_ID> implements DataSource<E, INSERT_ID>, DatabaseSource<INSERT_ID, DATABASE_ID> {
 
 	private final DatabaseElementHandler<E> databaseElementHandler;
 

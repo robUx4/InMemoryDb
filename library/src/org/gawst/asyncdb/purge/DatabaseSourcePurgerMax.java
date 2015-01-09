@@ -20,7 +20,7 @@ public abstract class DatabaseSourcePurgerMax<LAST_ELEMENT> extends DatabaseSour
 	 * @param fieldName      Name of the sorted field in the database to determine 'old' elements
 	 * @param databaseSource Database source (Sqlite, ContentProvider)
 	 */
-	public DatabaseSourcePurgerMax(int maxItems, String fieldName, DatabaseSource<?> databaseSource) {
+	public DatabaseSourcePurgerMax(int maxItems, String fieldName, DatabaseSource<?, ?> databaseSource) {
 		this(maxItems, 1, fieldName, databaseSource);
 	}
 
@@ -32,7 +32,7 @@ public abstract class DatabaseSourcePurgerMax<LAST_ELEMENT> extends DatabaseSour
 	 * @param fieldName            Name of the sorted field in the database to determine 'old' elements
 	 * @param databaseSource       Database source (Sqlite, ContentProvider)
 	 */
-	public DatabaseSourcePurgerMax(int maxItems, int checkInsertFrequency, String fieldName, DatabaseSource<?> databaseSource) {
+	public DatabaseSourcePurgerMax(int maxItems, int checkInsertFrequency, String fieldName, DatabaseSource<?, ?> databaseSource) {
 		super(maxItems, checkInsertFrequency, databaseSource);
 		this.fieldName = fieldName;
 	}

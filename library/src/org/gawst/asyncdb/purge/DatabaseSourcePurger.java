@@ -15,7 +15,7 @@ import android.support.annotation.Nullable;
  * @param <LAST_ELEMENT> Type of the last element to keep during the purge.
  */
 public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler {
-	private final DatabaseSource<?> dataSource;
+	private final DatabaseSource<?, ?> dataSource;
 	private final int maxItems;
 	private final int checkInsertFrequency;
 	private Integer nextCheck;
@@ -26,7 +26,7 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 	 * @param maxItems       Maximum number of items to keep in the database.
 	 * @param databaseSource Database source (Sqlite, ContentProvider)
 	 */
-	public DatabaseSourcePurger(int maxItems, DatabaseSource<?> databaseSource) {
+	public DatabaseSourcePurger(int maxItems, DatabaseSource<?, ?> databaseSource) {
 		this(maxItems, 1, databaseSource);
 	}
 
@@ -37,7 +37,7 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 	 * @param checkInsertFrequency The number of insertion before a purge is done. A purge is done after the first insertion.
 	 * @param databaseSource       Database source (Sqlite, ContentProvider)
 	 */
-	public DatabaseSourcePurger(int maxItems, int checkInsertFrequency, DatabaseSource<?> databaseSource) {
+	public DatabaseSourcePurger(int maxItems, int checkInsertFrequency, DatabaseSource<?, ?> databaseSource) {
 		this.dataSource = databaseSource;
 		if (maxItems <= 0) throw new IllegalArgumentException("the max item in AsyncHandlerPurge must be positive");
 		if (checkInsertFrequency <= 0) throw new IllegalArgumentException("the insert purge frequency in AsyncHandlerPurge must be positive");

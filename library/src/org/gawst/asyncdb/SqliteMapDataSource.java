@@ -15,7 +15,7 @@ import android.support.annotation.Nullable;
  *
  * @author Created by robUx4 on 12/31/2014.
  */
-public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, DatabaseSource<Long> {
+public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, DatabaseSource<Long, Void> {
 	private final SqliteDataSource<MapEntry<K, V>> source;
 
 	/**
@@ -60,6 +60,11 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, Dat
 				return new MapEntry<K, V>(key, databaseElementHandler.cursorToValue(cursor));
 			}
 		});
+	}
+
+	@Override
+	public Void getDatabaseId() {
+		return null;
 	}
 
 	@Override

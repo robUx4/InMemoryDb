@@ -18,7 +18,7 @@ public class DatabasePurgerMaxDate extends DatabaseSourcePurgerMax<Long> {
 	 * @param dateField      Date field in the database.
 	 * @param databaseSource Database source (Sqlite, ContentProvider)
 	 */
-	public DatabasePurgerMaxDate(int maxItems, String dateField, DatabaseSource<?> databaseSource) {
+	public DatabasePurgerMaxDate(int maxItems, String dateField, DatabaseSource<?, ?> databaseSource) {
 		super(maxItems, dateField, databaseSource);
 	}
 
@@ -30,7 +30,7 @@ public class DatabasePurgerMaxDate extends DatabaseSourcePurgerMax<Long> {
 	 * @param dateField            Date field in the database.
 	 * @param databaseSource       Database source (Sqlite, ContentProvider)
 	 */
-	public DatabasePurgerMaxDate(int maxItems, int checkInsertFrequency, String dateField, DatabaseSource<?> databaseSource) {
+	public DatabasePurgerMaxDate(int maxItems, int checkInsertFrequency, String dateField, DatabaseSource<?, ?> databaseSource) {
 		super(maxItems, checkInsertFrequency, dateField, databaseSource);
 	}
 
