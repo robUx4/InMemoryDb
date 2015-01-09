@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -78,9 +79,10 @@ public abstract class InMemoryDbTreeSet<E, INSERT_ID> extends InMemoryDbSet<E, T
 				// we're trying to read the data but they are not loading yet
 				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this);
 				long now = System.currentTimeMillis();
-				dataLoaded.await();
+				dataLoaded.await(10, TimeUnit.SECONDS);
 				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this+" finished after "+(System.currentTimeMillis()-now));
 			} catch (InterruptedException ignored) {
+				LogManager.logger.w(STARTUP_TAG, "timed out waiting for data loaded in "+this);
 			}
 		return mData;
 	}

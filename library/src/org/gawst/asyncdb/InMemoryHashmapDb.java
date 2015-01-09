@@ -1,6 +1,7 @@
 package org.gawst.asyncdb;
 
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -82,10 +83,11 @@ public abstract class InMemoryHashmapDb<K, V, INSERT_ID> extends InMemoryDbMap<K
 				// we're trying to read the data but they are not loading yet
 				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this);
 				long now = System.currentTimeMillis();
-				dataLoaded.await();
+				dataLoaded.await(10, TimeUnit.SECONDS);
 				LogManager.logger.v(STARTUP_TAG, "waiting data loaded in "+this+" finished after "+(System.currentTimeMillis()-now));
 				//Thread.sleep(1000);
 			} catch (InterruptedException ignored) {
+				LogManager.logger.w(STARTUP_TAG, "timed out waiting for data loaded in "+this);
 			}
 		if (null==mData) throw new NullPointerException("no HashMap, waited:"+waited+" mIsLoading:"+mIsLoading+" constructorPassed:"+constructorPassed);
 		return mData;
