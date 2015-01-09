@@ -53,13 +53,40 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	public void startQuery(final int token, final Object cookie, DATABASE_ID databaseId,
 	                       final String[] projection, final String selection, final String[] selectionArgs,
 	                       final String orderBy) {
+		startQuery(token, cookie, databaseId, projection, selection, selectionArgs, orderBy, null);
+	}
+
+	/**
+	 * This method begins an asynchronous query. When the query is done
+	 * {@link #onQueryComplete} is called.
+	 *
+	 * @param token         A token passed into {@link #onQueryComplete} to identify
+	 *                      the query.
+	 * @param cookie        An object that gets passed into {@link #onQueryComplete}
+	 * @param databaseId
+	 * @param projection    A list of which columns to return. Passing null will
+	 *                      return all columns, which is discouraged to prevent reading data
+	 *                      from storage that isn't going to be used.
+	 * @param selection     A filter declaring which rows to return, formatted as an
+	 *                      SQL WHERE clause (excluding the WHERE itself). Passing null will
+	 *                      return all rows for the given URI.
+	 * @param selectionArgs You may include ?s in selection, which will be
+	 *                      replaced by the values from selectionArgs, in the order that they
+	 *                      appear in the selection. The values will be bound as Strings.
+	 * @param orderBy       How to order the rows, formatted as an SQL ORDER BY
+	 * @param limit         Limits the number of rows returned by the query,
+	 *                      formatted as LIMIT clause. Passing null denotes no LIMIT clause.
+	 */
+	public void startQuery(final int token, final Object cookie, DATABASE_ID databaseId,
+	                       final String[] projection, final String selection, final String[] selectionArgs,
+	                       final String orderBy, final String limit) {
 		checkDatabaseId(databaseId);
 		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
 				Cursor cursor1;
 				try {
-					cursor1 = dataSource.query(projection, selection, selectionArgs, null, null, orderBy, null);
+					cursor1 = dataSource.query(projection, selection, selectionArgs, null, null, orderBy, limit);
 				} catch (Exception e) {
 					cursor1 = null;
 				}

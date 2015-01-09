@@ -82,9 +82,11 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		 *                      replaced by the values from selectionArgs, in the order that they
 		 *                      appear in the selection. The values will be bound as Strings.
 		 * @param orderBy       How to order the rows, formatted as an SQL ORDER BY
+		 * @param limit         Limits the number of rows returned by the query,
+		 *                      formatted as LIMIT clause. Passing null denotes no LIMIT clause.
 		 */
-		public void startQuery(int token, Object cookie, String[] projection, String selection, String[] selectionArgs, String orderBy) {
-			super.startQuery(token, cookie, dataSource.getDatabaseId(), projection, selection, selectionArgs, orderBy);
+		public void startQuery(int token, Object cookie, String[] projection, String selection, String[] selectionArgs, String orderBy, String limit) {
+			super.startQuery(token, cookie, dataSource.getDatabaseId(), projection, selection, selectionArgs, orderBy, limit);
 		}
 
 		@Deprecated
