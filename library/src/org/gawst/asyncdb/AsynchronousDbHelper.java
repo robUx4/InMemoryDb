@@ -362,7 +362,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 * @param addValues Values that will be written in the database
 	 * @throws RuntimeException if the insertion failed
 	 */
-	protected final void directStoreItem(ContentValues addValues) throws RuntimeException {
+	private void directStoreItem(ContentValues addValues) throws RuntimeException {
 		INSERT_ID inserted = dataSource.insert(addValues);
 		if (DEBUG_DB) LogManager.logger.d(TAG, AsynchronousDbHelper.this+" insert "+addValues+" = "+inserted);
 		if (inserted==null) throw new RuntimeException("failed to add values "+addValues+" in "+ dataSource);
