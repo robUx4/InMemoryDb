@@ -243,4 +243,14 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 			mDataLock.unlock();
 		}
 	}
+
+	@Override
+	public void onReplaceItemFailed(AsynchronousDbHelper<E, ?> db, E original, E replacement, Throwable cause) {
+		mDataLock.lock();
+		try {
+			super.onReplaceItemFailed(db, original, replacement, cause);
+		} finally {
+			mDataLock.unlock();
+		}
+	}
 }
