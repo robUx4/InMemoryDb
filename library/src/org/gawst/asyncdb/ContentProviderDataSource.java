@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 /**
  * A {@link org.gawst.asyncdb.DataSource} reading/writing data using a {@link android.content.ContentProvider ContentProvider}
@@ -33,6 +34,13 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> 
 
 	@Override
 	public Cursor query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+		if (!TextUtils.isEmpty(limit)) {
+			if (TextUtils.isEmpty(orderBy)) {
+				orderBy = "LIMIT "+limit;
+			} else {
+				orderBy += " LIMIT "+limit;
+			}
+		}
 		return context.getContentResolver().query(contentProviderUri, columns, selection, selectionArgs, orderBy);
 	}
 
