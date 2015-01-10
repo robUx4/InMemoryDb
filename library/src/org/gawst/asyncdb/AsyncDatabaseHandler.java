@@ -80,7 +80,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	public void startQuery(final int token, final Object cookie, DATABASE_ID databaseId,
 	                       final String[] projection, final String selection, final String[] selectionArgs,
 	                       final String orderBy, final String limit) {
-		checkDatabaseId(databaseId);
+		//checkDatabaseId(databaseId);
 		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
@@ -114,7 +114,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	 */
 	public void startInsert(final int token, final Object cookie, DATABASE_ID databaseId,
 	                              final ContentValues initialValues) {
-		checkDatabaseId(databaseId);
+		//checkDatabaseId(databaseId);
 		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
@@ -151,7 +151,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	 */
 	public void startUpdate(final int token, final Object cookie, DATABASE_ID databaseId,
 	                              final ContentValues values, final String selection, final String[] selectionArgs) {
-		checkDatabaseId(databaseId);
+		//checkDatabaseId(databaseId);
 		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
@@ -185,7 +185,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	 */
 	public void startDelete(final int token, final Object cookie, DATABASE_ID databaseId,
 	                              final String selection, final String[] selectionArgs) {
-		checkDatabaseId(databaseId);
+		//checkDatabaseId(databaseId);
 		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
