@@ -62,7 +62,7 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Uri, Uri> {
 	 * @param asynchronousDbHelper The {@link org.gawst.asyncdb.AsynchronousDbHelper} database to work with.
 	 * @param dataSource           The {@link org.gawst.asyncdb.DatabaseSource} source used by the {@code asynchronousDbHelper}.
 	 */
-	public AsyncQueryHandler(AsynchronousDbHelper<?, Uri> asynchronousDbHelper, DatabaseSource<Uri, ?> dataSource) {
-		super(asynchronousDbHelper, (DatabaseSource<Uri, Uri>) dataSource);
+	public AsyncQueryHandler(AsynchronousDbHelper<?, Uri> asynchronousDbHelper, DatabaseSource<Uri, Uri> dataSource) {
+		super(asynchronousDbHelper, dataSource);
 	}
 }
