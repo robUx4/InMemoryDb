@@ -13,7 +13,7 @@ import android.support.annotation.Nullable;
  * @author Created by robUx4 on 09/01/2015.
  * @see org.gawst.asyncdb.AsynchronousDbHelper.AsyncHandler AsyncHandler for a cleaner version
  */
-public class AsyncQueryHandler extends AsyncDatabaseHandler<Object, Uri> {
+public class AsyncQueryHandler extends AsyncDatabaseHandler<Uri, Uri> {
 
 	/**
 	 * Constructor similar to Android's {@link android.content.AsyncQueryHandler#AsyncQueryHandler(android.content.ContentResolver) AsyncQueryHandler()}
@@ -23,20 +23,20 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Object, Uri> {
 	 * @param contentProviderUri
 	 */
 	public AsyncQueryHandler(ContentResolver contentResolver, Uri contentProviderUri) {
-		this(new ContentProviderDataSource<Object>(contentResolver, contentProviderUri, new DatabaseElementHandler<Object>() {
+		this(new ContentProviderDataSource<Uri>(contentResolver, contentProviderUri, new DatabaseElementHandler<Uri>() {
 			@Override
-			public String getItemSelectClause(@Nullable Object itemToSelect) {
+			public String getItemSelectClause(@Nullable Uri itemToSelect) {
 				throw new AssertionError("not supported");
 			}
 
 			@Override
-			public String[] getItemSelectArgs(@NonNull Object itemToSelect) {
+			public String[] getItemSelectArgs(@NonNull Uri itemToSelect) {
 				throw new AssertionError("not supported");
 			}
 
 			@NonNull
 			@Override
-			public Object cursorToItem(@NonNull Cursor cursor) throws InvalidDbEntry {
+			public Uri cursorToItem(@NonNull Cursor cursor) throws InvalidDbEntry {
 				throw new AssertionError("not supported");
 			}
 		}));
@@ -47,10 +47,10 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Object, Uri> {
 	 *
 	 * @param dataSource Custom {@link org.gawst.asyncdb.ContentProviderDataSource} source.
 	 */
-	private AsyncQueryHandler(ContentProviderDataSource<Object> dataSource) {
-		this(new AsynchronousDatabase<Object, Uri>(dataSource, dataSource.toString(), null) {
+	public AsyncQueryHandler(ContentProviderDataSource<Uri> dataSource) {
+		this(new AsynchronousDatabase<Uri, Uri>(dataSource, dataSource.toString(), null) {
 			@Override
-			protected ContentValues getValuesFromData(Object data) throws RuntimeException {
+			protected ContentValues getValuesFromData(Uri data) throws RuntimeException {
 				throw new AssertionError("not supported");
 			}
 		}, dataSource);
@@ -62,7 +62,7 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Object, Uri> {
 	 * @param asynchronousDbHelper The {@link org.gawst.asyncdb.AsynchronousDbHelper} database to work with.
 	 * @param dataSource           The {@link org.gawst.asyncdb.DatabaseSource} source used by the {@code asynchronousDbHelper}.
 	 */
-	public AsyncQueryHandler(AsynchronousDbHelper<?, ?> asynchronousDbHelper, DatabaseSource<?, ?> dataSource) {
-		super((AsynchronousDbHelper<?, Object>) asynchronousDbHelper, (DatabaseSource<Object, Uri>) dataSource);
+	public AsyncQueryHandler(AsynchronousDbHelper<?, Uri> asynchronousDbHelper, DatabaseSource<Uri, ?> dataSource) {
+		super((AsynchronousDbHelper<?, Uri>) asynchronousDbHelper, (DatabaseSource<Uri, Uri>) dataSource);
 	}
 }

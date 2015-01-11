@@ -33,6 +33,14 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 			throw new IllegalArgumentException("wrong database id " + databaseId + " expected " + dataSource.getDatabaseId() + " try startRunnable()");
 	}
 
+	public AsynchronousDbHelper<?, INSERT_ID> getAsynchronousDbHelper() {
+		return asynchronousDbHelper;
+	}
+
+	public DatabaseSource<INSERT_ID, DATABASE_ID> getDataSource() {
+		return dataSource;
+	}
+
 	/**
 	 * This method begins an asynchronous query. When the query is done
 	 * {@link #onQueryComplete} is called.
