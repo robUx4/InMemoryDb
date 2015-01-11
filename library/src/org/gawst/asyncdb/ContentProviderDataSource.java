@@ -13,7 +13,7 @@ import android.text.TextUtils;
  * @param <E> Type of the elements read from the {@code Cursor}
  */
 public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> {
-	private final Uri contentProviderUri;
+	protected final Uri contentProviderUri;
 	private final Context context;
 	private final ContentResolver contentResolver;
 

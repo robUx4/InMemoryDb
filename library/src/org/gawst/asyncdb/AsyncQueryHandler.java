@@ -48,7 +48,7 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Uri, Uri> {
 	 * @param dataSource Custom {@link org.gawst.asyncdb.ContentProviderDataSource} source.
 	 */
 	public AsyncQueryHandler(ContentProviderDataSource<Uri> dataSource) {
-		this(new AsynchronousDatabase<Uri, Uri>(dataSource, dataSource.toString(), null) {
+		this(new AsynchronousDatabase<Uri, Uri>(dataSource, dataSource.contentProviderUri.getAuthority() + dataSource.contentProviderUri.getPath(), null) {
 			@Override
 			protected ContentValues getValuesFromData(Uri data) throws RuntimeException {
 				throw new AssertionError("not supported");
@@ -63,6 +63,6 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Uri, Uri> {
 	 * @param dataSource           The {@link org.gawst.asyncdb.DatabaseSource} source used by the {@code asynchronousDbHelper}.
 	 */
 	public AsyncQueryHandler(AsynchronousDbHelper<?, Uri> asynchronousDbHelper, DatabaseSource<Uri, ?> dataSource) {
-		super((AsynchronousDbHelper<?, Uri>) asynchronousDbHelper, (DatabaseSource<Uri, Uri>) dataSource);
+		super(asynchronousDbHelper, (DatabaseSource<Uri, Uri>) dataSource);
 	}
 }
