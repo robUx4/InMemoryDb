@@ -1,9 +1,9 @@
 package org.gawst.asyncdb.purge;
 
-import org.gawst.asyncdb.DatabaseSource;
-
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+
+import org.gawst.asyncdb.source.DatabaseSource;
 
 /**
  * Abstract helper class to purge a database with a maximum number of items and based on a sorted field.

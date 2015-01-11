@@ -1,9 +1,9 @@
 package org.gawst.asyncdb;
 
+import android.content.ContentValues;
+
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import android.content.ContentValues;
 
 public abstract class InMemoryLruCache<K,V, INSERT_ID> extends AsynchronousDbHelper<MapEntry<K,V>, INSERT_ID> {
 

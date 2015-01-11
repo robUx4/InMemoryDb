@@ -7,6 +7,10 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.gawst.asyncdb.source.ContentProviderDataSource;
+import org.gawst.asyncdb.source.DatabaseElementHandler;
+import org.gawst.asyncdb.source.DatabaseSource;
+
 /**
  * Class to mimick exactly the API of Android's {@link android.content.AsyncQueryHandler AsyncQueryHandler} with a {@link org.gawst.asyncdb.AsynchronousDbHelper} source
  *
@@ -45,7 +49,7 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Uri, Uri> {
 	/**
 	 * Constructor.
 	 *
-	 * @param dataSource Custom {@link org.gawst.asyncdb.ContentProviderDataSource} source.
+	 * @param dataSource Custom {@link org.gawst.asyncdb.source.ContentProviderDataSource} source.
 	 */
 	public AsyncQueryHandler(ContentProviderDataSource<Uri> dataSource) {
 		this(new AsynchronousDatabase<Uri, Uri>(dataSource, dataSource.contentProviderUri.getAuthority() + dataSource.contentProviderUri.getPath(), null) {
@@ -60,7 +64,7 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Uri, Uri> {
 	 * Constructor.
 	 *
 	 * @param asynchronousDbHelper The {@link org.gawst.asyncdb.AsynchronousDbHelper} database to work with.
-	 * @param dataSource           The {@link org.gawst.asyncdb.DatabaseSource} source used by the {@code asynchronousDbHelper}.
+	 * @param dataSource           The {@link org.gawst.asyncdb.source.DatabaseSource} source used by the {@code asynchronousDbHelper}.
 	 */
 	public AsyncQueryHandler(AsynchronousDbHelper<?, Uri> asynchronousDbHelper, DatabaseSource<Uri, Uri> dataSource) {
 		super(asynchronousDbHelper, dataSource);

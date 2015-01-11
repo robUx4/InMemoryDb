@@ -7,9 +7,9 @@ package org.gawst.asyncdb;
  */
 public interface InvalidEntry {
 	/**
-	 * @return the list of arguments to pass to the {@link org.gawst.asyncdb.DatabaseSource#delete(String, String[])
+	 * @return the list of arguments to pass to the {@link org.gawst.asyncdb.source.DatabaseSource#delete(String, String[])
 	 * DatabaseSource.delete()} when removing this invalid element.
-	 * @see org.gawst.asyncdb.DatabaseElementHandler#getItemSelectArgs(Object)
+	 * @see org.gawst.asyncdb.source.DatabaseElementHandler#getItemSelectArgs(Object)
 	 */
 	String[] getSelectArgs();
 }

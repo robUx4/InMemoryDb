@@ -1,13 +1,5 @@
 package org.gawst.asyncdb;
 
-import java.lang.ref.WeakReference;
-import java.util.Collection;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.gawst.asyncdb.purge.PurgeHandler;
-
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
@@ -18,6 +10,15 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
+
+import org.gawst.asyncdb.purge.PurgeHandler;
+import org.gawst.asyncdb.source.DatabaseSource;
+
+import java.lang.ref.WeakReference;
+import java.util.Collection;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * the main helper class that saves/restore item in memory using a DB storage
@@ -499,7 +500,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * Request to update the item in the database asynchronously
-	 * <p>{@link org.gawst.asyncdb.DatabaseElementHandler#getItemSelectClause(Object)} is used to find the matching item in the database
+	 * <p>{@link org.gawst.asyncdb.source.DatabaseElementHandler#getItemSelectClause(Object)} is used to find the matching item in the database
 	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onUpdateItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onUpdateItemFailed()} on failure
 	 * @see #getValuesFromData(Object)
 	 * @param item to update
@@ -514,7 +515,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * Request to replace an item in the databse with another asynchronously
-	 * <p>{@link org.gawst.asyncdb.DatabaseElementHandler#getItemSelectClause(Object)} is used to find the matching item in the database
+	 * <p>{@link org.gawst.asyncdb.source.DatabaseElementHandler#getItemSelectClause(Object)} is used to find the matching item in the database
 	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onReplaceItemFailed(AsynchronousDbHelper, Object, Object, Throwable) AsynchronousDbErrorHandler.onReplaceItemFailed()} on failure
 	 * @param original Item to replace
 	 * @param replacement Item to replace with

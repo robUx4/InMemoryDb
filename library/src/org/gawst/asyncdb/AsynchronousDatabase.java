@@ -1,8 +1,8 @@
 package org.gawst.asyncdb;
 
-import java.util.Collection;
-
 import android.database.sqlite.SQLiteOpenHelper;
+
+import java.util.Collection;
 
 /**
  * A {@link SQLiteOpenHelper} class with a worker thread for all disk work. Elements are not stored in memory.

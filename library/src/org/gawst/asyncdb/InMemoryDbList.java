@@ -1,10 +1,10 @@
 package org.gawst.asyncdb;
 
+import android.content.ContentValues;
+
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.List;
-
-import android.content.ContentValues;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link List}

@@ -1,13 +1,13 @@
 package org.gawst.asyncdb.purge;
 
-import org.gawst.asyncdb.AsynchronousDbHelper;
-import org.gawst.asyncdb.AsynchronousDbOperation;
-import org.gawst.asyncdb.DatabaseSource;
-import org.gawst.asyncdb.LogManager;
-
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import org.gawst.asyncdb.AsynchronousDbHelper;
+import org.gawst.asyncdb.AsynchronousDbOperation;
+import org.gawst.asyncdb.LogManager;
+import org.gawst.asyncdb.source.DatabaseSource;
 
 /**
  * Abstract helper class to purge a database.

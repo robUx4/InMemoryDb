@@ -1,15 +1,15 @@
 package org.gawst.asyncdb;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+
+import org.gawst.asyncdb.adapter.InMemoryFilteredAdapter;
+
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.gawst.asyncdb.adapter.InMemoryFilteredAdapter;
-
-import android.content.ContentValues;
-import android.database.Cursor;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link List}

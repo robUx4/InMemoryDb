@@ -1,17 +1,20 @@
-package org.gawst.asyncdb;
+package org.gawst.asyncdb.source.typed;
 
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.gawst.asyncdb.InvalidDbEntry;
+
 /**
  * Interface to handle the transformation from {@link E} elements to SQL query selections and from
  * {@link android.database.Cursor Cursor} to {@link E} elements.
  *
- * @param <E> Type of element read/write from the {@link org.gawst.asyncdb.DatabaseSource}.
- * @author Created by robUx4 on 08/01/2015.
+ * @param <E>      Type of element read/write from the {@link org.gawst.asyncdb.source.DatabaseSource}.
+ * @param <CURSOR> Wrapper around the raw {@code Cursor} read
+ * @author Created by robUx4 on 11/01/2015.
  */
-public interface DatabaseElementHandler<E> {
+public interface TypedDatabaseElementHandler<E, CURSOR extends Cursor> {
 	/**
 	 * The where clause that should be used to update/delete the item.
 	 * <p> see {@link #getItemSelectArgs(Object)}
@@ -40,5 +43,5 @@ public interface DatabaseElementHandler<E> {
 	 * @throws org.gawst.asyncdb.InvalidDbEntry if the Cursor data cannot be used
 	 */
 	@NonNull
-	E cursorToItem(@NonNull Cursor cursor) throws InvalidDbEntry;
+	E cursorToItem(@NonNull CURSOR cursor) throws InvalidDbEntry;
 }

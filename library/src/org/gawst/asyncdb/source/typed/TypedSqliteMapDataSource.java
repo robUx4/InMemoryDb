@@ -1,4 +1,4 @@
-package org.gawst.asyncdb;
+package org.gawst.asyncdb.source.typed;
 
 import android.annotation.TargetApi;
 import android.content.ContentValues;
@@ -9,14 +9,24 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.gawst.asyncdb.InvalidDbEntry;
+import org.gawst.asyncdb.InvalidEntry;
+import org.gawst.asyncdb.MapDataSource;
+import org.gawst.asyncdb.MapDatabaseElementHandler;
+import org.gawst.asyncdb.MapEntry;
+
 /**
  * A {@link org.gawst.asyncdb.DataSource} backed by a {@link android.database.sqlite.SQLiteOpenHelper} storage that uses a
- * Key/Value based {@link org.gawst.asyncdb.DatabaseElementHandler} to read/write elements from the database
+ * Key/Value based {@link org.gawst.asyncdb.source.DatabaseElementHandler} to read/write elements from the database
  *
- * @author Created by robUx4 on 12/31/2014.
+ * @param <K>      Type of the key read from the {@code CURSOR}
+ * @param <V>      Type of the value read from the {@code CURSOR}
+ * @param <CURSOR> Wrapper around the raw {@code Cursor} read
+ * @author Created by robUx4 on 11/01/2015.
  */
-public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, DatabaseSource<Long, Void> {
-	private final SqliteDataSource<MapEntry<K, V>> source;
+public abstract class TypedSqliteMapDataSource<K, V, CURSOR extends Cursor> implements MapDataSource<K, V, Long>, TypedDatabaseSource<Long, Void, CURSOR> {
+
+	private final TypedSqliteDataSource<MapEntry<K, V>, CURSOR> source;
 
 	/**
 	 * Constructor. (API v14 minimum)
@@ -27,7 +37,7 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, Dat
 	 * @param databaseElementHandler Handler to transform {@code Cursor} into ({@link K},{@link V}) pairs or ({@link K},{@link V}) pairs to selections.
 	 */
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-	public SqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull final MapDatabaseElementHandler<K, V> databaseElementHandler) {
+	public TypedSqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull final MapDatabaseElementHandler<K, V> databaseElementHandler) {
 		this(context, db, tableName, db.getDatabaseName(), databaseElementHandler);
 	}
 
@@ -40,9 +50,9 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, Dat
 	 * @param databaseName           Name of the database file on disk, in case it's corrupted and needs to be erased.
 	 * @param databaseElementHandler Handler to transform {@code Cursor} into ({@link K},{@link V}) pairs or ({@link K},{@link V}) pairs to selections.
 	 */
-	public SqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final MapDatabaseElementHandler<K, V> databaseElementHandler) {
+	public TypedSqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final MapDatabaseElementHandler<K, V> databaseElementHandler) {
 		if (databaseElementHandler == null) throw new NullPointerException("null MapCursorSourceHandler in " + this);
-		this.source = new SqliteDataSource<MapEntry<K, V>>(context, db, tableName, databaseName, new DatabaseElementHandler<MapEntry<K, V>>() {
+		this.source = new TypedSqliteDataSource<MapEntry<K, V>, CURSOR>(context, db, tableName, databaseName, new TypedDatabaseElementHandler<MapEntry<K,V>, CURSOR>() {
 			@Override
 			public String getItemSelectClause(@Nullable MapEntry<K, V> itemToSelect) {
 				return databaseElementHandler.getKeySelectClause(null == itemToSelect ? null : itemToSelect.getKey());
@@ -55,11 +65,16 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, Dat
 
 			@NonNull
 			@Override
-			public MapEntry<K, V> cursorToItem(@NonNull Cursor cursor) throws InvalidDbEntry {
+			public MapEntry<K, V> cursorToItem(@NonNull CURSOR cursor) throws InvalidDbEntry {
 				K key = databaseElementHandler.cursorToKey(cursor);
 				return new MapEntry<K, V>(key, databaseElementHandler.cursorToValue(cursor));
 			}
-		});
+		}) {
+			@Override
+			public CURSOR wrapCursor(Cursor cursor) {
+				return source.wrapCursor(cursor);
+			}
+		};
 	}
 
 	@Override
@@ -88,7 +103,7 @@ public class SqliteMapDataSource<K, V> implements MapDataSource<K, V, Long>, Dat
 	}
 
 	@Override
-	public Cursor query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+	public CURSOR query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
 		return source.query(columns, selection, selectionArgs, groupBy, having, orderBy, limit);
 	}
 

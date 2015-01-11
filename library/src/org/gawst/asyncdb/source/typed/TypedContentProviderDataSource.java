@@ -1,4 +1,4 @@
-package org.gawst.asyncdb;
+package org.gawst.asyncdb.source.typed;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -10,14 +10,24 @@ import android.text.TextUtils;
 
 /**
  * A {@link org.gawst.asyncdb.DataSource} reading/writing data using a {@link android.content.ContentProvider ContentProvider}
- * @param <E> Type of the elements read from the {@code Cursor}
+ *
+ * @param <E>      Type of the elements read from the {@code CURSOR}
+ * @param <CURSOR> Wrapper around the raw {@code Cursor} read
+ * @author Created by robUx4 on 11/01/2015.
  */
-public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> {
-	protected final Uri contentProviderUri;
+public abstract class TypedContentProviderDataSource<E, CURSOR extends Cursor> extends TypedCursorDataSource<E, Uri, Uri, CURSOR> {
+	public final Uri contentProviderUri;
 	private final Context context;
 	private final ContentResolver contentResolver;
 
-	public ContentProviderDataSource(@NonNull ContentResolver contentResolver, @NonNull Uri contentProviderUri, @NonNull DatabaseElementHandler<E> databaseElementHandler) {
+	/**
+	 * Contructor.
+	 *
+	 * @param contentResolver        ContentResolver used to access the {@link android.content.ContentProvider ContentProvider}
+	 * @param contentProviderUri     {@link android.net.Uri Uri} to access the data from the {@link android.content.ContentProvider ContentProvider}
+	 * @param databaseElementHandler Handler to transform {@link E} elements to queries and {@code Cursor} to {@link E} elements.
+	 */
+	public TypedContentProviderDataSource(@NonNull ContentResolver contentResolver, @NonNull Uri contentProviderUri, @NonNull TypedDatabaseElementHandler<E, CURSOR> databaseElementHandler) {
 		super(databaseElementHandler);
 		this.context = null;
 		this.contentResolver = contentResolver;
@@ -26,11 +36,12 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> 
 
 	/**
 	 * Contructor.
-	 * @param context Context used to get the {@link android.content.ContentResolver ContentResolver} used to access the {@link android.content.ContentProvider ContentProvider}
-	 * @param contentProviderUri {@link android.net.Uri Uri} to access the data from the {@link android.content.ContentProvider ContentProvider}
+	 *
+	 * @param context                Context used to get the {@link android.content.ContentResolver ContentResolver} used to access the {@link android.content.ContentProvider ContentProvider}
+	 * @param contentProviderUri     {@link android.net.Uri Uri} to access the data from the {@link android.content.ContentProvider ContentProvider}
 	 * @param databaseElementHandler Handler to transform {@link E} elements to queries and {@code Cursor} to {@link E} elements.
 	 */
-	public ContentProviderDataSource(@NonNull Context context, @NonNull Uri contentProviderUri, @NonNull DatabaseElementHandler<E> databaseElementHandler) {
+	public TypedContentProviderDataSource(@NonNull Context context, @NonNull Uri contentProviderUri, @NonNull TypedDatabaseElementHandler<E, CURSOR> databaseElementHandler) {
 		super(databaseElementHandler);
 		this.context = context.getApplicationContext();
 		this.contentResolver = null;
@@ -49,15 +60,15 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> 
 	}
 
 	@Override
-	public Cursor query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+	public CURSOR query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
 		if (!TextUtils.isEmpty(limit)) {
 			if (TextUtils.isEmpty(orderBy)) {
-				orderBy = "LIMIT "+limit;
+				orderBy = "LIMIT " + limit;
 			} else {
-				orderBy += " LIMIT "+limit;
+				orderBy += " LIMIT " + limit;
 			}
 		}
-		return getContentResolver().query(contentProviderUri, columns, selection, selectionArgs, orderBy);
+		return wrapCursor(getContentResolver().query(contentProviderUri, columns, selection, selectionArgs, orderBy));
 	}
 
 	@Override

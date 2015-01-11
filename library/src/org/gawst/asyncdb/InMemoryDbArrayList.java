@@ -1,13 +1,13 @@
 package org.gawst.asyncdb;
 
+import org.gawst.asyncdb.adapter.InMemoryFilteredAdapter;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.gawst.asyncdb.adapter.InMemoryFilteredAdapter;
 
 /**
  * a basic helper class to keep the content of a flat database in an {@link ArrayList}

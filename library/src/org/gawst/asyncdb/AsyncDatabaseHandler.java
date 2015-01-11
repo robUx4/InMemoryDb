@@ -5,6 +5,8 @@ import android.database.Cursor;
 import android.os.Handler;
 import android.os.Looper;
 
+import org.gawst.asyncdb.source.DatabaseSource;
+
 /**
  * Class similar to Android's {@link android.content.AsyncQueryHandler AsyncQueryHandler} to work with an
  * {@link org.gawst.asyncdb.AsynchronousDbHelper} instead of a ContentProvider source
@@ -21,7 +23,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	 * Constructor.
 	 *
 	 * @param asynchronousDbHelper The {@link org.gawst.asyncdb.AsynchronousDbHelper} database to work with.
-	 * @param dataSource           The {@link org.gawst.asyncdb.DatabaseSource} source used by the {@code asynchronousDbHelper}.
+	 * @param dataSource           The {@link org.gawst.asyncdb.source.DatabaseSource} source used by the {@code asynchronousDbHelper}.
 	 */
 	public AsyncDatabaseHandler(AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper, DatabaseSource<INSERT_ID, DATABASE_ID> dataSource) {
 		this.asynchronousDbHelper = asynchronousDbHelper;
@@ -66,7 +68,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous query. When the query is done
 	 * {@link #onQueryComplete} is called.
@@ -121,7 +123,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous query. When the query is done
 	 * {@link #onQueryComplete} is called.
@@ -171,7 +173,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous insert. When the insert operation is
 	 * done {@link #onInsertComplete} is called.
@@ -226,7 +228,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous update. When the update operation is
 	 * done {@link #onUpdateComplete} is called.
@@ -278,7 +280,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous delete. When the delete operation is
 	 * done {@link #onDeleteComplete} is called.

@@ -1,9 +1,9 @@
 package org.gawst.asyncdb;
 
+import android.content.ContentValues;
+
 import java.util.Map;
 import java.util.Set;
-
-import android.content.ContentValues;
 
 public abstract class InMemoryDbMap<K, V, H extends Map<K, V>, INSERT_ID> extends AsynchronousDbHelper<MapEntry<K,V>, INSERT_ID> {
 

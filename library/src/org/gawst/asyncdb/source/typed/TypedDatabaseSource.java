@@ -1,4 +1,4 @@
-package org.gawst.asyncdb;
+package org.gawst.asyncdb.source.typed;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -9,12 +9,13 @@ import android.support.annotation.Nullable;
  * Interface for classes that read/write data in SQL queries
  *
  * @param <INSERT_ID>   Type of element returned by {@link #insert(android.content.ContentValues) insert()}
- * @param <DATABASE_ID> Type of the ID needed to use {@link AsyncDatabaseHandler}
- * @author Created by robUx4 on 06/01/2015.
+ * @param <DATABASE_ID> Type of the ID needed to use {@link org.gawst.asyncdb.AsyncDatabaseHandler}
+ * @param <CURSOR> Wrapper around the raw {@code Cursor} read
+ * @author Created by robUx4 on 11/01/2015.
  */
-public interface DatabaseSource<INSERT_ID, DATABASE_ID> {
+public interface TypedDatabaseSource<INSERT_ID, DATABASE_ID, CURSOR extends Cursor> {
 	/**
-	 * Query the {@link org.gawst.asyncdb.DatabaseSource} with an SQL-like syntax.
+	 * Query the {@link org.gawst.asyncdb.source.DatabaseSource} with an SQL-like syntax.
 	 *
 	 * @param columns       A list of which columns to return. Passing null will
 	 *                      return all columns, which is inefficient.
@@ -39,7 +40,7 @@ public interface DatabaseSource<INSERT_ID, DATABASE_ID> {
 	 *                      formatted as LIMIT clause. Passing null denotes no LIMIT clause.
 	 * @return a {@link android.database.Cursor} containing the result of the selection.
 	 */
-	Cursor query(@Nullable String[] columns, @Nullable String selection, @Nullable String[] selectionArgs,
+	CURSOR query(@Nullable String[] columns, @Nullable String selection, @Nullable String[] selectionArgs,
 	             @Nullable String groupBy, @Nullable String having, @Nullable String orderBy, @Nullable String limit);
 
 	/**
@@ -47,13 +48,13 @@ public interface DatabaseSource<INSERT_ID, DATABASE_ID> {
 	 *
 	 * @param values The initial values for the newly inserted row. The key is the column name for
 	 *               the field. Passing an empty ContentValues will create an empty row.
-	 * @return a {@link INSERT_ID} specific to the {@link org.gawst.asyncdb.DatabaseSource}
+	 * @return a {@link INSERT_ID} specific to the {@link org.gawst.asyncdb.source.DatabaseSource}
 	 * @throws RuntimeException
 	 */
 	INSERT_ID insert(@NonNull ContentValues values) throws RuntimeException;
 
 	/**
-	 * Update row(s) in the {@link org.gawst.asyncdb.DatabaseSource}.
+	 * Update row(s) in the {@link org.gawst.asyncdb.source.DatabaseSource}.
 	 *
 	 * @param updateValues  The new field values. The key is the column name for the field.	A null value will remove an existing field value.
 	 * @param selection     A filter to apply to rows before updating, formatted as an SQL WHERE clause	(excluding the WHERE itself).
@@ -65,7 +66,7 @@ public interface DatabaseSource<INSERT_ID, DATABASE_ID> {
 	int update(@NonNull ContentValues updateValues, @Nullable String selection, @Nullable String[] selectionArgs);
 
 	/**
-	 * Delete row(s) from the {@link org.gawst.asyncdb.DatabaseSource}.
+	 * Delete row(s) from the {@link org.gawst.asyncdb.source.DatabaseSource}.
 	 *
 	 * @param selection     A filter to apply to rows before deleting, formatted as an SQL WHERE clause	(excluding the WHERE itself).
 	 * @param selectionArgs You may include ?s in the selection clause, which
@@ -76,7 +77,12 @@ public interface DatabaseSource<INSERT_ID, DATABASE_ID> {
 	int delete(@Nullable String selection, @Nullable String[] selectionArgs);
 
 	/**
-	 * @return The database ID needed to use {@link AsyncDatabaseHandler}
+	 * @return The database ID needed to use {@link org.gawst.asyncdb.AsyncDatabaseHandler}
 	 */
 	DATABASE_ID getDatabaseId();
+
+	/**
+	 * @return the raw {@link android.database.Cursor} read from the database turned into a more friendly {@link CURSOR}.
+	 */
+	CURSOR wrapCursor(Cursor cursor);
 }
