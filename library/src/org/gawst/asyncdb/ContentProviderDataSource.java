@@ -1,5 +1,6 @@
 package org.gawst.asyncdb;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -14,6 +15,14 @@ import android.text.TextUtils;
 public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> {
 	private final Uri contentProviderUri;
 	private final Context context;
+	private final ContentResolver contentResolver;
+
+	public ContentProviderDataSource(@NonNull ContentResolver contentResolver, @NonNull Uri contentProviderUri, @NonNull DatabaseElementHandler<E> databaseElementHandler) {
+		super(databaseElementHandler);
+		this.context = null;
+		this.contentResolver = contentResolver;
+		this.contentProviderUri = contentProviderUri;
+	}
 
 	/**
 	 * Contructor.
@@ -24,12 +33,19 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> 
 	public ContentProviderDataSource(@NonNull Context context, @NonNull Uri contentProviderUri, @NonNull DatabaseElementHandler<E> databaseElementHandler) {
 		super(databaseElementHandler);
 		this.context = context.getApplicationContext();
+		this.contentResolver = null;
 		this.contentProviderUri = contentProviderUri;
 	}
 
 	@Override
 	public Uri getDatabaseId() {
 		return contentProviderUri;
+	}
+
+	private ContentResolver getContentResolver() {
+		if (null != context)
+			return context.getContentResolver();
+		return contentResolver;
 	}
 
 	@Override
@@ -41,29 +57,32 @@ public class ContentProviderDataSource<E> extends CursorDataSource<E, Uri, Uri> 
 				orderBy += " LIMIT "+limit;
 			}
 		}
-		return context.getContentResolver().query(contentProviderUri, columns, selection, selectionArgs, orderBy);
+		return getContentResolver().query(contentProviderUri, columns, selection, selectionArgs, orderBy);
 	}
 
 	@Override
 	public int clearAllData() {
-		return context.getContentResolver().delete(contentProviderUri, "1", null);
+		return getContentResolver().delete(contentProviderUri, "1", null);
 	}
 
 	@Override
 	public Uri insert(ContentValues values) throws RuntimeException {
-		return context.getContentResolver().insert(contentProviderUri, values);
+		return getContentResolver().insert(contentProviderUri, values);
 	}
 
 	@Override
 	public int update(ContentValues updateValues, String where, String[] selectionArgs) {
-		return context.getContentResolver().update(contentProviderUri, updateValues, where, selectionArgs);
+		return getContentResolver().update(contentProviderUri, updateValues, where, selectionArgs);
 	}
 
 	@Override
 	public int delete(String selection, String[] selectionArgs) {
-		return context.getContentResolver().delete(contentProviderUri, selection, selectionArgs);
+		return getContentResolver().delete(contentProviderUri, selection, selectionArgs);
 	}
 
+	/**
+	 * Does nothing for a {@link android.content.ContentProvider}
+	 */
 	@Override
 	public void eraseSource() {
 		// TODO
