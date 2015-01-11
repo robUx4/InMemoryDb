@@ -341,7 +341,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		return purgeHandler;
 	}
 
-	protected void setPurgeHandler(PurgeHandler purgeHandler) {
+	public void setPurgeHandler(PurgeHandler purgeHandler) {
 		this.purgeHandler = purgeHandler;
 	}
 
