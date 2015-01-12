@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 
+import org.gawst.asyncdb.adapter.UIHandler;
 import org.gawst.asyncdb.purge.PurgeHandler;
 import org.gawst.asyncdb.source.DatabaseSource;
 
@@ -363,7 +364,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 * @see #scheduleRemoveOperation(Object)
 	 * @see #scheduleUpdateOperation(Object)
 	 * @see #scheduleReplaceOperation(Object, Object)
-	 * @see #scheduleSwapOperation(Object, Object) 
+	 * @see #scheduleSwapOperation(Object, Object)
 	 */
 	protected boolean notifyOnSchedule() {
 		return true;
@@ -390,16 +391,21 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		this.purgeHandler = purgeHandler;
 	}
 
-	public void addListener(InMemoryDbListener<E> listener) {
+	public void addListener(final InMemoryDbListener<E> listener) {
 		for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
 			if (l.get()==null)
 				mDbListeners.remove(l);
 			else if (l.get()==listener)
 				return;
 		}
-		if (mDataLoaded.get())
-			listener.onMemoryDbChanged(this);
 		mDbListeners.add(new WeakReference<InMemoryDbListener<E>>(listener));
+		if (mDataLoaded.get())
+			UI_HANDLER.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					listener.onMemoryDbChanged(AsynchronousDbHelper.this);
+				}
+			});
 	}
 
 	public void removeListener(InMemoryDbListener<E> listener) {
@@ -646,14 +652,23 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		return true;
 	}
 
-	protected void notifyDatabaseChanged() {
-		for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
-			final InMemoryDbListener<E> listener = l.get();
-			if (listener==null)
-				mDbListeners.remove(l);
-			else
-				listener.onMemoryDbChanged(this);
+	private final Runnable dataChanged = new Runnable() {
+		@Override
+		public void run() {
+			for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
+				final InMemoryDbListener<E> listener = l.get();
+				if (listener==null)
+					mDbListeners.remove(l);
+				else
+					listener.onMemoryDbChanged(AsynchronousDbHelper.this);
+			}
 		}
+	};
+	private static final UIHandler UI_HANDLER = new UIHandler();
+
+	protected void notifyDatabaseChanged() {
+		UI_HANDLER.removeCallbacks(dataChanged);
+		UI_HANDLER.runOnUiThread(dataChanged);
 	}
 
 	public boolean isDataLoaded() {

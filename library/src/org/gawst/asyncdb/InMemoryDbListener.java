@@ -8,7 +8,7 @@ package org.gawst.asyncdb;
 public interface InMemoryDbListener<E> {
 	/**
 	 * notify the listener that the data of the {@link AsynchronousDbHelper} just changed
-	 * <p>it may be called from any thread, including the internal one
+	 * <p>Called on the UI thread.
 	 * @param db the database which content has changed
 	 */
 	void onMemoryDbChanged(AsynchronousDbHelper<E, ?> db);
