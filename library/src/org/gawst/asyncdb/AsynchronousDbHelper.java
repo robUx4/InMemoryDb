@@ -46,6 +46,8 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private static final int MSG_REPLACE_ITEM      = 107;
 	private static final int MSG_CUSTOM_OPERATION  = 108;
 
+	private static final UIHandler UI_HANDLER = new UIHandler();
+
 	private WeakReference<AsynchronousDbErrorHandler<E>> mErrorHandler; // not protected for now
 	private final CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>> mDbListeners = new CopyOnWriteArrayList<WeakReference<InMemoryDbListener<E>>>();
 
@@ -343,20 +345,34 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		modifyingTransactionLevel.incrementAndGet();
 	}
 
+	private final Runnable dataChanged = new Runnable() {
+		@Override
+		public void run() {
+			for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
+				final InMemoryDbListener<E> listener = l.get();
+				if (listener==null)
+					mDbListeners.remove(l);
+				else
+					listener.onMemoryDbChanged(AsynchronousDbHelper.this);
+			}
+		}
+	};
+
 	/**
 	 * tell the InMemory database we have finish modifying the data at this level.
-	 * Once the pop matches all the push {@link #notifyDatabaseChanged()} is called
-	 * <p> this is useful to avoid multiple calls to {@link #notifyDatabaseChanged()} during a batch of changes
+	 * Once the pop matches all the pushes {@link org.gawst.asyncdb.InMemoryDbListener#onMemoryDbChanged(AsynchronousDbHelper)} is called
+	 * <p> this is useful to avoid multiple calls to {@link org.gawst.asyncdb.InMemoryDbListener#onMemoryDbChanged(AsynchronousDbHelper)} during a batch of changes
 	 * <p> see also {@link #pushModifyingTransaction()}
 	 */
 	protected void popModifyingTransaction() {
 		if (modifyingTransactionLevel.decrementAndGet()==0) {
-			notifyDatabaseChanged();
+			UI_HANDLER.removeCallbacks(dataChanged);
+			UI_HANDLER.runOnUiThread(dataChanged);
 		}
 	}
 
 	/**
-	 * @return {@code true} if {@link #notifyDatabaseChanged} should be called right after a schedule call or after the call is processed.
+	 * @return {@code true} if all {@link org.gawst.asyncdb.InMemoryDbListener#onMemoryDbChanged(AsynchronousDbHelper)} should be called right after a schedule call or after the call is processed.
 	 * @see #scheduleAddOperation(Object)
 	 * @see #scheduleAddOperation(Object, org.gawst.asyncdb.purge.PurgeHandler)
 	 * @see #scheduleAddOperation(java.util.Collection)
@@ -659,25 +675,6 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 */
 	protected boolean shouldReloadAllData() {
 		return true;
-	}
-
-	private final Runnable dataChanged = new Runnable() {
-		@Override
-		public void run() {
-			for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
-				final InMemoryDbListener<E> listener = l.get();
-				if (listener==null)
-					mDbListeners.remove(l);
-				else
-					listener.onMemoryDbChanged(AsynchronousDbHelper.this);
-			}
-		}
-	};
-	private static final UIHandler UI_HANDLER = new UIHandler();
-
-	protected void notifyDatabaseChanged() {
-		UI_HANDLER.removeCallbacks(dataChanged);
-		UI_HANDLER.runOnUiThread(dataChanged);
 	}
 
 	public boolean isDataLoaded() {
