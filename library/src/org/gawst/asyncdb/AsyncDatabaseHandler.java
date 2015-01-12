@@ -357,6 +357,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 
 	/**
 	 * Called when an asynchronous query is completed. The receiver is responsible to close the Cursor.
+	 * </p>Called in the UI thread
 	 *
 	 * @param token  the token to identify the query, passed in from
 	 *               {@link #startQuery}.
@@ -369,6 +370,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 
 	/**
 	 * Called when an asynchronous insert is completed.
+	 * </p>Called in the UI thread
 	 *
 	 * @param token    the token to identify the query, passed in from
 	 *                 {@link #startInsert}.
@@ -382,6 +384,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 
 	/**
 	 * Called when an asynchronous update is completed.
+	 * </p>Called in the UI thread
 	 *
 	 * @param token  the token to identify the query, passed in from
 	 *               {@link #startUpdate}.
@@ -395,6 +398,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 
 	/**
 	 * Called when an asynchronous delete is completed.
+	 * </p>Called in the UI thread
 	 *
 	 * @param token  the token to identify the query, passed in from
 	 *               {@link #startDelete}.
@@ -408,6 +412,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 
 	/**
 	 * Called when an asynchronous {@code Runnable} is completed.
+	 * </p>Called in the UI thread
 	 *
 	 * @param token  the token to identify the query, passed in from
 	 *               {@link #startRunnable}.
