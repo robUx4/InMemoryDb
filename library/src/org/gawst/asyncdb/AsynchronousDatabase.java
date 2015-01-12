@@ -31,6 +31,11 @@ public abstract class AsynchronousDatabase<E, INSERT_ID> extends AsynchronousDbH
 		return false;
 	}
 
+	@Override
+	protected boolean notifyOnSchedule() {
+		return false;
+	}
+
 	/**
 	 * Add a new element in the database (asynchronous)
 	 * <p>Helper call for {@link AsynchronousDbHelper#scheduleAddOperation(Object, org.gawst.asyncdb.purge.PurgeHandler)}

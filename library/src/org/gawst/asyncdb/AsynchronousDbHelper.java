@@ -114,7 +114,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 				case MSG_REMOVE_ITEM:
 					@SuppressWarnings("unchecked")
 					E itemToDelete = (E) msg.obj;
-					remoteItem(itemToDelete);
+					removeItem(itemToDelete);
 					break;
 
 				case MSG_UPDATE_ITEM:
@@ -192,8 +192,14 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		} catch (Exception e) {
 			notifyAddItemFailed(item, addValues, e);
 		} finally {
-			if (itemAdded && purgeHandler != null) {
-				purgeHandler.onElementsAdded(AsynchronousDbHelper.this);
+			if (itemAdded) {
+				if (purgeHandler != null) {
+					purgeHandler.onElementsAdded(AsynchronousDbHelper.this);
+				}
+				if (!notifyOnSchedule()) {
+					pushModifyingTransaction();
+					popModifyingTransaction();
+				}
 			}
 		}
 	}
@@ -213,16 +219,27 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 				notifyAddItemFailed(item, addValues, e);
 			}
 		}
-		if (itemsAdded && purgeHandler != null) {
-			purgeHandler.onElementsAdded(AsynchronousDbHelper.this);
+		if (itemsAdded) {
+			if (purgeHandler != null) {
+				purgeHandler.onElementsAdded(AsynchronousDbHelper.this);
+			}
+			if (!notifyOnSchedule()) {
+				pushModifyingTransaction();
+				popModifyingTransaction();
+			}
 		}
 	}
 
-	private void remoteItem(@NonNull E itemToDelete) {
+	private void removeItem(@NonNull E itemToDelete) {
 		try {
 			if (DEBUG_DB) LogManager.logger.d(TAG, name + " remove " + itemToDelete);
-			if (!dataSource.delete(itemToDelete))
+			if (!dataSource.delete(itemToDelete)) {
 				notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item " + itemToDelete + " in " + name));
+			} else if (!notifyOnSchedule()) {
+				pushModifyingTransaction();
+				popModifyingTransaction();
+			}
+
 		} catch (Throwable e) {
 			notifyRemoveItemFailed(itemToDelete, e);
 		}
@@ -234,6 +251,9 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 			updateValues = getValuesFromData(itemToUpdate);
 			if (!directUpdate(itemToUpdate, updateValues)) {
 				notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update " + updateValues + " in " + name));
+			} else if (!notifyOnSchedule()) {
+				pushModifyingTransaction();
+				popModifyingTransaction();
 			}
 		} catch (Throwable e) {
 			notifyUpdateItemFailed(itemToUpdate, updateValues, e);
@@ -243,7 +263,12 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private void replaceItem(@NonNull E src, @NonNull E replacement) {
 		try {
 			ContentValues replacementValues = getValuesFromData(src);
-			directUpdate(replacement, replacementValues);
+			if (directUpdate(replacement, replacementValues)) {
+				if (!notifyOnSchedule()) {
+					pushModifyingTransaction();
+					popModifyingTransaction();
+				}
+			}
 		} catch (Throwable e) {
 			notifyReplaceItemFailed(src, replacement, e);
 		}
@@ -269,6 +294,10 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 			}
 		} catch (Throwable e) {
 			notifyUpdateItemFailed(second, newValuesB, e);
+		}
+		if (!notifyOnSchedule()) {
+			pushModifyingTransaction();
+			popModifyingTransaction();
 		}
 	}
 
@@ -323,6 +352,21 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		if (modifyingTransactionLevel.decrementAndGet()==0) {
 			notifyDatabaseChanged();
 		}
+	}
+
+	/**
+	 * @return {@code true} if {@link #notifyDatabaseChanged} should be called right after a schedule call or after the call is processed.
+	 * @see #scheduleAddOperation(Object)
+	 * @see #scheduleAddOperation(Object, org.gawst.asyncdb.purge.PurgeHandler)
+	 * @see #scheduleAddOperation(java.util.Collection)
+	 * @see #scheduleAddOperation(java.util.Collection, org.gawst.asyncdb.purge.PurgeHandler)
+	 * @see #scheduleRemoveOperation(Object)
+	 * @see #scheduleUpdateOperation(Object)
+	 * @see #scheduleReplaceOperation(Object, Object)
+	 * @see #scheduleSwapOperation(Object, Object) 
+	 */
+	protected boolean notifyOnSchedule() {
+		return true;
 	}
 
 	protected void clearDataInMemory() {}
@@ -470,8 +514,10 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	protected final void scheduleAddOperation(E item, PurgeHandler purgeHandler) {
 		if (null != item) {
 			saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEM, new Pair<E, PurgeHandler>(item, purgeHandler)));
-			pushModifyingTransaction();
-			popModifyingTransaction();
+			if (notifyOnSchedule()) {
+				pushModifyingTransaction();
+				popModifyingTransaction();
+			}
 		}
 	}
 
@@ -493,8 +539,10 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	protected final void scheduleAddOperation(Collection<? extends E> items, PurgeHandler purgeHandler) {
 		if (null != items) {
 			saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_STORE_ITEMS, new Pair<Collection<? extends E>, PurgeHandler>(items, purgeHandler)));
-			pushModifyingTransaction();
-			popModifyingTransaction();
+			if (notifyOnSchedule()) {
+				pushModifyingTransaction();
+				popModifyingTransaction();
+			}
 		}
 	}
 
@@ -508,8 +556,10 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	protected final void scheduleUpdateOperation(@NonNull E item) {
 		if (null != item) {
 			saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_UPDATE_ITEM, item));
-			pushModifyingTransaction();
-			popModifyingTransaction();
+			if (notifyOnSchedule()) {
+				pushModifyingTransaction();
+				popModifyingTransaction();
+			}
 		}
 	}
 
@@ -522,14 +572,18 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 */
 	protected final void scheduleReplaceOperation(@NonNull E original, @NonNull E replacement) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REPLACE_ITEM, new Pair<E, E>(original, replacement)));
-		pushModifyingTransaction();
-		popModifyingTransaction();
+		if (notifyOnSchedule()) {
+			pushModifyingTransaction();
+			popModifyingTransaction();
+		}
 	}
 
 	protected final void scheduleSwapOperation(@NonNull E itemA, @NonNull E itemB) {
 		saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_SWAP_ITEMS, new Pair<E,E>(itemA, itemB)));
-		pushModifyingTransaction();
-		popModifyingTransaction();
+		if (notifyOnSchedule()) {
+			pushModifyingTransaction();
+			popModifyingTransaction();
+		}
 	}
 
 	/**
@@ -540,8 +594,10 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	protected final void scheduleRemoveOperation(E item) {
 		if (null != item) {
 			saveStoreHandler.sendMessage(Message.obtain(saveStoreHandler, MSG_REMOVE_ITEM, item));
-			pushModifyingTransaction();
-			popModifyingTransaction();
+			if (notifyOnSchedule()) {
+				pushModifyingTransaction();
+				popModifyingTransaction();
+			}
 		}
 	}
 
