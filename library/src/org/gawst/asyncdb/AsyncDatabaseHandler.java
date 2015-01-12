@@ -1,11 +1,11 @@
 package org.gawst.asyncdb;
 
+import org.gawst.asyncdb.source.DatabaseSource;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Handler;
 import android.os.Looper;
-
-import org.gawst.asyncdb.source.DatabaseSource;
 
 /**
  * Class similar to Android's {@link android.content.AsyncQueryHandler AsyncQueryHandler} to work with an
@@ -212,8 +212,9 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 				} catch (Exception e) {
 					inserted1 = null;
 				} finally {
-					if (inserted1 != null)
-						asynchronousDbHelper.getPurgeHandler().onElementsAdded(db);
+					if (inserted1 != null) {
+						asynchronousDbHelper.triggerPurgeHandler();
+					}
 				}
 
 				final INSERT_ID insertId = inserted1;

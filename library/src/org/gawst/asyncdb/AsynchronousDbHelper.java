@@ -391,6 +391,15 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		this.purgeHandler = purgeHandler;
 	}
 
+	/**
+	 * Call this after an element is inserted for the purge to do its job.
+	 */
+	public void triggerPurgeHandler() {
+		if (null != purgeHandler) {
+			purgeHandler.onElementsAdded(this);
+		}
+	}
+
 	public void addListener(final InMemoryDbListener<E> listener) {
 		for (WeakReference<InMemoryDbListener<E>> l : mDbListeners) {
 			if (l.get()==null)
