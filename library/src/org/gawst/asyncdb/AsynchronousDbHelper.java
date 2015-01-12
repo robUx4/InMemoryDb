@@ -221,7 +221,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private void remoteItem(@NonNull E itemToDelete) {
 		try {
 			if (DEBUG_DB) LogManager.logger.d(TAG, name + " remove " + itemToDelete);
-			if (dataSource.delete(itemToDelete))
+			if (!dataSource.delete(itemToDelete))
 				notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item " + itemToDelete + " in " + name));
 		} catch (Throwable e) {
 			notifyRemoveItemFailed(itemToDelete, e);
