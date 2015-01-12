@@ -72,7 +72,7 @@ public abstract class TypedSqliteMapDataSource<K, V, CURSOR extends Cursor> impl
 		}) {
 			@Override
 			public CURSOR wrapCursor(Cursor cursor) {
-				return source.wrapCursor(cursor);
+				return TypedSqliteMapDataSource.this.wrapCursor(cursor);
 			}
 		};
 	}
