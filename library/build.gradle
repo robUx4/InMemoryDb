@@ -15,7 +15,7 @@ buildscript {
 }
 
 dependencies {
-    def artifactSupportAnnotations = 'com.android.support:support-annotations:21.+'
+    def artifactSupportAnnotations = 'com.android.support:support-annotations:21.0.3'
     def useLocalAnnotations = false
     def localAnnotations = ':support-annotations'
 
