@@ -53,11 +53,13 @@ public abstract class TypedSqliteMapDataSource<K, V, CURSOR extends Cursor> impl
 	public TypedSqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final MapDatabaseElementHandler<K, V> databaseElementHandler) {
 		if (databaseElementHandler == null) throw new NullPointerException("null MapCursorSourceHandler in " + this);
 		this.source = new TypedSqliteDataSource<MapEntry<K, V>, CURSOR>(context, db, tableName, databaseName, new TypedDatabaseElementHandler<MapEntry<K,V>, CURSOR>() {
+			@NonNull
 			@Override
 			public String getItemSelectClause(@Nullable MapEntry<K, V> itemToSelect) {
 				return databaseElementHandler.getKeySelectClause(null == itemToSelect ? null : itemToSelect.getKey());
 			}
 
+			@NonNull
 			@Override
 			public String[] getItemSelectArgs(@NonNull MapEntry<K, V> itemToSelect) {
 				return databaseElementHandler.getKeySelectArgs(itemToSelect.getKey());

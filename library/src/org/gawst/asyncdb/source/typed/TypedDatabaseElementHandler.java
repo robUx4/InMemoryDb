@@ -23,6 +23,7 @@ public interface TypedDatabaseElementHandler<E, CURSOR extends Cursor> {
 	 * @return a {@link String} for the whereClause in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[]) SQLiteDatabase.update()}
 	 * or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[]) SQLiteDatabase.delete()}
 	 */
+	@NonNull
 	String getItemSelectClause(@Nullable E itemToSelect);
 
 	/**
@@ -33,6 +34,7 @@ public interface TypedDatabaseElementHandler<E, CURSOR extends Cursor> {
 	 * @return a {@link String} array for the whereArgs in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[]) SQLiteDatabase.update()}
 	 * or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[]) SQLiteDatabase.delete()}
 	 */
+	@NonNull
 	String[] getItemSelectArgs(@NonNull E itemToSelect);
 
 	/**

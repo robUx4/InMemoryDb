@@ -21,6 +21,7 @@ public interface MapDatabaseElementHandler<K, V> {
 	 * @return a {@link String} for the whereClause in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
 	 * @see #getKeySelectArgs(Object)
 	 */
+	@NonNull
 	String getKeySelectClause(@Nullable K itemToSelect);
 
 	/**
@@ -30,6 +31,7 @@ public interface MapDatabaseElementHandler<K, V> {
 	 * @return a {@link String} array for the whereArgs in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
 	 * @see #getKeySelectClause(Object)
 	 */
+	@NonNull
 	String[] getKeySelectArgs(@NonNull K itemToSelect);
 
 	/**
