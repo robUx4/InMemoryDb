@@ -154,22 +154,22 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	};
 
 	private void loadInMemory() {
-		if (shouldReloadAllData()) {
-			startLoadingInMemory();
-			try {
+		startLoadingInMemory();
+		try {
+			if (shouldReloadAllData()) {
 				try {
 					dataSource.queryAll(AsynchronousDbHelper.this);
 				} catch (Exception e) {
 					LogManager.logger.w(STARTUP_TAG, "Can't query table " + dataSource + " in " + name, e);
 				}
-			} catch (Exception e) {
-				if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
-					notifyDatabaseCorrupted(dataSource, name, e);
-				else
-					LogManager.logger.w(STARTUP_TAG, "Can't open database " + name, e);
-			} finally {
-				finishLoadingInMemory();
 			}
+		} catch (Exception e) {
+			if (e instanceof SQLiteDatabaseCorruptException || e.getCause() instanceof SQLiteDatabaseCorruptException)
+				notifyDatabaseCorrupted(dataSource, name, e);
+			else
+				LogManager.logger.w(STARTUP_TAG, "Can't open database " + name, e);
+		} finally {
+			finishLoadingInMemory();
 		}
 	}
 
