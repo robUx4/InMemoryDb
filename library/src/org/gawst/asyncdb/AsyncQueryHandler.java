@@ -15,7 +15,7 @@ import org.gawst.asyncdb.source.DatabaseSource;
  * Class to mimick exactly the API of Android's {@link android.content.AsyncQueryHandler AsyncQueryHandler} with a {@link org.gawst.asyncdb.AsynchronousDbHelper} source
  *
  * @author Created by robUx4 on 09/01/2015.
- * @see org.gawst.asyncdb.AsynchronousDbHelper.AsyncHandler AsyncHandler for a cleaner version
+ * @see AsyncDbHelperHandler AsyncDbHelperHandler for a cleaner version
  */
 public class AsyncQueryHandler extends AsyncDatabaseHandler<Uri, Uri> {
 

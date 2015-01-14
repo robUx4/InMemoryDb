@@ -11,7 +11,7 @@ import android.os.Looper;
  * Class similar to Android's {@link android.content.AsyncQueryHandler AsyncQueryHandler} to work with an
  * {@link org.gawst.asyncdb.AsynchronousDbHelper} instead of a ContentProvider source
  *
- * @see org.gawst.asyncdb.AsynchronousDbHelper.AsyncHandler AsyncHandler for a ready to use version
+ * @see AsyncDbHelperHandler AsyncDbHelperHandler for a ready to use version
  */
 public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 

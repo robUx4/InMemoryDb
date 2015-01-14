@@ -3,7 +3,6 @@ package org.gawst.asyncdb;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -13,7 +12,6 @@ import android.util.Pair;
 
 import org.gawst.asyncdb.adapter.UIHandler;
 import org.gawst.asyncdb.purge.PurgeHandler;
-import org.gawst.asyncdb.source.DatabaseSource;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -28,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @param <E> the type of items stored in memory
  * @author Steve Lhomme
- * @see org.gawst.asyncdb.AsynchronousDbHelper.AsyncHandler
+ * @see AsyncDbHelperHandler
  */
 public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.BatchReadingCallback<E> {
 
@@ -53,7 +51,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
-	private final DataSource<E, INSERT_ID> dataSource;
+	final DataSource<E, INSERT_ID> dataSource;
 	private final String name;
 
 	private PurgeHandler purgeHandler;
@@ -64,11 +62,13 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	}
 
 	/**
-	 * A class similar to {@link android.content.AsyncQueryHandler} to do simple calls asynchronously with a callback when it's done
+	 * A class similar to {@link android.content.AsyncQueryHandler AsyncQueryHandler} to do simple calls asynchronously with a callback when it's done.
+	 * Only works with {@link AsynchronousDbHelper} classes that use a {@link org.gawst.asyncdb.source.DatabaseSource DatabaseSource} source.
+	 * <p>You can create your own with custom callback handling with {@link org.gawst.asyncdb.AsyncDbHelperHandler}.
 	 */
-	public class AsyncHandler extends AsyncDatabaseHandler<INSERT_ID, Uri> {
+	public class AsyncHandler extends AsyncDbHelperHandler<INSERT_ID> {
 		public AsyncHandler() {
-			super(AsynchronousDbHelper.this, (DatabaseSource<INSERT_ID, Uri>) AsynchronousDbHelper.this.dataSource);
+			super(AsynchronousDbHelper.this);
 		}
 	}
 
