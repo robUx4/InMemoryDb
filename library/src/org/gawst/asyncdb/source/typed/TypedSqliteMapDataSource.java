@@ -133,4 +133,9 @@ public abstract class TypedSqliteMapDataSource<K, V, CURSOR extends Cursor> impl
 	public void eraseSource() {
 		source.eraseSource();
 	}
+
+	@Override
+	public String toString() {
+		return "TypedSqliteMap:"+source;
+	}
 }

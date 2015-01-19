@@ -160,7 +160,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 				try {
 					dataSource.queryAll(AsynchronousDbHelper.this);
 				} catch (Exception e) {
-					LogManager.logger.w(STARTUP_TAG, "Can't query table " + dataSource + " in " + name, e);
+					LogManager.logger.w(STARTUP_TAG, "Can't query source " + dataSource + " in " + name, e);
 				}
 			}
 		} catch (Exception e) {

@@ -68,4 +68,16 @@ public abstract class TypedCursorDataSource<E, INSERT_ID, DATABASE_ID, CURSOR ex
 	public boolean deleteInvalidEntry(InvalidEntry invalidEntry) {
 		return delete(databaseElementHandler.getItemSelectClause(null), invalidEntry.getSelectArgs()) != 0;
 	}
+
+	protected String getToStringHeader() {
+		return "TypedCursor";
+	}
+
+	/**
+	 * @see #getToStringHeader()
+	 */
+	@Override
+	public final String toString() {
+		return "{"+getToStringHeader()+" eltHandler="+databaseElementHandler+'}';
+	}
 }

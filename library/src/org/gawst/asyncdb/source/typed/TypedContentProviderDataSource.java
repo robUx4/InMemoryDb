@@ -98,4 +98,9 @@ public abstract class TypedContentProviderDataSource<E, CURSOR extends Cursor> e
 	public void eraseSource() {
 		// TODO
 	}
+
+	@Override
+	protected String getToStringHeader() {
+		return "TypedContentProvider:"+contentProviderUri;
+	}
 }

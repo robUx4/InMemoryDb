@@ -99,4 +99,9 @@ public abstract class TypedSqliteDataSource<E, CURSOR extends Cursor> extends Ty
 		File corruptedDbFile = context.getDatabasePath(databaseName);
 		corruptedDbFile.delete();
 	}
+
+	@Override
+	protected String getToStringHeader() {
+		return "TypedSqlite:"+databaseName+" table="+tableName;
+	}
 }
