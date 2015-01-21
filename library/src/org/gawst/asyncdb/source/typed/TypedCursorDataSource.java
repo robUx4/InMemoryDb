@@ -29,7 +29,7 @@ public abstract class TypedCursorDataSource<E, INSERT_ID, DATABASE_ID, CURSOR ex
 	 */
 	public TypedCursorDataSource(@NonNull TypedDatabaseElementHandler<E, CURSOR> databaseElementHandler) {
 		if (databaseElementHandler == null)
-			throw new NullPointerException("null CursorSourceHandler in " + this);
+			throw new NullPointerException("null TypedDatabaseElementHandler in " + this);
 		this.databaseElementHandler = databaseElementHandler;
 	}
 

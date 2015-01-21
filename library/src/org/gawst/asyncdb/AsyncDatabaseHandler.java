@@ -1,6 +1,6 @@
 package org.gawst.asyncdb;
 
-import org.gawst.asyncdb.source.DatabaseSource;
+import org.gawst.asyncdb.source.typed.TypedDatabaseSource;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -17,15 +17,15 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 
 	private final AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper;
 	private static final Handler mHandler = new Handler(Looper.getMainLooper());
-	protected final DatabaseSource<INSERT_ID, DATABASE_ID> dataSource;
+	protected final TypedDatabaseSource<INSERT_ID, DATABASE_ID, ?> dataSource;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param asynchronousDbHelper The {@link org.gawst.asyncdb.AsynchronousDbHelper} database to work with.
-	 * @param dataSource           The {@link org.gawst.asyncdb.source.DatabaseSource} source used by the {@code asynchronousDbHelper}.
+	 * @param dataSource           The {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} source used by the {@code asynchronousDbHelper}.
 	 */
-	public AsyncDatabaseHandler(AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper, DatabaseSource<INSERT_ID, DATABASE_ID> dataSource) {
+	public AsyncDatabaseHandler(AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper, TypedDatabaseSource<INSERT_ID, DATABASE_ID, ?> dataSource) {
 		this.asynchronousDbHelper = asynchronousDbHelper;
 		this.dataSource = dataSource;
 	}
@@ -39,7 +39,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 		return asynchronousDbHelper;
 	}
 
-	public DatabaseSource<INSERT_ID, DATABASE_ID> getDataSource() {
+	public TypedDatabaseSource<INSERT_ID, DATABASE_ID, ?> getDataSource() {
 		return dataSource;
 	}
 
@@ -68,7 +68,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous query. When the query is done
 	 * {@link #onQueryComplete} is called.
@@ -123,7 +123,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous query. When the query is done
 	 * {@link #onQueryComplete} is called.
@@ -173,7 +173,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous insert. When the insert operation is
 	 * done {@link #onInsertComplete} is called.
@@ -229,7 +229,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous update. When the update operation is
 	 * done {@link #onUpdateComplete} is called.
@@ -281,7 +281,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.DatabaseSource} will be used.</b>
+	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} will be used.</b>
 	 * <p/>
 	 * This method begins an asynchronous delete. When the delete operation is
 	 * done {@link #onDeleteComplete} is called.

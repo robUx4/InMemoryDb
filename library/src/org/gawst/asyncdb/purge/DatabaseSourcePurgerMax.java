@@ -1,9 +1,9 @@
 package org.gawst.asyncdb.purge;
 
+import org.gawst.asyncdb.source.typed.TypedDatabaseSource;
+
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
-
-import org.gawst.asyncdb.source.DatabaseSource;
 
 /**
  * Abstract helper class to purge a database with a maximum number of items and based on a sorted field.
@@ -20,7 +20,7 @@ public abstract class DatabaseSourcePurgerMax<LAST_ELEMENT> extends DatabaseSour
 	 * @param fieldName      Name of the sorted field in the database to determine 'old' elements
 	 * @param databaseSource Database source (Sqlite, ContentProvider)
 	 */
-	public DatabaseSourcePurgerMax(int maxItems, String fieldName, DatabaseSource<?, ?> databaseSource) {
+	public DatabaseSourcePurgerMax(int maxItems, String fieldName, TypedDatabaseSource<?, ?, ?> databaseSource) {
 		this(maxItems, 1, fieldName, databaseSource);
 	}
 
@@ -32,7 +32,7 @@ public abstract class DatabaseSourcePurgerMax<LAST_ELEMENT> extends DatabaseSour
 	 * @param fieldName            Name of the sorted field in the database to determine 'old' elements
 	 * @param databaseSource       Database source (Sqlite, ContentProvider)
 	 */
-	public DatabaseSourcePurgerMax(int maxItems, int checkInsertFrequency, String fieldName, DatabaseSource<?, ?> databaseSource) {
+	public DatabaseSourcePurgerMax(int maxItems, int checkInsertFrequency, String fieldName, TypedDatabaseSource<?, ?, ?> databaseSource) {
 		super(maxItems, checkInsertFrequency, databaseSource);
 		this.fieldName = fieldName;
 	}

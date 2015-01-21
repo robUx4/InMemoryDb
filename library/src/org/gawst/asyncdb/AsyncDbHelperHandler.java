@@ -1,6 +1,6 @@
 package org.gawst.asyncdb;
 
-import org.gawst.asyncdb.source.DatabaseSource;
+import org.gawst.asyncdb.source.typed.TypedDatabaseSource;
 
 import android.net.Uri;
 
@@ -16,6 +16,6 @@ public class AsyncDbHelperHandler<INSERT_ID> extends AsyncDatabaseHandler<INSERT
 	 * @param asynchronousDbHelper
 	 */
 	public AsyncDbHelperHandler(AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper) {
-		super(asynchronousDbHelper, (DatabaseSource<INSERT_ID, Uri>) asynchronousDbHelper.dataSource);
+		super(asynchronousDbHelper, (TypedDatabaseSource<INSERT_ID, Uri, ?>) asynchronousDbHelper.dataSource);
 	}
 }

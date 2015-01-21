@@ -1,13 +1,13 @@
 package org.gawst.asyncdb.purge;
 
-import android.database.Cursor;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import org.gawst.asyncdb.AsynchronousDbHelper;
 import org.gawst.asyncdb.AsynchronousDbOperation;
 import org.gawst.asyncdb.LogManager;
-import org.gawst.asyncdb.source.DatabaseSource;
+import org.gawst.asyncdb.source.typed.TypedDatabaseSource;
+
+import android.database.Cursor;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
  * Abstract helper class to purge a database.
@@ -15,7 +15,7 @@ import org.gawst.asyncdb.source.DatabaseSource;
  * @param <LAST_ELEMENT> Type of the last element to keep during the purge.
  */
 public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler {
-	private final DatabaseSource<?, ?> dataSource;
+	private final TypedDatabaseSource<?, ?, ? extends Cursor> dataSource;
 	private final int maxItems;
 	private final int checkInsertFrequency;
 	private Integer nextCheck;
@@ -26,7 +26,7 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 	 * @param maxItems       Maximum number of items to keep in the database.
 	 * @param databaseSource Database source (Sqlite, ContentProvider)
 	 */
-	public DatabaseSourcePurger(int maxItems, DatabaseSource<?, ?> databaseSource) {
+	public DatabaseSourcePurger(int maxItems, TypedDatabaseSource<?, ?, ?> databaseSource) {
 		this(maxItems, 1, databaseSource);
 	}
 
@@ -37,7 +37,7 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 	 * @param checkInsertFrequency The number of insertion before a purge is done. A purge is done after the first insertion.
 	 * @param databaseSource       Database source (Sqlite, ContentProvider)
 	 */
-	public DatabaseSourcePurger(int maxItems, int checkInsertFrequency, DatabaseSource<?, ?> databaseSource) {
+	public DatabaseSourcePurger(int maxItems, int checkInsertFrequency, TypedDatabaseSource<?, ?, ?> databaseSource) {
 		this.dataSource = databaseSource;
 		if (maxItems <= 0) throw new IllegalArgumentException("the max item in AsyncHandlerPurge must be positive");
 		if (checkInsertFrequency <= 0) throw new IllegalArgumentException("the insert purge frequency in AsyncHandlerPurge must be positive");

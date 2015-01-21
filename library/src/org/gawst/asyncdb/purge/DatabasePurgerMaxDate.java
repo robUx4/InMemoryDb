@@ -1,9 +1,9 @@
 package org.gawst.asyncdb.purge;
 
+import org.gawst.asyncdb.source.typed.TypedDatabaseSource;
+
 import android.database.Cursor;
 import android.support.annotation.Nullable;
-
-import org.gawst.asyncdb.source.DatabaseSource;
 
 /**
  * Helper class to purge a database with a maximum number of items and based on a date field.
@@ -18,7 +18,7 @@ public class DatabasePurgerMaxDate extends DatabaseSourcePurgerMax<Long> {
 	 * @param dateField      Date field in the database.
 	 * @param databaseSource Database source (Sqlite, ContentProvider)
 	 */
-	public DatabasePurgerMaxDate(int maxItems, String dateField, DatabaseSource<?, ?> databaseSource) {
+	public DatabasePurgerMaxDate(int maxItems, String dateField, TypedDatabaseSource<?, ?, ?> databaseSource) {
 		super(maxItems, dateField, databaseSource);
 	}
 
@@ -30,7 +30,7 @@ public class DatabasePurgerMaxDate extends DatabaseSourcePurgerMax<Long> {
 	 * @param dateField            Date field in the database.
 	 * @param databaseSource       Database source (Sqlite, ContentProvider)
 	 */
-	public DatabasePurgerMaxDate(int maxItems, int checkInsertFrequency, String dateField, DatabaseSource<?, ?> databaseSource) {
+	public DatabasePurgerMaxDate(int maxItems, int checkInsertFrequency, String dateField, TypedDatabaseSource<?, ?, ?> databaseSource) {
 		super(maxItems, checkInsertFrequency, dateField, databaseSource);
 	}
 

@@ -63,7 +63,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * A class similar to {@link android.content.AsyncQueryHandler AsyncQueryHandler} to do simple calls asynchronously with a callback when it's done.
-	 * Only works with {@link AsynchronousDbHelper} classes that use a {@link org.gawst.asyncdb.source.DatabaseSource DatabaseSource} source.
+	 * Only works with {@link AsynchronousDbHelper} classes that use a {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource DatabaseSource} source.
 	 * <p>You can create your own with custom callback handling with {@link org.gawst.asyncdb.AsyncDbHelperHandler}.
 	 */
 	public class AsyncHandler extends AsyncDbHelperHandler<INSERT_ID> {
