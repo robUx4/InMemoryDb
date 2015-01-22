@@ -77,12 +77,12 @@ public abstract class TypedContentProviderDataSource<E, CURSOR extends Cursor> e
 	}
 
 	@Override
-	public Uri insert(ContentValues values) throws RuntimeException {
+	public Uri insert(@NonNull ContentValues values) throws RuntimeException {
 		return getContentResolver().insert(contentProviderUri, values);
 	}
 
 	@Override
-	public int update(ContentValues updateValues, String where, String[] selectionArgs) {
+	public int update(@NonNull ContentValues updateValues, String where, String[] selectionArgs) {
 		return getContentResolver().update(contentProviderUri, updateValues, where, selectionArgs);
 	}
 

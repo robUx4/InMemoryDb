@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @param <E> the type of items stored in memory
  * @author Steve Lhomme
  * @see AsyncDbHelperHandler
+ * @see org.gawst.asyncdb.AsynchronousDatabase
  */
 public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.BatchReadingCallback<E> {
 
