@@ -1,6 +1,7 @@
 package org.gawst.asyncdb;
 
 import android.content.ContentValues;
+import android.support.annotation.Nullable;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -90,11 +91,21 @@ public abstract class InMemoryLruCache<K,V, INSERT_ID> extends AsynchronousDbHel
 		map.put(entry.first, entry.second);
 	}
 
-	protected abstract ContentValues getValuesFromData(K key, V value) throws RuntimeException;
+	/**
+	 * Transform the element in memory into {@link android.content.ContentValues} that can be saved in the database.
+	 * <p> you can return null and fill the database yourself if you need to.
+	 * @param key Map key value of the element to insert/update.
+	 * @param value Map value of the element to insert/update.
+	 * @param update {@code true} if the values are for an update, not an insert, you can omit keys there.
+	 * @return a ContentValues element with all data that can be used to restore the data later from the database.
+	 * @throws RuntimeException
+	 */
+	@Nullable
+	protected abstract ContentValues getValuesFromData(K key, V value, boolean update) throws RuntimeException;
 
 	@Override
-	protected final ContentValues getValuesFromData(MapEntry<K, V> data) throws RuntimeException {
-		return getValuesFromData(data.getKey(), data.getValue());
+	protected final ContentValues getValuesFromData(MapEntry<K, V> data, boolean update) throws RuntimeException {
+		return getValuesFromData(data.getKey(), data.getValue(), update);
 	}
 
 	/**

@@ -43,7 +43,7 @@ public abstract class InMemoryDbSet<E, S extends Set<E>, INSERT_ID> extends Asyn
 	 * transform the {@link Cursor} into an element that can be used in memory
 	 * @param c the Cursor to transform
 	 * @return a formated element used in memory
-	 * @see AsynchronousDbHelper#getValuesFromData(Object)
+	 * @see AsynchronousDbHelper#getValuesFromData(Object, boolean)
 	 */
 	protected abstract E getDataFromCursor(Cursor c);
 

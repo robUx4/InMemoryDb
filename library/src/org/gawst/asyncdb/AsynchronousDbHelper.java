@@ -187,7 +187,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		ContentValues addValues = null;
 		boolean itemAdded = false;
 		try {
-			addValues = getValuesFromData(item);
+			addValues = getValuesFromData(item, false);
 			if (addValues != null) {
 				directStoreItem(addValues);
 				itemAdded = true;
@@ -213,7 +213,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		for (E item : items) {
 			addValues = null;
 			try {
-				addValues = getValuesFromData(item);
+				addValues = getValuesFromData(item, false);
 				if (addValues != null) {
 					directStoreItem(addValues);
 					itemsAdded = true;
@@ -251,7 +251,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private void updateItem(@NonNull E itemToUpdate) {
 		ContentValues updateValues = null;
 		try {
-			updateValues = getValuesFromData(itemToUpdate);
+			updateValues = getValuesFromData(itemToUpdate, true);
 			if (!directUpdate(itemToUpdate, updateValues)) {
 				notifyUpdateItemFailed(itemToUpdate, updateValues, new RuntimeException("Can't update " + updateValues + " in " + name));
 			} else if (!notifyOnSchedule()) {
@@ -265,7 +265,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	private void replaceItem(@NonNull E src, @NonNull E replacement) {
 		try {
-			ContentValues replacementValues = getValuesFromData(src);
+			ContentValues replacementValues = getValuesFromData(src, true);
 			if (directUpdate(replacement, replacementValues)) {
 				if (!notifyOnSchedule()) {
 					pushModifyingTransaction();
@@ -280,7 +280,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private void swapItems(@NonNull E first, @NonNull E second) {
 		ContentValues newValuesA = null;
 		try {
-			newValuesA = getValuesFromData(second);
+			newValuesA = getValuesFromData(second, true);
 			if (newValuesA != null) {
 				if (DEBUG_DB) LogManager.logger.d(TAG, name + " update " + second + " with " + newValuesA);
 				directUpdate(first, newValuesA);
@@ -290,7 +290,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 		}
 		ContentValues newValuesB = null;
 		try {
-			newValuesB = getValuesFromData(first);
+			newValuesB = getValuesFromData(first, true);
 			if (newValuesB != null) {
 				if (DEBUG_DB) LogManager.logger.d(TAG, name + " update " + first + " with " + newValuesB);
 				directUpdate(second, newValuesB);
@@ -520,12 +520,14 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/**
 	 * Transform the element in memory into {@link android.content.ContentValues} that can be saved in the database.
-	 * <p> you can return null and fill the database yourself if you need to
+	 * <p> you can return null and fill the database yourself if you need to.
 	 * @param data the data to transform
-	 * @return a ContentValues element with all data that can be used to restore the data later from the database
+	 * @param update {@code true} if the values are for an update, not an insert, you can omit keys there.
+	 * @return a ContentValues element with all data that can be used to restore the data later from the database.
 	 * @see #addItemInMemory(Object)
 	 */
-	protected abstract ContentValues getValuesFromData(E data) throws RuntimeException;
+	@Nullable
+	protected abstract ContentValues getValuesFromData(E data, boolean update) throws RuntimeException;
 
 	/**
 	 * Request to store the item in the database asynchronously
@@ -581,7 +583,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 * Request to update the item in the database asynchronously
 	 * <p>{@link org.gawst.asyncdb.source.DatabaseElementHandler#getItemSelectClause(Object)} is used to find the matching item in the database
 	 * <p>Will call {@link org.gawst.asyncdb.AsynchronousDbErrorHandler#onUpdateItemFailed(AsynchronousDbHelper, Object, Throwable) AsynchronousDbErrorHandler.onUpdateItemFailed()} on failure
-	 * @see #getValuesFromData(Object)
+	 * @see #getValuesFromData(Object, boolean)
 	 * @param item to update
 	 */
 	protected final void scheduleUpdateOperation(@NonNull E item) {
