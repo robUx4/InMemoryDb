@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 /**
@@ -61,14 +62,32 @@ public abstract class TypedContentProviderDataSource<E, CURSOR extends Cursor> e
 
 	@Override
 	public CURSOR query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+		Uri uri = contentProviderUri;
 		if (!TextUtils.isEmpty(limit)) {
-			if (TextUtils.isEmpty(orderBy)) {
-				orderBy = "LIMIT " + limit;
-			} else {
-				orderBy += " LIMIT " + limit;
-			}
+			orderBy = getLimitOrderBy(orderBy, limit);
+			uri = getLimitUri(uri, limit);
 		}
-		return wrapCursor(getContentResolver().query(contentProviderUri, columns, selection, selectionArgs, orderBy));
+		return wrapCursor(getContentResolver().query(uri, columns, selection, selectionArgs, orderBy));
+	}
+
+	/**
+	 * Allow modifications on the {@code ORDER_BY} field to handle the {@code LIMIT} field
+	 * @return modified {@code ORDER_BY} clause
+	 */
+	protected String getLimitOrderBy(@Nullable String orderBy, @NonNull String limit) {
+		if (TextUtils.isEmpty(orderBy)) {
+			return "LIMIT " + limit;
+		}
+
+		return orderBy + " LIMIT " + limit;
+	}
+
+	/**
+	 * Allow modifications on the Content-Provider {@code Uri} to handle the {@code LIMIT} field
+	 * @return modified {@code Uri}
+	 */
+	protected Uri getLimitUri(@NonNull Uri uri, @NonNull String limit) {
+		return uri;
 	}
 
 	@Override
