@@ -63,7 +63,7 @@ public abstract class TypedSqliteDataSource<E, CURSOR extends Cursor> extends Ty
 	}
 
 	public CURSOR query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
-		UIHandler.assertNotUIThread();
+		//UIHandler.assertNotUIThread();
 		return wrapCursor(db.getReadableDatabase().query(tableName, columns, selection, selectionArgs, groupBy, having, orderBy, limit));
 	}
 
