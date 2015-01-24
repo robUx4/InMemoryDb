@@ -1,4 +1,7 @@
-package org.gawst.asyncdb;
+package org.gawst.asyncdb.source;
+
+import org.gawst.asyncdb.DataSource;
+import org.gawst.asyncdb.MapEntry;
 
 /**
  * Interface that defines sources that handle a Key/Value pair to store in a regular {@link org.gawst.asyncdb.DataSource}

@@ -5,6 +5,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.gawst.asyncdb.source.MapDataSource;
+
 public abstract class InMemoryHashmapDb<K, V, INSERT_ID> extends InMemoryDbMap<K, V, HashMap<K,V>, INSERT_ID> {
 
 	/**

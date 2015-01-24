@@ -1,5 +1,10 @@
 package org.gawst.asyncdb.source.typed;
 
+import org.gawst.asyncdb.InvalidDbEntry;
+import org.gawst.asyncdb.InvalidEntry;
+import org.gawst.asyncdb.MapEntry;
+import org.gawst.asyncdb.source.MapDataSource;
+
 import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
@@ -8,12 +13,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
-import org.gawst.asyncdb.InvalidDbEntry;
-import org.gawst.asyncdb.InvalidEntry;
-import org.gawst.asyncdb.MapDataSource;
-import org.gawst.asyncdb.MapDatabaseElementHandler;
-import org.gawst.asyncdb.MapEntry;
 
 /**
  * A {@link org.gawst.asyncdb.DataSource} backed by a {@link android.database.sqlite.SQLiteOpenHelper} storage that uses a
@@ -37,7 +36,7 @@ public abstract class TypedSqliteMapDataSource<K, V, CURSOR extends Cursor> impl
 	 * @param databaseElementHandler Handler to transform {@code Cursor} into ({@link K},{@link V}) pairs or ({@link K},{@link V}) pairs to selections.
 	 */
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-	public TypedSqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull final MapDatabaseElementHandler<K, V> databaseElementHandler) {
+	public TypedSqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull final TypedMapDatabaseElementHandler<K, V, CURSOR> databaseElementHandler) {
 		this(context, db, tableName, db.getDatabaseName(), databaseElementHandler);
 	}
 
@@ -50,7 +49,7 @@ public abstract class TypedSqliteMapDataSource<K, V, CURSOR extends Cursor> impl
 	 * @param databaseName           Name of the database file on disk, in case it's corrupted and needs to be erased.
 	 * @param databaseElementHandler Handler to transform {@code Cursor} into ({@link K},{@link V}) pairs or ({@link K},{@link V}) pairs to selections.
 	 */
-	public TypedSqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final MapDatabaseElementHandler<K, V> databaseElementHandler) {
+	public TypedSqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final TypedMapDatabaseElementHandler<K, V, CURSOR> databaseElementHandler) {
 		if (databaseElementHandler == null) throw new NullPointerException("null MapCursorSourceHandler in " + this);
 		this.source = new TypedSqliteDataSource<MapEntry<K, V>, CURSOR>(context, db, tableName, databaseName, new TypedDatabaseElementHandler<MapEntry<K,V>, CURSOR>() {
 			@NonNull

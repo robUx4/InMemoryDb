@@ -1,12 +1,11 @@
 package org.gawst.asyncdb.source;
 
+import org.gawst.asyncdb.source.typed.TypedSqliteMapDataSource;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.NonNull;
-
-import org.gawst.asyncdb.MapDatabaseElementHandler;
-import org.gawst.asyncdb.source.typed.TypedSqliteMapDataSource;
 
 /**
  * A {@link org.gawst.asyncdb.DataSource} backed by a {@link android.database.sqlite.SQLiteOpenHelper} storage that uses a

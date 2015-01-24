@@ -1,6 +1,7 @@
-package org.gawst.asyncdb;
+package org.gawst.asyncdb.source.typed;
 
-import android.database.Cursor;
+import org.gawst.asyncdb.InvalidDbEntry;
+
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -13,7 +14,7 @@ import android.support.annotation.Nullable;
  * @author Created by robUx4 on 06/01/2015.
  * @see org.gawst.asyncdb.source.DatabaseElementHandler
  */
-public interface MapDatabaseElementHandler<K, V> {
+public interface TypedMapDatabaseElementHandler<K, V, CURSOR> {
 	/**
 	 * The where clause that should be used to update/delete the item.
 	 *
@@ -40,7 +41,7 @@ public interface MapDatabaseElementHandler<K, V> {
 	 * @param cursor the Cursor to use
 	 */
 	@NonNull
-	K cursorToKey(@NonNull Cursor cursor) throws InvalidDbEntry;
+	K cursorToKey(@NonNull CURSOR cursor) throws InvalidDbEntry;
 
 	/**
 	 * Use the data in the {@link android.database.Cursor} to create a valid item
@@ -48,5 +49,5 @@ public interface MapDatabaseElementHandler<K, V> {
 	 * @param cursor the Cursor to use
 	 */
 	@NonNull
-	V cursorToValue(@NonNull Cursor cursor);
+	V cursorToValue(@NonNull CURSOR cursor);
 }
