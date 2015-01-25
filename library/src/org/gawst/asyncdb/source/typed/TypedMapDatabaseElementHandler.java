@@ -18,22 +18,22 @@ public interface TypedMapDatabaseElementHandler<K, V, CURSOR> {
 	/**
 	 * The where clause that should be used to update/delete the item.
 	 *
-	 * @param itemToSelect the item about to be selected in the database
+	 * @param key the item about to be selected in the database
 	 * @return a {@link String} for the whereClause in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
 	 * @see #getKeySelectArgs(Object)
 	 */
 	@NonNull
-	String getKeySelectClause(@Nullable K itemToSelect);
+	String getKeySelectClause(@Nullable K key);
 
 	/**
 	 * The where arguments that should be used to update/delete the item.
 	 *
-	 * @param itemToSelect the item about to be selected in the database
+	 * @param key the item about to be selected in the database
 	 * @return a {@link String} array for the whereArgs in {@link android.database.sqlite.SQLiteDatabase#update(String, android.content.ContentValues, String, String[])} or {@link android.database.sqlite.SQLiteDatabase#delete(String, String, String[])}
 	 * @see #getKeySelectClause(Object)
 	 */
 	@NonNull
-	String[] getKeySelectArgs(@NonNull K itemToSelect);
+	String[] getKeySelectArgs(@NonNull K key);
 
 	/**
 	 * Use the data in the {@link android.database.Cursor} to create a valid item
