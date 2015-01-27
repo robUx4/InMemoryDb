@@ -45,7 +45,7 @@ public abstract class TypedCursorDataSource<E, INSERT_ID, DATABASE_ID, CURSOR ex
 
 	@Override
 	public final void queryAll(BatchReadingCallback<E> readingCallback) {
-		CURSOR c = wrapCursor(query(null, null, null, null, null, null, null));
+		CURSOR c = query(null, null, null, null, null, null, null);
 		if (c != null)
 			try {
 				if (c.moveToFirst()) {
