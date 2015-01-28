@@ -155,6 +155,15 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 	/**
 	 * Notify that an item in the List has changed. The value is updated in memory (synchronous) and in the database (asynchronous).
 	 * <p>If the element doesn't exist in memory, nothing happens.</p>
+	 * @see #notifyItemChanged(Object)
+	 */
+	public void update(E item) {
+		notifyItemChanged(item);
+	}
+
+	/**
+	 * Notify that an item in the List has changed. The value is updated in memory (synchronous) and in the database (asynchronous).
+	 * <p>If the element doesn't exist in memory, nothing happens.</p>
 	 */
 	public void notifyItemChanged(E item) {
 		int itemPos = getList().indexOf(item);
