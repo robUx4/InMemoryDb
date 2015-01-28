@@ -136,14 +136,14 @@ public abstract class InMemoryHashmapDb<K, V, INSERT_ID> extends InMemoryDbMap<K
 	}
 
 	@Override
-	public K getStoredKey(K key) {
+	public K findKey(K key) {
 		// protect the data coherence
-		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock getStoredKey");
+		if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" lock findKey");
 		mDataLock.lock();
 		try {
-			return super.getStoredKey(key);
+			return super.findKey(key);
 		} finally {
-			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock getStoredKey");
+			if (DEBUG_LOCK) LogManager.getLogger().i(TAG, this+" unlock findKey");
 			mDataLock.unlock();
 		}
 	}

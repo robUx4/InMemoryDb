@@ -444,7 +444,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	}
 
 	/**
-	 * delete all the data in memory and in the database
+	 * Delete all the data in memory (synchronous) and in the database (asynchronous).
 	 */
 	public final void clear() {
 		pushModifyingTransaction();

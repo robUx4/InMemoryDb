@@ -1,6 +1,7 @@
 package org.gawst.asyncdb;
 
 import android.content.ContentValues;
+import android.support.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -34,6 +35,11 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 	 */
 	abstract protected L getList();
 
+	/**
+	 * Called when data in memory have been cleared.
+	 *
+	 * @see #clear()
+	 */
 	protected void onDataCleared() {}
 
 	@Override
@@ -50,8 +56,11 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 	}
 
 	/**
-	 * add a new element in memory (synchronous) and in the database (asynchronous)
+	 * Add a new element in memory (synchronous) and in the database (asynchronous).
+	 *
 	 * @param item to add
+	 * @return {@code true} if the item was added in memory.
+	 * @see java.util.List#add(Object)
 	 */
 	public boolean add(E item) {
 		if (!getList().contains(item)) {
@@ -62,10 +71,13 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		}
 		return false;
 	}
-	
+
 	/**
-	 * add new elements in memory (synchronous) and in the database (asynchronous)
+	 * Add new elements in memory (synchronous) and in the database (asynchronous).
+	 *
 	 * @param items to add
+	 * @return {@code true} if the items were added in memory.
+	 * @see java.util.List#addAll(java.util.Collection)
 	 */
 	public boolean addAll(Collection<? extends E> items) {
 		if (getList().addAll(items)) {
@@ -76,9 +88,11 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 	}
 
 	/**
-	 * remove and item from memory (synchronous) and from the database (asynchronous)
-	 * @param item
-	 * @return true if the element was removed
+	 * Remove and item from memory (synchronous) and in the database (asynchronous).
+	 *
+	 * @param item to remove
+	 * @return {@code true} if the element was removed, {@code false} if the element could not be found or was {@code null}.
+	 * @see List#remove(Object)
 	 */
 	public boolean remove(E item) {
 		if (!getList().remove(item))
@@ -88,6 +102,13 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		return true;
 	}
 
+	/**
+	 * Remove and item from memory (synchronous) and in the database (asynchronous).
+	 *
+	 * @param index of the item to remove
+	 * @return {@code true} if the element was removed, {@code false} if the element could not be found or was {@code null}.
+	 * @see java.util.List#remove(int)
+	 */
 	public boolean remove(int index) {
 		if (index < 0 || index >= getList().size())
 			return false;
@@ -99,12 +120,23 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		return true;
 	}
 
+	/**
+	 * @see java.util.List#get(int)
+	 */
+	@Nullable
 	public E get(int position) {
 		if (position >= getList().size())
 			return null;
 		return getList().get(position);
 	}
 
+	/**
+	 * Find the first item in memory that is similar to the specified item.
+	 *
+	 * @param similar the item to match with {@code equals()}.
+	 * @return {@code null} if it cannot be found.
+	 */
+	@Nullable
 	public E findItem(E similar) {
 		int found = getList().indexOf(similar);
 		if (found<0)
@@ -113,10 +145,17 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		return getList().get(found);
 	}
 
+	/**
+	 * @see java.util.List#indexOf(Object)
+	 */
 	public int indexOf(E similar) {
 		return getList().indexOf(similar);
 	}
 
+	/**
+	 * Notify that an item in the List has changed. The value is updated in memory (synchronous) and in the database (asynchronous).
+	 * <p>If the element doesn't exist in memory, nothing happens.</p>
+	 */
 	public void notifyItemChanged(E item) {
 		int itemPos = getList().indexOf(item);
 		if (itemPos>=0) {
@@ -132,6 +171,14 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		onDataCleared();
 	}
 
+	/**
+	 * Force the specified position in the List with a new item.
+	 *
+	 * @param index   position to write to
+	 * @param newData new item to set a this position
+	 * @return {@code true} if the value was changed in memory.
+	 * @see #swap(int, int)
+	 */
 	public boolean replace(int index, E newData) {
 		if (index < 0 || index >= getList().size())
 			return false;
@@ -142,6 +189,13 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		return true;
 	}
 
+	/**
+	 * Swap the elements at the specified positions in memory (synchronous) and in the database (asynchronous).
+	 *
+	 * @param positionA position of the first element to swap.
+	 * @param positionB position of the second element to swap.
+	 * @return {@code true} if the swap was done in memory.
+	 */
 	public boolean swap(int positionA, int positionB) {
 		if (positionA < 0 || positionA >= getList().size())
 			return false;
@@ -157,6 +211,7 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		return true;
 	}
 
+	@Override
 	public void onAddItemFailed(AsynchronousDbHelper<E, ?> db, E item, ContentValues values, Throwable cause) {
 		// revert the failed change in memory
 		remove(item);
@@ -170,6 +225,7 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		}
 	}
 
+	@Override
 	public void onRemoveItemFailed(AsynchronousDbHelper<E, ?> db, E item, Throwable cause) {
 		// revert the failed change in memory
 		add(item);
@@ -183,6 +239,7 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		}
 	}
 
+	@Override
 	public void onUpdateItemFailed(AsynchronousDbHelper<E, ?> db, E item, Throwable cause) {
 		if (mListener!=null) {
 			final AsynchronousDbErrorHandler<E> listener = mListener.get();
@@ -193,6 +250,7 @@ public abstract class InMemoryDbList<E, L extends List<E>, INSERT_ID> extends As
 		}
 	}
 
+	@Override
 	public void onReplaceItemFailed(AsynchronousDbHelper<E, ?> db, E original, E replacement, Throwable cause) {
 		// revert the failed change in memory
 		int prevIndex = getList().indexOf(replacement); // TODO: we may store the position somewhere
