@@ -104,6 +104,7 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 		getList().ensureCapacity(elementCount);
 	}
 
+	@Override
 	public boolean add(E item) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -114,6 +115,7 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 		}
 	}
 
+	@Override
 	public boolean addAll(Collection<? extends E> items) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -124,6 +126,7 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 		}
 	}
 
+	@Override
 	public boolean remove(E item) {
 		// protect the data coherence
 		mDataLock.lock();
@@ -145,6 +148,7 @@ public abstract class InMemoryDbArrayList<E, INSERT_ID> extends InMemoryDbList<E
 		}
 	}
 
+	@Override
 	public void notifyItemChanged(E item) {
 		// protect the data coherence
 		mDataLock.lock();
