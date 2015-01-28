@@ -9,17 +9,17 @@ data source code based on a JSON definition of the database fields. It can even 
 
 ### Download
 
-Download via Maven:
+Download [the latest JAR][1] or grab via Maven:
 ```xml
 <dependency>
   <groupId>org.gawst</groupId>
   <artifactId>asyncdb</artifactId>
-  <version>3.0.0-rc7</version>
+  <version>3.0.0</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'org.gawst:asyncdb:3.0.0-rc7'
+compile 'org.gawst:asyncdb:3.0.0'
 ```
 
 
@@ -37,3 +37,5 @@ License
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
+[1]: https://search.maven.org/remote_content?g=org.gawst&a=asyncdb&v=LATEST
