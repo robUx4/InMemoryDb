@@ -1,7 +1,10 @@
 InMemoryDb
 ==========
 
-Some helper classes to use Android database with storage on disk and in memory
+Some helper classes to use Android database with storage on disk and in memory (optional).
+
+You may be interrested in [this project](https://github.com/robUx4/android-contentprovider-generator) that can generate all the 
+data source code based on a JSON definition of the database fields. It can even generate a Content Provider for you.
 
 
 ### Download
