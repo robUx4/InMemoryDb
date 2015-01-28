@@ -50,7 +50,7 @@ public abstract class TypedSqliteMapDataSource<K, V, CURSOR extends Cursor> impl
 	 * @param databaseElementHandler Handler to transform {@code Cursor} into ({@link K},{@link V}) pairs or ({@link K},{@link V}) pairs to selections.
 	 */
 	public TypedSqliteMapDataSource(@NonNull Context context, @NonNull SQLiteOpenHelper db, @NonNull final String tableName, @NonNull String databaseName, @NonNull final TypedMapDatabaseElementHandler<K, V, CURSOR> databaseElementHandler) {
-		if (databaseElementHandler == null) throw new NullPointerException("null MapCursorSourceHandler in " + this);
+		if (databaseElementHandler == null) throw new NullPointerException("null TypedMapDatabaseElementHandler in " + this);
 		this.source = new TypedSqliteDataSource<MapEntry<K, V>, CURSOR>(context, db, tableName, databaseName, new TypedDatabaseElementHandler<MapEntry<K,V>, CURSOR>() {
 			@NonNull
 			@Override
