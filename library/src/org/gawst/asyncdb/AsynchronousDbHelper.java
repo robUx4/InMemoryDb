@@ -52,7 +52,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	private final AtomicBoolean mDataLoaded = new AtomicBoolean();
 	private final AtomicInteger modifyingTransactionLevel = new AtomicInteger(0);
-	final DataSource<E, INSERT_ID> dataSource;
+	private final DataSource<E, INSERT_ID> dataSource;
 	private final String name;
 
 	private PurgeHandler purgeHandler;
@@ -237,7 +237,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	private void removeItem(@NonNull E itemToDelete) {
 		try {
 			if (DEBUG_DB) LogManager.logger.d(TAG, name + " remove " + itemToDelete);
-			if (!dataSource.delete(itemToDelete)) {
+			if (dataSource.delete(itemToDelete)==0) {
 				notifyRemoveItemFailed(itemToDelete, new RuntimeException("No item " + itemToDelete + " in " + name));
 			} else if (!notifyOnSchedule()) {
 				pushModifyingTransaction();
@@ -528,7 +528,7 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 	 * @see #addItemInMemory(Object)
 	 */
 	@Nullable
-	protected abstract ContentValues getValuesFromData(E data, boolean update) throws RuntimeException;
+	public abstract ContentValues getValuesFromData(E data, boolean update) throws RuntimeException;
 
 	/**
 	 * Request to store the item in the database asynchronously
@@ -686,6 +686,10 @@ public abstract class AsynchronousDbHelper<E, INSERT_ID> implements DataSource.B
 
 	/** Wait until the data are loaded */
 	public void waitForDataLoaded() {
+	}
+
+	public DataSource<E, INSERT_ID> getDataSource() {
+		return dataSource;
 	}
 
 	@Override

@@ -9,17 +9,17 @@ data source code based on a JSON definition of the database fields. It can even 
 
 ### Download
 
-Download [the latest JAR][1] or grab via Maven:
+Download [the latest JAR][1] or grab via Maven [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.gawst/asyncdb/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/org.gawst/asyncdb)
 ```xml
 <dependency>
   <groupId>org.gawst</groupId>
   <artifactId>asyncdb</artifactId>
-  <version>3.0.0</version>
+  <version>3.1.0</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'org.gawst:asyncdb:3.0.0'
+compile 'org.gawst:asyncdb:3.1.0'
 ```
 
 

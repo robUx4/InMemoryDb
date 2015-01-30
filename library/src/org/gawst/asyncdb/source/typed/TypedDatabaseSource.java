@@ -72,7 +72,7 @@ public interface TypedDatabaseSource<INSERT_ID, DATABASE_ID, CURSOR extends Curs
 	 * @param selectionArgs You may include ?s in the selection clause, which
 	 *                      will be replaced by the values from whereArgs. The values
 	 *                      will be bound as Strings.
-	 * @return
+	 * @return The number of rows deleted.
 	 */
 	int delete(@Nullable String selection, @Nullable String[] selectionArgs);
 

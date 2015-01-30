@@ -89,7 +89,7 @@ public abstract class TypedSqliteMapDataSource<K, V, CURSOR extends Cursor> impl
 	}
 
 	@Override
-	public boolean delete(MapEntry<K, V> itemToDelete) {
+	public int delete(MapEntry<K, V> itemToDelete) {
 		return source.delete(itemToDelete);
 	}
 

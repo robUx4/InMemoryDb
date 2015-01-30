@@ -51,7 +51,7 @@ public abstract class InMemoryDbMap<K, V, H extends Map<K, V>, INSERT_ID> extend
 	protected abstract ContentValues getValuesFromData(K key, V value, boolean update) throws RuntimeException;
 
 	@Override
-	protected final ContentValues getValuesFromData(MapEntry<K, V> data, boolean update) throws RuntimeException {
+	public final ContentValues getValuesFromData(MapEntry<K, V> data, boolean update) throws RuntimeException {
 		return getValuesFromData(data.getKey(), data.getValue(), update);
 	}
 

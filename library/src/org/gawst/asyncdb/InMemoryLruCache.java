@@ -106,7 +106,7 @@ public abstract class InMemoryLruCache<K,V, INSERT_ID> extends AsynchronousDbHel
 	protected abstract ContentValues getValuesFromData(K key, V value, boolean update) throws RuntimeException;
 
 	@Override
-	protected final ContentValues getValuesFromData(MapEntry<K, V> data, boolean update) throws RuntimeException {
+	public final ContentValues getValuesFromData(MapEntry<K, V> data, boolean update) throws RuntimeException {
 		return getValuesFromData(data.getKey(), data.getValue(), update);
 	}
 

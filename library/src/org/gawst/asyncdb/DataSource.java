@@ -63,9 +63,9 @@ public interface DataSource<E, INSERT_ID> {
 	 * Delete the item from the source of data
 	 *
 	 * @param itemToDelete
-	 * @return {@code true} if the element was removed
+	 * @return {@code 1} if the element was removed, {@code 0} otherwise
 	 */
-	boolean delete(E itemToDelete);
+	int delete(E itemToDelete);
 
 	/**
 	 * Delete the data specified by the {@code invalidEntry} from the source.

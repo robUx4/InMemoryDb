@@ -54,7 +54,7 @@ public class AsyncQueryHandler extends AsyncDatabaseHandler<Uri, Uri> {
 	public AsyncQueryHandler(ContentProviderDataSource<Uri> dataSource) {
 		this(new AsynchronousDatabase<Uri, Uri>(dataSource, dataSource.contentProviderUri.getAuthority() + dataSource.contentProviderUri.getPath(), null) {
 			@Override
-			protected ContentValues getValuesFromData(Uri data, boolean update) throws RuntimeException {
+			public ContentValues getValuesFromData(Uri data, boolean update) throws RuntimeException {
 				throw new AssertionError("not supported");
 			}
 		}, dataSource);

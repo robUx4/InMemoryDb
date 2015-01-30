@@ -1,5 +1,7 @@
-package org.gawst.asyncdb;
+package org.gawst.asyncdb.typed;
 
+import org.gawst.asyncdb.AsynchronousDbHelper;
+import org.gawst.asyncdb.AsynchronousDbOperation;
 import org.gawst.asyncdb.source.typed.TypedDatabaseSource;
 
 import android.content.ContentValues;
@@ -9,24 +11,26 @@ import android.os.Looper;
 
 /**
  * Class similar to Android's {@link android.content.AsyncQueryHandler AsyncQueryHandler} to work with an
- * {@link org.gawst.asyncdb.AsynchronousDbHelper} instead of a ContentProvider source
+ * {@link org.gawst.asyncdb.AsynchronousDbHelper} instead of a ContentProvider source and dealing with items of type {@link E}.
  *
- * @see AsyncDbHelperHandler AsyncDbHelperHandler for a ready to use version
- * @see org.gawst.asyncdb.typed.TypedAsyncDatabaseHandler TypedAsyncDatabaseHandler
+ * @param <CURSOR>      the type of {@link android.database.Cursor} returned by a query, see {@link #onQueryComplete(int, Object, android.database.Cursor)}
+ * @param <E>           the type of elements written to the database.
+ * @param <INSERT_ID>   the type of {@code id} returned from a {@link #startInsert(int, Object, Object)}, see {@link #onInsertComplete(int, Object, Object)}
+ * @param <DATABASE_ID> the database internal ID, used to check everything is okay internally
  */
-public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
+public class TypedAsyncDatabaseHandler<E, CURSOR extends Cursor, INSERT_ID, DATABASE_ID> {
 
-	private final AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper;
+	private final AsynchronousDbHelper<E, INSERT_ID> asynchronousDbHelper;
 	private static final Handler mHandler = new Handler(Looper.getMainLooper());
-	protected final TypedDatabaseSource<INSERT_ID, DATABASE_ID, ?> dataSource;
+	protected final TypedDatabaseSource<INSERT_ID, DATABASE_ID, CURSOR> dataSource;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param asynchronousDbHelper The {@link org.gawst.asyncdb.AsynchronousDbHelper} database to work with.
+	 * @param asynchronousDbHelper The {@link AsynchronousDbHelper} database to work with.
 	 * @param dataSource           The {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} source used by the {@code asynchronousDbHelper}.
 	 */
-	public AsyncDatabaseHandler(AsynchronousDbHelper<?, INSERT_ID> asynchronousDbHelper, TypedDatabaseSource<INSERT_ID, DATABASE_ID, ?> dataSource) {
+	public TypedAsyncDatabaseHandler(AsynchronousDbHelper<E, INSERT_ID> asynchronousDbHelper, TypedDatabaseSource<INSERT_ID, DATABASE_ID, CURSOR> dataSource) {
 		this.asynchronousDbHelper = asynchronousDbHelper;
 		this.dataSource = dataSource;
 	}
@@ -36,11 +40,11 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 			throw new IllegalArgumentException("wrong database id " + databaseId + " expected " + dataSource.getDatabaseId() + " try startRunnable()");
 	}
 
-	public AsynchronousDbHelper<?, INSERT_ID> getAsynchronousDbHelper() {
+	public AsynchronousDbHelper<E, INSERT_ID> getAsynchronousDbHelper() {
 		return asynchronousDbHelper;
 	}
 
-	public TypedDatabaseSource<INSERT_ID, DATABASE_ID, ?> getDataSource() {
+	public TypedDatabaseSource<INSERT_ID, DATABASE_ID, CURSOR> getDataSource() {
 		return dataSource;
 	}
 
@@ -155,14 +159,14 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
-				Cursor cursor1;
+				CURSOR cursor1;
 				try {
 					cursor1 = dataSource.query(projection, selection, selectionArgs, null, null, orderBy, limit);
 				} catch (Exception e) {
 					cursor1 = null;
 				}
 
-				final Cursor cursor = cursor1;
+				final CURSOR cursor = cursor1;
 				mHandler.post(new Runnable() {
 					@Override
 					public void run() {
@@ -174,79 +178,41 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	}
 
 	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} will be used.</b>
-	 * <p/>
 	 * This method begins an asynchronous insert. When the insert operation is
 	 * done {@link #onInsertComplete} is called.
 	 *
-	 * @param token         A token passed into {@link #onInsertComplete} to identify
-	 *                      the insert operation.
-	 * @param cookie        An object that gets passed into {@link #onInsertComplete}
-	 * @param databaseId    the Uri passed to the insert operation.
-	 * @param initialValues the ContentValues parameter passed to the insert operation.
-	 * @see #startInsert(int, Object, android.content.ContentValues)
+	 * @param token  A token passed into {@link #onInsertComplete} to identify
+	 *               the insert operation.
+	 * @param cookie An object that gets passed into {@link #onInsertComplete}
+	 * @param item   to the insert in the database.
 	 */
-	@Deprecated
-	public void startInsert(final int token, final Object cookie, DATABASE_ID databaseId,
-	                        final ContentValues initialValues) {
-		checkDatabaseId(databaseId);
-		startInsert(token, cookie, initialValues);
-	}
-
-	/**
-	 * This method begins an asynchronous insert. When the insert operation is
-	 * done {@link #onInsertComplete} is called.
-	 *
-	 * @param token         A token passed into {@link #onInsertComplete} to identify
-	 *                      the insert operation.
-	 * @param cookie        An object that gets passed into {@link #onInsertComplete}
-	 * @param initialValues the ContentValues parameter passed to the insert operation.
-	 */
-	public void startInsert(final int token, final Object cookie,
-	                        final ContentValues initialValues) {
-		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
-			@Override
-			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
-				INSERT_ID inserted1 = null;
-				try {
-					inserted1 = dataSource.insert(initialValues);
-				} catch (Exception e) {
-					inserted1 = null;
-				} finally {
-					if (inserted1 != null) {
-						asynchronousDbHelper.triggerPurgeHandler();
+	public void startInsert(final int token, final Object cookie, E item) {
+		final ContentValues insertValues = asynchronousDbHelper.getValuesFromData(item, false);
+		if (null != insertValues) {
+			asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
+				@Override
+				public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
+					INSERT_ID inserted1 = null;
+					try {
+						inserted1 = dataSource.insert(insertValues);
+					} catch (Exception e) {
+						inserted1 = null;
+					} finally {
+						if (inserted1 != null) {
+							asynchronousDbHelper.triggerPurgeHandler();
+						}
 					}
+
+					final INSERT_ID insertId = inserted1;
+					mHandler.post(new Runnable() {
+						@Override
+						public void run() {
+							onInsertComplete(token, cookie, insertId);
+						}
+					});
 				}
-
-				final INSERT_ID insertId = inserted1;
-				mHandler.post(new Runnable() {
-					@Override
-					public void run() {
-						onInsertComplete(token, cookie, insertId);
-					}
-				});
-			}
-		});
-	}
-
-	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} will be used.</b>
-	 * <p/>
-	 * This method begins an asynchronous update. When the update operation is
-	 * done {@link #onUpdateComplete} is called.
-	 *
-	 * @param token      A token passed into {@link #onUpdateComplete} to identify
-	 *                   the update operation.
-	 * @param cookie     An object that gets passed into {@link #onUpdateComplete}
-	 * @param databaseId the Uri passed to the update operation.
-	 * @param values     the ContentValues parameter passed to the update operation.
-	 * @see #startUpdate(int, Object, android.content.ContentValues, String, String[])
-	 */
-	@Deprecated
-	public void startUpdate(final int token, final Object cookie, DATABASE_ID databaseId,
-	                        final ContentValues values, final String selection, final String[] selectionArgs) {
-		checkDatabaseId(databaseId);
-		startUpdate(token, cookie, values, selection, selectionArgs);
+			});
+		}
 	}
 
 	/**
@@ -256,77 +222,59 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	 * @param token  A token passed into {@link #onUpdateComplete} to identify
 	 *               the update operation.
 	 * @param cookie An object that gets passed into {@link #onUpdateComplete}
-	 * @param values the ContentValues parameter passed to the update operation.
+	 * @param item   to update in the database.
 	 */
 	public void startUpdate(final int token, final Object cookie,
-	                        final ContentValues values, final String selection, final String[] selectionArgs) {
-		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
-			@Override
-			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
-				int cursor1;
-				try {
-					cursor1 = dataSource.update(values, selection, selectionArgs);
-				} catch (Exception e) {
-					cursor1 = 0;
-				}
-
-				final int cursor = cursor1;
-				mHandler.post(new Runnable() {
-					@Override
-					public void run() {
-						onUpdateComplete(token, cookie, cursor);
+	                        final E item, final String selection, final String[] selectionArgs) {
+		final ContentValues updateValues = asynchronousDbHelper.getValuesFromData(item, true);
+		if (null != updateValues) {
+			asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
+				@Override
+				public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
+					int updatedRows;
+					try {
+						updatedRows = dataSource.update(updateValues, selection, selectionArgs);
+					} catch (Exception e) {
+						updatedRows = 0;
 					}
-				});
-			}
-		});
-	}
 
-	/**
-	 * <b>Deprecated, the {@code uri} field will be ignored, the one from {@link org.gawst.asyncdb.source.typed.TypedDatabaseSource} will be used.</b>
-	 * <p/>
-	 * This method begins an asynchronous delete. When the delete operation is
-	 * done {@link #onDeleteComplete} is called.
-	 *
-	 * @param token      A token passed into {@link #onDeleteComplete} to identify
-	 *                   the delete operation.
-	 * @param cookie     An object that gets passed into {@link #onDeleteComplete}
-	 * @param databaseId the Uri passed to the delete operation.
-	 * @param selection  the where clause.
-	 * @see #startDelete(int, Object, String, String[])
-	 */
-	@Deprecated
-	public void startDelete(final int token, final Object cookie, DATABASE_ID databaseId,
-	                        final String selection, final String[] selectionArgs) {
-		checkDatabaseId(databaseId);
-		startDelete(token, cookie, selection, selectionArgs);
+					final int finalUpdatedRows = updatedRows;
+					mHandler.post(new Runnable() {
+						@Override
+						public void run() {
+							onUpdateComplete(token, cookie, finalUpdatedRows);
+						}
+					});
+				}
+			});
+		}
 	}
 
 	/**
 	 * This method begins an asynchronous delete. When the delete operation is
 	 * done {@link #onDeleteComplete} is called.
 	 *
-	 * @param token     A token passed into {@link #onDeleteComplete} to identify
-	 *                  the delete operation.
-	 * @param cookie    An object that gets passed into {@link #onDeleteComplete}
-	 * @param selection the where clause.
+	 * @param token  A token passed into {@link #onDeleteComplete} to identify
+	 *               the delete operation.
+	 * @param cookie An object that gets passed into {@link #onDeleteComplete}
+	 * @param item   to delete from the database.
 	 */
-	public void startDelete(final int token, final Object cookie,
-	                        final String selection, final String[] selectionArgs) {
+	public void startDelete(final int token, final Object cookie, final E item) {
 		asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
 			@Override
 			public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
-				int cursor1;
+				int deleted;
 				try {
-					cursor1 = dataSource.delete(selection, selectionArgs);
+					deleted = asynchronousDbHelper.getDataSource().delete(item);
 				} catch (Exception e) {
-					cursor1 = 0;
+					deleted = 0;
 				}
 
-				final int cursor = cursor1;
+				final int finalDeleted = deleted;
 				mHandler.post(new Runnable() {
 					@Override
 					public void run() {
-						onDeleteComplete(token, cookie, cursor);
+						onDeleteComplete(token, cookie, finalDeleted);
 					}
 				});
 			}
@@ -366,7 +314,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	 * @param cookie the cookie object passed in from {@link #startQuery}.
 	 * @param cursor The cursor holding the results from the query.
 	 */
-	protected void onQueryComplete(int token, Object cookie, Cursor cursor) {
+	protected void onQueryComplete(int token, Object cookie, CURSOR cursor) {
 		// Empty
 	}
 
@@ -406,7 +354,7 @@ public class AsyncDatabaseHandler<INSERT_ID, DATABASE_ID> {
 	 *               {@link #startDelete}.
 	 * @param cookie the cookie object that's passed in from
 	 *               {@link #startDelete}.
-	 * @param result the result returned from the delete operation
+	 * @param result {@code 1} if the element was deleted, {@code 0} otherwise.
 	 */
 	protected void onDeleteComplete(int token, Object cookie, int result) {
 		// Empty

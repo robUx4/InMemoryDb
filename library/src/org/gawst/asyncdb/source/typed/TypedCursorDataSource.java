@@ -39,8 +39,8 @@ public abstract class TypedCursorDataSource<E, INSERT_ID, DATABASE_ID, CURSOR ex
 	}
 
 	@Override
-	public final boolean delete(E itemToDelete) {
-		return delete(databaseElementHandler.getItemSelectClause(itemToDelete), databaseElementHandler.getItemSelectArgs(itemToDelete)) != 0;
+	public final int delete(E itemToDelete) {
+		return delete(databaseElementHandler.getItemSelectClause(itemToDelete), databaseElementHandler.getItemSelectArgs(itemToDelete));
 	}
 
 	@Override
