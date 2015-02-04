@@ -1,13 +1,17 @@
 package org.gawst.asyncdb.typed;
 
-import org.gawst.asyncdb.AsynchronousDbHelper;
-import org.gawst.asyncdb.AsynchronousDbOperation;
-import org.gawst.asyncdb.source.typed.TypedDatabaseSource;
-
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import org.gawst.asyncdb.AsynchronousDbHelper;
+import org.gawst.asyncdb.AsynchronousDbOperation;
+import org.gawst.asyncdb.source.typed.TypedDatabaseSource;
+
+import java.util.concurrent.Callable;
 
 /**
  * Class similar to Android's {@link android.content.AsyncQueryHandler AsyncQueryHandler} to work with an
@@ -304,6 +308,64 @@ public class TypedAsyncDatabaseHandler<E, CURSOR extends Cursor, INSERT_ID, DATA
 			}
 		});
 	}
+
+    /**
+     * Callback called when the {@link java.util.concurrent.Callable} passed to {@link #startCallable(int, Object,
+     * java.util.concurrent.Callable, org.gawst.asyncdb.typed.TypedAsyncDatabaseHandler.CallableCallback) startCallable()} is finished.
+     *
+     * @param <V> type of the data returned by the {@code Callable}
+     */
+    public interface CallableCallback<V> {
+        /**
+         * Callback called when the {@link java.util.concurrent.Callable} passed to {@link #startCallable(int, Object,
+         * java.util.concurrent.Callable, org.gawst.asyncdb.typed.TypedAsyncDatabaseHandler.CallableCallback) startCallable()} is finished.
+         *
+         * @param token     A token passed into {@link #startCallable(int, Object, java.util.concurrent.Callable,
+         *                  org.gawst.asyncdb.typed.TypedAsyncDatabaseHandler.CallableCallback) startCallable()} to
+         *                  identify the operation.
+         * @param cookie    An object that gets passed into {@link #startCallable(int, Object, java.util.concurrent.Callable,
+         *                  org.gawst.asyncdb.typed.TypedAsyncDatabaseHandler.CallableCallback) startCallable()} .
+         * @param result    of the {@code Callable} if there was no exception.
+         * @param exception thrown by the {@code Callable}.
+         */
+        void onCallableResult(int token, Object cookie, @Nullable V result, @Nullable Exception exception);
+    }
+
+    /**
+     * This method begins an asynchronous processing of the {@code Callable}. When the operation is
+     * done the {@code callback} is called.
+     *
+     * @param token    A token passed into {@link CallableCallback#onCallableResult(int, Object, Object, Exception)
+     *                 CallableCallback.onCallableResult()} to identify the operation.
+     * @param cookie   An object that gets passed into {@link CallableCallback#onCallableResult(int, Object, Object, Exception)
+     *                 CallableCallback.onCallableResult()}.
+     * @param callable The {@code Callable} to run.
+     * @param callback The callback call when the {@code Callable} is finished with a result or an exception.
+     * @param <V>      type of the data returned by the {@code Callable}
+     */
+    public final <V> void startCallable(final int token, final Object cookie, @NonNull final Callable<V> callable, @NonNull final CallableCallback<V> callback) {
+        asynchronousDbHelper.scheduleCustomOperation(new AsynchronousDbOperation() {
+            @Override
+            public void runInMemoryDbOperation(AsynchronousDbHelper<?, ?> db) {
+                try {
+                    final V result = callable.call();
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onCallableResult(token, cookie, result, null);
+                        }
+                    });
+                } catch (final Exception e) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onCallableResult(token, cookie, null, e);
+                        }
+                    });
+                }
+            }
+        });
+    }
 
 	/**
 	 * Called when an asynchronous query is completed. The receiver is responsible to close the Cursor.
