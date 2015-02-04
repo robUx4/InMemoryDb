@@ -43,8 +43,8 @@ public abstract class DatabaseSourcePurger<LAST_ELEMENT> implements PurgeHandler
 		if (checkInsertFrequency <= 0) throw new IllegalArgumentException("the insert purge frequency in AsyncHandlerPurge must be positive");
 
 		this.maxItems = maxItems;
-		this.checkInsertFrequency = 0; // we should purge at the first insert, in case the app is closed too often without purging
-		nextCheck = checkInsertFrequency;
+		this.checkInsertFrequency = checkInsertFrequency;
+		nextCheck = 0; // we should purge at the first insert, in case the app is closed too often without purging
 	}
 
 	/**
