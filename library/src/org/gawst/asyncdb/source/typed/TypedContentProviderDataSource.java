@@ -63,6 +63,14 @@ public abstract class TypedContentProviderDataSource<E, CURSOR extends Cursor> e
 	@Override
 	public CURSOR query(String[] columns, String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
 		Uri uri = contentProviderUri;
+		if (!TextUtils.isEmpty(groupBy)) {
+			orderBy = getGroupOrderBy(orderBy, groupBy);
+			uri = getGroupUri(uri, groupBy);
+		}
+		if (!TextUtils.isEmpty(having)) {
+			orderBy = getHavingOrderBy(orderBy, having);
+			uri = getHavingUri(uri, having);
+		}
 		if (!TextUtils.isEmpty(limit)) {
 			orderBy = getLimitOrderBy(orderBy, limit);
 			uri = getLimitUri(uri, limit);
@@ -71,7 +79,47 @@ public abstract class TypedContentProviderDataSource<E, CURSOR extends Cursor> e
 	}
 
 	/**
-	 * Allow modifications on the {@code ORDER_BY} field to handle the {@code LIMIT} field
+	 * Allow modifications on the {@code ORDER_BY} field to handle the {@code GROUP BY} field missing in Content-Provider query().
+	 * @return modified {@code ORDER_BY} clause
+	 */
+	protected String getGroupOrderBy(@Nullable String orderBy, @NonNull String groupBy) {
+		if (TextUtils.isEmpty(orderBy)) {
+			return "GROUP BY " + groupBy;
+		}
+
+		return orderBy + " GROUP BY " + groupBy;
+	}
+
+	/**
+	 * Allow modifications on the Content-Provider {@code Uri} to handle the {@code GROUP BY} field missing in Content-Provider query().
+	 * @return modified {@code Uri}
+	 */
+	protected Uri getGroupUri(@NonNull Uri uri, @NonNull String groupBy) {
+		return uri;
+	}
+
+	/**
+	 * Allow modifications on the {@code ORDER_BY} field to handle the {@code HAVING} field missing in Content-Provider query().
+	 * @return modified {@code ORDER_BY} clause
+	 */
+	protected String getHavingOrderBy(@Nullable String orderBy, @NonNull String having) {
+		if (TextUtils.isEmpty(orderBy)) {
+			return "HAVING " + having;
+		}
+
+		return orderBy + " HAVING " + having;
+	}
+
+	/**
+	 * Allow modifications on the Content-Provider {@code Uri} to handle the {@code HAVING} field missing in Content-Provider query().
+	 * @return modified {@code Uri}
+	 */
+	protected Uri getHavingUri(@NonNull Uri uri, @NonNull String having) {
+		return uri;
+	}
+
+	/**
+	 * Allow modifications on the {@code ORDER_BY} field to handle the {@code LIMIT} field missing in Content-Provider query().
 	 * @return modified {@code ORDER_BY} clause
 	 */
 	protected String getLimitOrderBy(@Nullable String orderBy, @NonNull String limit) {
@@ -83,7 +131,7 @@ public abstract class TypedContentProviderDataSource<E, CURSOR extends Cursor> e
 	}
 
 	/**
-	 * Allow modifications on the Content-Provider {@code Uri} to handle the {@code LIMIT} field
+	 * Allow modifications on the Content-Provider {@code Uri} to handle the {@code LIMIT} field missing in Content-Provider query().
 	 * @return modified {@code Uri}
 	 */
 	protected Uri getLimitUri(@NonNull Uri uri, @NonNull String limit) {
